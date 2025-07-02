@@ -12,4 +12,4 @@ create-pages:
   before_script:
     - npm install -g elm
   script:
-    - elm make src/Main.elm --output=public/index.html
+    - elm make src/Main.elm --output=public/main.js
