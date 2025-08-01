@@ -8,13 +8,40 @@
 % Mentale Modelle: geometrische Objekte, Zeitreihen, Zustandsänderungen
 % Sind diese mentalen Modelle für sie notwendig, um die Aufgaben lösen zu können? % Gehen Sie bei Ihrer Argumentation von den Anwendungsaufgaben aus und kommen Sie dann zu den mentalen Modellen, deren Aufbau durch Visualisierungen unterstützt wird.
 % Welche Visualisierungen helfen den Personen, die die Software verwenden, sinnvolle mentale Modelle aufzubauen. 
-\textbf{... TODO ...}
+
+Die Anwender sollen mithilfe dieser Visual-Analytics-Anwendung die Frage beantworten können, welche Nation die sportlich erfolgreichste bei den Olympischen Sommerspielen 2024 war. Dabei sollen sie erkennen, dass diese Frage nicht allein mit dem Medaillenspiegel beantwortet werden kann, da dieser nur quantitative Ergebnisse darstellt. Die Anwender sollen sich deshalb intensiver mit den erzielten Ergebnissen einer Nation auseinandersetzen und die zentrale Fragestellung in drei verschiedenen Analysen beantworten.
+
+\paragraph{Analyse Eins}
+Der erste Schritt besteht darin, die Herkunft der gewonnenen Medaillen zu untersuchen. Dabei sollen sie erkennen können, ob eine Nation nur in einer einzigen Sportart erfolgreich war, oder in vielen Sportarten Medaillengewinner hervorbringen konnte. 
+
+Um die Verteilung der Medaillen zu untersuchen, müssen die Anwender erkennen können, welcher Anteil der Medaillen in einer bestimmten Sportart gewonnen wurde. Die Anteile summieren sich zu der Anzahl im Medaillenspiegel auf. Typischerweise werden solche Daten als Anteile eines Kreises interpretiert. Auch wenn die einfache Auflistung der gewonnenen Medaillen pro Sportart zur Beantwortung der Frage ausreichen würde, kann durch das mentale Modell des Kreises die prozentuale Größe leichter erfasst werden. Das Kreisdiagramm visualisiert dieses mentale Modell. Da manche Sportarten zusätzlich in Disziplinen unterteilt sind nutzen wir ein Sunburst-Diagramm, um diese Hierarchie ebenfalls abzubilden.
+
+\paragraph{Analyse Zwei}
+In einem zweiten Schritt sollen die Anwender das quantitative Länderranking des Medaillenspiegels hinterfragen. Dazu werden die sportlichen Leistungen eines Landes mit den qualitativen Einflussfaktoren \textit{Einwohneranzahl}, \textit{Bruttoinlandsprodukt} und \textit{Median-Alter} ins Verhältnis gesetzt. Die resultierenden Länderränkings sollen die Anwender dann mit dem ursprünglichen Medaillenspiegel vergleichen und die quantitativen Erfolge aus einem neuen Blickwinkel bewerten.
+
+Der Medaillenspiegel wird typischerweise als Tabelle, mit der erfolgreichsten Nation in der obersten Zeile, dargestellt. Damit die Anwender diese Vorstellung beibehalten können, muss der Vergleich mit den qualitativen Einflussfaktoren ebenfalls in einem Länderranking resultieren, bei dem sich der Sieger, also die sportlich erfolgreichste Nation, an oberster Stelle befindet. Dazu wäre erneut eine tabellarische Darstellung gut geeignet. Gleichzeitig sollen die Anwender aber auch Unterschiede zwischen den Platzierungen eines Landes in den verschiedenen Länderrankings erkennen können. Diese Aufgabe kann durch parallele Koordinatensysteme erleichtert werden. Einerseits können mit den parallelen Koordinatenachsen die verschiedenen Länderrankings abgebildet werden, bei denen sich der Datenpunkt der Siegernation an oberster Stelle befindet. Andererseits können durch Linien zwischen den Datenpunkten Veränderungen bei den Platzierungen eines Landes visualisiert werden.
+
+\paragraph{Analyse Drei}
+Als drittes sollen die Anwender die erzielten Ergebnisse der Olympischen Sommerspiele 2024 mit vorhergehenden Jahren vergleichen können. Im Bezug auf die zentrale Fragestellung sollen die Anwender \enquote{Überraschungsleistungen} von gezielt entwickelten Leistungen unterscheiden können. Es gibt einige Sportarten, die in bestimmten Ländern besonders gefördert werden. Diese Länder können in regelmäßigen Abständen neue Medaillengewinner beglückwünschen. Deutlich seltener kommen Olympiasieger aus Ländern, in denen der Sport nicht so stark gefördert wird. Die Anwender sollen die historische Entwicklung von neuen Medaillengewinnern eines Landes analysieren und Länder mit gezielter sportlicher Förderung identifizieren können.
+
+Die historische Entwicklung der Medaillengewinner interpretieren viele Anwender vermutlich als Zeitstrahl. Auf diesem werden in zeitlich fortschreitenden Abständen die Anzahl der Medaillengewinner dargestellt. Dieses mentale Modell ist aber nicht zwingend notwendig, um die zentrale Fragestellung unter diesem Aspekt zu beantworten. Jedoch erleichtert es die Analyse für den ungeübten Anwender, indem die zeitlichen Abstände modelliert werden. Für die Beantwortung der Fragestellung müssen die Anwender aber auch die Unterschiede zwischen den einzelnen Jahren analysieren. Die neuen Medaillengewinner pro Olympiazyklus dürften für alle Nationen eher gering sein, sodass die Anwender auf die kleinen Unterschiede achten müssen. Ein mentales Modell, das bei dieser Aufgabe helfen könnte wären Farben, die große Änderungen farblich mehr herausheben als kleine Änderungen. In Kombination mit dem Zeitstrahl scheint eine 2D Heatmap, mit den Nationen und Jahren als Achsen, eine praktische Umsetzung dieses mentalen Modells zu sein.
 
 \subsection{Anforderungen an die Visualisierungen}
 % Leiten Sie Anforderungen an das Design der Visualisierungen ab, die sich durch Ihre Analyse des Zielproblems ergeben.
 % Trivial: soll verständlich sein
 % Besser: Welche Kompromisse, was besonders gut zu dekodieren sein soll
-\textbf{... TODO ...}
+\paragraph{Visualisierung SunBurst} Die Anwender sollen erkennen können, welcher Anteil der Medaillen in einer bestimmten Sportart gewonnen wurde. Die Verteilung der 987 Olympischen Medaillen nach Nationen und Sportarten in einer Visualisierung zu vereinen wird die Bearbeitung der Anwendungsaufgabe sehr schwierig machen. Daher stellen wir die Verteilung der Medaillen nach Sportarten immer nur für ein Land dar, welches durch den Anwender ausgewählt wird.
+
+Zur besseren Unterscheidung der verschiedenen Sportarten sollten diese in unterschiedlichen Farben dargestellt werden. Weiterhin sollten die Namen der Sportarten und absoluten Werte ebenfalls dargestellt werden. Um die Visualisierung aber nicht mit zu vielen Informationen zu überladen, sollten diese Informationen nur per Mouse-Hover eingeblendet werden.
+
+\paragraph{Visualisierung Parallele Koordinaten}
+Bei der Beantwortung der zentralen Fragestellung sollen die Anwender zu der Erkenntnis kommen, dass der Medaillenspiegel auf die Frage nach der sportlich erfolgreichsten Nation nur triviale Ergebnisse liefert. Daher müssen die Unterschiede zwischen den Platzierungen einer Nation in dem Medaillenspiegel und den resultierenden Länderrankings der qualitativen Einflussfaktoren hervorgehoben werden. Aus diesem Grund sollten die Linien zwischen den Koordinatenachsen farblich dargestellt werden, um Veränderungen in den Länderrankings leichter zu erkennen. Außerdem sollten die Achsen vertauschbar sein, um direkte Vergleiche zu ermöglichen.
+
+Das größere Problem ist aber die Darstellung aller teilnehmenden Länder auf der Koordinatenachse. Um die 204 Länder darzustellen, muss die Visualisierung entweder sehr groß gezeichnet werden, oder die Abstände zwischen den Datenpunkten sehr klein sein. In beiden Fällen wäre die dargestellte Menge an Informationen schwierig zu analysieren. Ein Kompromiss wäre nur einen Teil der Länder darzustellen, welcher von den Anwendern frei wählbar ist.
+
+\paragraph{Visualisierung Heatmap} Die Visualisierung der historischen Entwicklung der Olympischen Medaillengewinner soll den Anwendern dabei helfen, Nationen mit struktureller sportlicher Förderung zu erkennen. Dazu müssen die Anwender Unterschiede in den absoluten Werten schnell erkennen können. Bei dieser Aufgabe sind die Differenzen aber eher gering, weshalb durch Farbe die verschiedenen Werte kenntlich gemacht werden sollen. Damit alle Anwender die Bedeutung der Farben gleichermaßen interpretieren, wird eine Legende benötigt. Zusätzlich sollten die absoluten Werte durch Mouse-Hover eingeblendet werden.
+
+Die gängige Leserichtung für die zeitliche Abfolge der einzelnen Olympischen Sommerspiele ist von links nach rechts. Seit 1896 wurden 33 Olympische Sommerspiele ausgetragen. Diese Anzahl dürfte auf einem normalgroßen Display entlang der horizontalen Achse darstellbar sein. Die Höhe und Breite der Quadrate in der Heatmap muss entsprechend gewählt werden.
 
 \subsection{Präsentation der Visualisierungen}
 % Präsentieren sie die visuelle Abbildungen und Kodierungen der Daten und Interaktionsmöglichkeiten. 
@@ -30,13 +57,18 @@
 %Die eben beschriebenen Präsentationen und Begründungen sollen für jede der drei folgenden Visualisierungen durchgeführt werden. 
 \textbf{... TODO ...}
 \subsubsection{Visualisierung Eins}
+%Medaillenverteilung eines Landes nach Sportart in einem Sunburst-Diagramm.
 ...
 \subsubsection{Visualisierung Zwei}
+%Medaillenspiegel im Verhältnis zu anderen Faktoren gesetzt. Die Platzierung in einem Faktoren wird als Parallele Koordinate dargestellt
 ...
 \subsubsection{Visualisierung Drei}
+%Heatmap mit Nation und Jahr als Achsen
 ...
 
 \subsection{Interaktion}
 % Wie einzelne Interaktionen zusammen hängen
 % Die präsentierten Visualisierungstechniken müssen interaktiv zu einer Anwendung verknüpft werden. Die Interaktion mit einer Visualisierung soll in den anderen Visualisierungen zu einer Änderung führen. Erklären sie die möglichen Interaktionen mit den einzelnen Visualisierungen und die möglichen Verknüpfungen zwischen ihnen. Begründen Sie warum die konkreten Interaktionen umgesetzt wurden und welche Zwecke für die Anwenderinnen mit ihnen unterstützt werden. Begründen sie ebenfalls warum sie andere Interaktionsmöglichkeiten nicht umgesetzt haben. Wenn sie keine der geforderten Interaktionen umsetzen, erhalten Sie im gesamten Projekt deutlichen Punktabzug.
-\textbf{... TODO ...}
+Stichpunkte:\\
+- Klick auf Land im Medaillenspiegel öffnet Sunburst-Visualisierung mit Verteilung der Medaillen des entsprechenden Landes\\
+- In Medaillenspiegel Tabelle Spalte mit Checkbox um Länder für Parallele Koordinaten auszuwählen. Standardmäßig die besten 10 ausgewählt.\\

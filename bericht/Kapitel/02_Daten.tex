@@ -1,14 +1,51 @@
 \section{Daten}
 % Beschreiben Sie vorhandene Daten. Gehen sie kritisch darauf ein, in wie weit sich die Daten für die Bearbeitung der Fragestellungen und dem Erreichen von Lösungen für die oben beschriebene Zielgruppen eignen.
-\textbf{... TODO ...}
+
+Die Daten des quantitativen Medaillenspiegels werden von vielen Quellen bereitgestellt. Jedoch ist dieser für unsere Analyse zu allgemein. Die Platzierungen ergeben sich lediglich aus der Anzahl gewonnener Goldmedaillen. Bei gleicher Anzahl entscheidet die Anzahl an Silber- und Bronzemedaillen über die Platzierung. Gewinnt eine Nation eine Goldmedaille, belegt diese also einen besseren Platz als eine Nation mit null Goldmedaillen, aber 10 Silbermedaillen. Offensichtlich ist dieses einfache Verfahren zu trivial, um die Frage nach der sportlich erfolgreichsten Nation adäquat zu beantworten.
+
+Für eine detailliertere Analyse werden einerseits die Informationen benötigt, welche Medaillen ein konkretes Land in einer Sportart gewonnen hat, um die Verteilung der Medaillen zu analysieren. Andererseits sind für die Analyse der historischen Entwicklung der Medaillengewinner eines Landes Informationen über alle Medaillengewinner der Olympischen Sommerspiele erforderlich. Auf Kaggle steht ein Datensatz frei verfügbar, der diesen Anforderungen gerecht wird \cite{kaggleAllTime}. Dieser enthält Informationen zu jedem Sportler, der jemals an einer Olympiade teilgenommen hat. Zu jedem Sportler wird die absolvierte Sportart und gegebenenfalls die gewonnene Medaille angegeben.
+
 
 \subsection{Technische Bereitstellung}
 % Erklären sie die technische Bereitstellung der Daten.
 % Wie sind die Daten zugänglich?
 % Welche Formate werden genutzt.
 % Gibt es Besonderheiten beim Lesen der Formate?
+Der Datensatz \cite{kaggleAllTime} besteht aus 253.000 Einträgen und stellt Informationen von den ersten Olympischen Sommerspielen der Neuzeit im Jahre 1896 bis 2024 bereit. Dieser kann im \texttt{CSV}-Format von der Webseite frei heruntergeladen werden. Für die Einträge werden die folgenden Attribute bereitgestellt:
+\begin{itemize}
+    \item \texttt{player\_id}: Einzigartiger Bezeichner für jeden Athleten
+    \item \texttt{Name}: Name des Athleten
+    \item \texttt{Sex}: Geschlecht (M/F) des Athleten
+    \item \texttt{Team}: Repräsentiertes Land
+    \item \texttt{NOC}: IOC-Ländercode des repräsentierten Landes
+    \item \texttt{Year}: Jahr 
+    \item \texttt{Season}: Saison der Olympischen Spiele (Summer/Winter)
+    \item \texttt{City}: Austragungsort der Olympischen Spiele
+    \item \texttt{Sport}: Sportart, in welcher der Athlet teilgenommen hat
+    \item \texttt{Event}: Konkretes Event in der Sportart
+    \item \texttt{Medal}: Gewonnene Medaille (Gold, Silver, Bronze) oder \enquote{No medal} 
+\end{itemize}
+Diese Daten können in \texttt{Elm} direkt über einen entsprechenden Decoder verarbeitet werden.\\
+
 % Haben sie die Daten sinnvoll mit weiteren Datenquellen ergänzt? Wenn ja, wie?
-\textbf{... TODO ...}
+Für die Analyse mit den qualitativen Einflussfaktoren werden die nachfolgenden Kennzahlen genutzt, welche von den aufgeführten Quellen bezogen werden:
+\begin{itemize}
+    % Für Einwohnerzahl könnte man vllt die Datensätze von Kaggle nehmen:
+    % 1960 - 2022: https://www.kaggle.com/datasets/ayushparwal2026/country-population-from-1960-to-2022
+    % 2023: https://www.kaggle.com/datasets/rajkumarpandey02/2023-world-population-by-country
+    % 2024: https://www.kaggle.com/datasets/dataanalyst001/world-population-by-country-2024
+    
+    % Für Bruttoinlandsprodukt:
+    % 1999 - 2022: https://www.kaggle.com/datasets/alejopaullier/-gdp-by-country-1999-2022
+
+    % Einwohnerzahl und Median Alter - Stand 2024
+    % https://www.kaggle.com/datasets/samithsachidanandan/world-population-by-countries-2025
+    % Bruttoinlandsprodukt - Stand 2023
+    % https://www.kaggle.com/datasets/nelgiriyewithana/countries-of-the-world-2023
+    \item \texttt{Einwohnerzahl}: \cite{kagglePopulation}
+    \item \texttt{Bruttoinlandsprodukt}: \cite{kaggleBIP}
+    \item  \texttt{Median Alter der Bevölkerung}: \cite{kagglePopulation}
+\end{itemize}
 
 \subsection{Datenvorverarbeitung}
 % [ ] Beschreiben sie die Datenvorverarbeitung. Welche Datenvorverarbeitungsschritte sind notwendig? Beschreiben Sie die einzelnen Schritte und begründen sie z.B. warum werden manche Daten weggelassen, über welche Mengen werden Durchschnitte berechnet, warum sind die so berechneten Werte aussagekräftiger als andere Werte. Wenn möglich sollen sie die Datenvorverarbeitung in Elm programmieren, so dass ihre Anwendung auf eine Änderung der Rohdaten reagieren kann.
