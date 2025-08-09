@@ -5188,63 +5188,8 @@ var $author$project$Update$update = F2(
 			model,
 			{message: newMessage});
 	});
-var $author$project$Model$ChangeMessage = function (a) {
-	return {$: 'ChangeMessage', a: a};
-};
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$div = _VirtualDom_node('div');
-var $elm$html$Html$h1 = _VirtualDom_node('h1');
-var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
-};
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
+var $elm$html$Html$a = _VirtualDom_node('a');
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -5253,58 +5198,216 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			key,
 			$elm$json$Json$Encode$string(string));
 	});
-var $elm$html$Html$Attributes$placeholder = $elm$html$Html$Attributes$stringProperty('placeholder');
+var $elm$html$Html$Attributes$alt = $elm$html$Html$Attributes$stringProperty('alt');
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
+var $elm$html$Html$img = _VirtualDom_node('img');
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $author$project$View$headerSection = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+			A2($elm$html$Html$Attributes$style, 'padding', '20px'),
+			A2($elm$html$Html$Attributes$style, 'background-color', '#f8f9fa')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'margin-bottom', '20px')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('#medaillenspiegel'),
+							A2($elm$html$Html$Attributes$style, 'margin', '0 15px'),
+							A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+							A2($elm$html$Html$Attributes$style, 'color', '#007cba'),
+							A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Medaillenspiegel')
+						])),
+					$elm$html$Html$text(' | '),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('#medaillenverteilung'),
+							A2($elm$html$Html$Attributes$style, 'margin', '0 15px'),
+							A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+							A2($elm$html$Html$Attributes$style, 'color', '#007cba'),
+							A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Medaillenverteilung')
+						])),
+					$elm$html$Html$text(' | '),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('#visualisierung3'),
+							A2($elm$html$Html$Attributes$style, 'margin', '0 15px'),
+							A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+							A2($elm$html$Html$Attributes$style, 'color', '#007cba'),
+							A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Visualisierung 3')
+						])),
+					$elm$html$Html$text(' | '),
+					A2(
+					$elm$html$Html$a,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$href('#visualisierung4'),
+							A2($elm$html$Html$Attributes$style, 'margin', '0 15px'),
+							A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+							A2($elm$html$Html$Attributes$style, 'color', '#007cba'),
+							A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Visualisierung 4')
+						]))
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'margin', '30px 0')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$img,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$src('https://upload.wikimedia.org/wikipedia/commons/5/5c/Olympic_rings_without_rims.svg'),
+							$elm$html$Html$Attributes$alt('Olympische Ringe'),
+							A2($elm$html$Html$Attributes$style, 'width', '300px'),
+							A2($elm$html$Html$Attributes$style, 'height', 'auto')
+						]),
+					_List_Nil)
+				])),
+			A2(
+			$elm$html$Html$h1,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'color', '#333'),
+					A2($elm$html$Html$Attributes$style, 'margin', '20px 0'),
+					A2($elm$html$Html$Attributes$style, 'font-size', '2.5em')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Analyse des Medaillenspiegels der Olympischen Sommerspiele 2024')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'max-width', '800px'),
+					A2($elm$html$Html$Attributes$style, 'margin', '0 auto'),
+					A2($elm$html$Html$Attributes$style, 'padding', '20px'),
+					A2($elm$html$Html$Attributes$style, 'border', '1px solid #ddd'),
+					A2($elm$html$Html$Attributes$style, 'border-radius', '5px'),
+					A2($elm$html$Html$Attributes$style, 'background-color', '#fff')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$p,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Diese interaktive Analyse führt Sie durch verschiedene Perspektiven auf die Medaillenverteilung der Olympischen Sommerspiele 2024. Scrollen Sie nach unten oder nutzen Sie die Navigation, um verschiedene Visualisierungen zu erkunden.')
+						]))
+				]))
+		]));
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $author$project$View$medaillenspiegelSection = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$id('medaillenspiegel'),
+			A2($elm$html$Html$Attributes$style, 'margin', '60px 0'),
+			A2($elm$html$Html$Attributes$style, 'padding', '20px')
+		]),
+	_List_Nil);
+var $author$project$View$medaillenverteilungSection = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$id('medaillenverteilung'),
+			A2($elm$html$Html$Attributes$style, 'margin', '60px 0'),
+			A2($elm$html$Html$Attributes$style, 'padding', '20px'),
+			A2($elm$html$Html$Attributes$style, 'background-color', '#f8f9fa')
+		]),
+	_List_Nil);
+var $author$project$View$visualisierung3 = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$id('visualisierung3'),
+			A2($elm$html$Html$Attributes$style, 'margin', '60px 0'),
+			A2($elm$html$Html$Attributes$style, 'padding', '20px')
+		]),
+	_List_Nil);
+var $author$project$View$visualisierung4 = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$id('visualisierung4'),
+			A2($elm$html$Html$Attributes$style, 'margin', '60px 0'),
+			A2($elm$html$Html$Attributes$style, 'padding', '20px'),
+			A2($elm$html$Html$Attributes$style, 'background-color', '#f8f9fa')
+		]),
+	_List_Nil);
 var $author$project$View$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
 		_List_fromArray(
 			[
-				A2(
-				$elm$html$Html$h1,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(model.message)
-					])),
-				A2(
-				$elm$html$Html$input,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$placeholder('Gib eine neue Nachricht ein...'),
-						$elm$html$Html$Events$onInput($author$project$Model$ChangeMessage)
-					]),
-				_List_Nil),
+				A2($elm$html$Html$Attributes$style, 'font-family', 'Arial, sans-serif')
+			]),
+		_List_fromArray(
+			[
+				$author$project$View$headerSection,
 				A2(
 				$elm$html$Html$div,
-				_List_Nil,
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick(
-								$author$project$Model$ChangeMessage('Hello World!'))
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Hello World!')
-							])),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick(
-								$author$project$Model$ChangeMessage('Hallo Welt!'))
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Hallo Welt!')
-							]))
-					]))
+						A2($elm$html$Html$Attributes$style, 'max-width', '1200px'),
+						A2($elm$html$Html$Attributes$style, 'margin', '0 auto'),
+						A2($elm$html$Html$Attributes$style, 'padding', '20px')
+					]),
+				_List_fromArray(
+					[$author$project$View$medaillenspiegelSection, $author$project$View$medaillenverteilungSection, $author$project$View$visualisierung3, $author$project$View$visualisierung4]))
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
