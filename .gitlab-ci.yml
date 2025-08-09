@@ -1,9 +1,8 @@
 # The Docker image that will be used to build your app
 image: node:lts
-create-pages:
-  pages:
-    # The folder that contains the files to be exposed at the Page URL
-    publish: public
+pages:
+  # The folder that contains the files to be exposed at the Page URL
+  publish: public
   rules:
     # This ensures that only pushes to the default branch will trigger
     # a pages deploy
@@ -13,3 +12,5 @@ create-pages:
     - npm install -g elm
   script:
     - elm make src/Main.elm --output=public/main.js
+    - echo "The site will be deployed to $CI_PAGES_URL"
+
