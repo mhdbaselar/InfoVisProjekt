@@ -5349,16 +5349,250 @@ var $author$project$View$headerSection = A2(
 						]))
 				]))
 		]));
+var $elm$core$Basics$compare = _Utils_compare;
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $author$project$View$medaillenspiegelSection = A2(
-	$elm$html$Html$div,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$id('medaillenspiegel'),
-			A2($elm$html$Html$Attributes$style, 'margin', '60px 0'),
-			A2($elm$html$Html$Attributes$style, 'padding', '20px')
-		]),
-	_List_Nil);
+var $elm$core$List$sortWith = _List_sortWith;
+var $elm$html$Html$table = _VirtualDom_node('table');
+var $elm$html$Html$tbody = _VirtualDom_node('tbody');
+var $elm$html$Html$td = _VirtualDom_node('td');
+var $elm$html$Html$th = _VirtualDom_node('th');
+var $elm$html$Html$thead = _VirtualDom_node('thead');
+var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $author$project$View$medaillenspiegelSection = function (llm) {
+	var totalMed = function (lm) {
+		return (lm.gold + lm.silber) + lm.bronze;
+	};
+	var sortedLlm = A2(
+		$elm$core$List$sortWith,
+		F2(
+			function (a, b) {
+				return A2(
+					$elm$core$Basics$compare,
+					_Utils_Tuple2(
+						b.gold,
+						totalMed(b)),
+					_Utils_Tuple2(
+						a.gold,
+						totalMed(a)));
+			}),
+		llm);
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$id('medaillenspiegel'),
+				A2($elm$html$Html$Attributes$style, 'margin', '60px 0'),
+				A2($elm$html$Html$Attributes$style, 'padding', '20px')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'max-width', '900px'),
+						A2($elm$html$Html$Attributes$style, 'margin', '0 auto')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h2,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
+								A2($elm$html$Html$Attributes$style, 'margin-bottom', '20px'),
+								A2($elm$html$Html$Attributes$style, 'color', '#333')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('1. Medaillenspiegel')
+							])),
+						A2(
+						$elm$html$Html$table,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'width', '100%'),
+								A2($elm$html$Html$Attributes$style, 'border-collapse', 'collapse')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$thead,
+								_List_Nil,
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$tr,
+										_List_fromArray(
+											[
+												A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
+												A2($elm$html$Html$Attributes$style, 'color', 'white')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$th,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
+														A2($elm$html$Html$Attributes$style, 'padding', '12px')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Platz')
+													])),
+												A2(
+												$elm$html$Html$th,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
+														A2($elm$html$Html$Attributes$style, 'padding', '12px')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Land')
+													])),
+												A2(
+												$elm$html$Html$th,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+														A2($elm$html$Html$Attributes$style, 'padding', '12px')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Gold')
+													])),
+												A2(
+												$elm$html$Html$th,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+														A2($elm$html$Html$Attributes$style, 'padding', '12px')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Silber')
+													])),
+												A2(
+												$elm$html$Html$th,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+														A2($elm$html$Html$Attributes$style, 'padding', '12px')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Bronze')
+													])),
+												A2(
+												$elm$html$Html$th,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+														A2($elm$html$Html$Attributes$style, 'padding', '12px')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Gesamt')
+													]))
+											]))
+									])),
+								A2(
+								$elm$html$Html$tbody,
+								_List_Nil,
+								A2(
+									$elm$core$List$indexedMap,
+									F2(
+										function (i, lm) {
+											return A2(
+												$elm$html$Html$tr,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$style, 'border-bottom', '1px solid #ddd')
+													]),
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '10px')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(
+																$elm$core$String$fromInt(i + 1))
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(lm.land)
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(
+																$elm$core$String$fromInt(lm.gold))
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(
+																$elm$core$String$fromInt(lm.silber))
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(
+																$elm$core$String$fromInt(lm.bronze))
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+																A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(
+																$elm$core$String$fromInt(
+																	totalMed(lm)))
+															]))
+													]));
+										}),
+									sortedLlm))
+							]))
+					]))
+			]));
+};
 var $author$project$View$medaillenverteilungSection = A2(
 	$elm$html$Html$div,
 	_List_fromArray(
@@ -5369,6 +5603,14 @@ var $author$project$View$medaillenverteilungSection = A2(
 			A2($elm$html$Html$Attributes$style, 'background-color', '#f8f9fa')
 		]),
 	_List_Nil);
+var $author$project$Model$mockData = _List_fromArray(
+	[
+		{bronze: 42, gold: 40, land: 'USA', silber: 44},
+		{bronze: 24, gold: 40, land: 'China', silber: 27},
+		{bronze: 13, gold: 20, land: 'Japan', silber: 12},
+		{bronze: 16, gold: 18, land: 'Australien', silber: 19},
+		{bronze: 22, gold: 16, land: 'Frankreich', silber: 26}
+	]);
 var $author$project$View$visualisierung3 = A2(
 	$elm$html$Html$div,
 	_List_fromArray(
@@ -5407,7 +5649,12 @@ var $author$project$View$view = function (model) {
 						A2($elm$html$Html$Attributes$style, 'padding', '20px')
 					]),
 				_List_fromArray(
-					[$author$project$View$medaillenspiegelSection, $author$project$View$medaillenverteilungSection, $author$project$View$visualisierung3, $author$project$View$visualisierung4]))
+					[
+						$author$project$View$medaillenspiegelSection($author$project$Model$mockData),
+						$author$project$View$medaillenverteilungSection,
+						$author$project$View$visualisierung3,
+						$author$project$View$visualisierung4
+					]))
 			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$sandbox(
