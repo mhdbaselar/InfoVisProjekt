@@ -1,6 +1,6 @@
 module View exposing (..)
 
-import Html exposing (Html, div, h1, text, a, img, p)
+import Html exposing (Html, div, h1, h2, text, a, img, p, table, thead, tbody, tr, th, td)
 import Html.Attributes exposing (href, src, alt, style, id)
 import Model exposing (..)
 
@@ -11,7 +11,7 @@ view model =
           headerSection
         , -- Visualisierungen untereinander
           div [ style "max-width" "1200px", style "margin" "0 auto", style "padding" "20px" ]
-            [ medaillenspiegelSection
+            [ medaillenspiegelSection mockData
             , medaillenverteilungSection
             , visualisierung3
             , visualisierung4
@@ -48,10 +48,49 @@ headerSection =
         ]
 
 -- Sektion 1: Traditioneller Medaillenspiegel
-medaillenspiegelSection : Html Msg
-medaillenspiegelSection =
+medaillenspiegelSection : List LandMedaillen -> Html Msg
+medaillenspiegelSection llm =
+    let
+        totalMed : LandMedaillen -> Int
+        totalMed lm =
+            lm.gold + lm.silber + lm.bronze
+
+        -- Sortierung: absteigend nach Gold, dann Gesamt
+        sortedLlm =
+            llm
+                |> List.sortWith (\a b -> compare ( b.gold, totalMed b ) ( a.gold, totalMed a ))
+    in
     div [ id "medaillenspiegel", style "margin" "60px 0", style "padding" "20px" ]
-        [
+        [ div [ style "max-width" "900px", style "margin" "0 auto" ]
+            [ h2 [ style "text-align" "left", style "margin-bottom" "20px", style "color" "#333" ]
+                [ text "1. Medaillenspiegel" ]
+            , table [ style "width" "100%", style "border-collapse" "collapse" ]
+                [ thead []
+                    [ tr [ style "background-color" "#007cba", style "color" "white" ]
+                        [ th [ style "text-align" "left", style "padding" "12px" ] [ text "Platz" ]
+                        , th [ style "text-align" "left", style "padding" "12px" ] [ text "Land" ]
+                        , th [ style "text-align" "center", style "padding" "12px" ] [ text "Gold" ]
+                        , th [ style "text-align" "center", style "padding" "12px" ] [ text "Silber" ]
+                        , th [ style "text-align" "center", style "padding" "12px" ] [ text "Bronze" ]
+                        , th [ style "text-align" "center", style "padding" "12px" ] [ text "Gesamt" ]
+                        ]
+                    ]
+                , tbody []
+                    (sortedLlm
+                        |> List.indexedMap
+                            (\i lm ->
+                                tr [ style "border-bottom" "1px solid #ddd" ]
+                                    [ td [ style "padding" "10px" ] [ text (String.fromInt (i + 1)) ]
+                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text lm.land ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.gold) ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.silber) ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.bronze) ]
+                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt (totalMed lm)) ]
+                                    ]
+                            )
+                    )
+                ]
+            ]
         ]
 
 -- Sektion 2: Medaillenverteilung
