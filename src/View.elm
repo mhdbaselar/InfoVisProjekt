@@ -91,26 +91,47 @@ medaillenspiegelSection llm =
                     )
                 ]
             ]
+        , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
+            [ nextLink "#medaillenverteilung" ]
         ]
 
 -- Sektion 2: Medaillenverteilung
 medaillenverteilungSection : Html Msg
 medaillenverteilungSection =
     div [ id "medaillenverteilung", style "margin" "60px 0", style "padding" "20px", style "background-color" "#f8f9fa" ]
-        [
+        [ h2 [ style "margin" "0 0 16px 0" ] [ text "2. Medaillenverteilung" ]
+        , div [ style "text-align" "right" ] [ nextLink "#visualisierung3" ]
         ]
 
 -- Sektion 3: Visualisierung 3
 visualisierung3 : Html Msg
 visualisierung3 =
     div [ id "visualisierung3", style "margin" "60px 0", style "padding" "20px" ]
-        [
+        [ h2 [ style "margin" "0 0 16px 0" ] [ text "3. Visualisierung" ]
+        , div [ style "text-align" "right" ] [ nextLink "#visualisierung4" ]
         ]
 
 -- Sektion 4: Visualisierung 4
 visualisierung4 : Html Msg
 visualisierung4 =
     div [ id "visualisierung4", style "margin" "60px 0", style "padding" "20px", style "background-color" "#f8f9fa" ]
-        [
+        [ h2 [ style "margin" "0 0 16px 0" ] [ text "4. Visualisierung" ]
+        , div [ style "text-align" "right" ] [ nextLink "#medaillenspiegel" ]
         ]
+
+
+-- "Weiter" CTA as styled link
+nextLink : String -> Html msg
+nextLink target =
+    a
+        [ href target
+        , style "display" "inline-block"
+        , style "padding" "10px 16px"
+        , style "background-color" "#007cba"
+        , style "color" "#fff"
+        , style "border-radius" "4px"
+        , style "text-decoration" "none"
+        ]
+        [ text "Weiter" ]
+
 
