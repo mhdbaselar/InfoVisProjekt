@@ -7472,14 +7472,28 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 		$elm$core$List$sortWith,
 		F2(
 			function (a, b) {
-				return A2(
-					$elm$core$Basics$compare,
-					_Utils_Tuple2(
-						b.gold,
-						totalMed(b)),
-					_Utils_Tuple2(
-						a.gold,
-						totalMed(a)));
+				var _v1 = A2($elm$core$Basics$compare, b.gold, a.gold);
+				if (_v1.$ === 'EQ') {
+					var _v2 = A2(
+						$elm$core$Basics$compare,
+						totalMed(b),
+						totalMed(a));
+					if (_v2.$ === 'EQ') {
+						var _v3 = A2($elm$core$Basics$compare, b.silver, a.silver);
+						if (_v3.$ === 'EQ') {
+							return A2($elm$core$Basics$compare, b.bronze, a.bronze);
+						} else {
+							var ord = _v3;
+							return ord;
+						}
+					} else {
+						var ord = _v2;
+						return ord;
+					}
+				} else {
+					var ord = _v1;
+					return ord;
+				}
 			}),
 		model.medals);
 	return A2(

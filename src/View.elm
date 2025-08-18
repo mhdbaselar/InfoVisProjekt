@@ -55,10 +55,24 @@ medaillenspiegelSection model =
         totalMed lm =
             lm.gold + lm.silver + lm.bronze
 
-        -- Sortierung: absteigend nach Gold, dann Gesamt
+        -- Sortierung: absteigend nach Gold -> Gesamt -> Silber -> Bronze
         sortedLlm =
             model.medals
-                |> List.sortWith (\a b -> compare ( b.gold, totalMed b ) ( a.gold, totalMed a ))
+                |> List.sortWith (\a b ->
+                    case compare b.gold a.gold of
+                        EQ ->
+                            case compare (totalMed b) (totalMed a) of
+                                EQ ->
+                                    case compare b.silver a.silver of
+                                        EQ ->
+                                            compare b.bronze a.bronze
+                                        ord ->
+                                            ord
+                                ord ->
+                                    ord
+                        ord ->
+                            ord
+                )
     in
     div [ id "medaillenspiegel", style "margin" "60px 0", style "padding" "20px" ]
         [ div [ style "max-width" "900px", style "margin" "0 auto" ]
