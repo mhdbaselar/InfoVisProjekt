@@ -4370,8 +4370,182 @@ function _Browser_load(url)
 		}
 	}));
 }
-var $author$project$Model$init = {message: 'Hello World!'};
-var $elm$core$Basics$EQ = {$: 'EQ'};
+
+
+
+// SEND REQUEST
+
+var _Http_toTask = F3(function(router, toTask, request)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		function done(response) {
+			callback(toTask(request.expect.a(response)));
+		}
+
+		var xhr = new XMLHttpRequest();
+		xhr.addEventListener('error', function() { done($elm$http$Http$NetworkError_); });
+		xhr.addEventListener('timeout', function() { done($elm$http$Http$Timeout_); });
+		xhr.addEventListener('load', function() { done(_Http_toResponse(request.expect.b, xhr)); });
+		$elm$core$Maybe$isJust(request.tracker) && _Http_track(router, xhr, request.tracker.a);
+
+		try {
+			xhr.open(request.method, request.url, true);
+		} catch (e) {
+			return done($elm$http$Http$BadUrl_(request.url));
+		}
+
+		_Http_configureRequest(xhr, request);
+
+		request.body.a && xhr.setRequestHeader('Content-Type', request.body.a);
+		xhr.send(request.body.b);
+
+		return function() { xhr.c = true; xhr.abort(); };
+	});
+});
+
+
+// CONFIGURE
+
+function _Http_configureRequest(xhr, request)
+{
+	for (var headers = request.headers; headers.b; headers = headers.b) // WHILE_CONS
+	{
+		xhr.setRequestHeader(headers.a.a, headers.a.b);
+	}
+	xhr.timeout = request.timeout.a || 0;
+	xhr.responseType = request.expect.d;
+	xhr.withCredentials = request.allowCookiesFromOtherDomains;
+}
+
+
+// RESPONSES
+
+function _Http_toResponse(toBody, xhr)
+{
+	return A2(
+		200 <= xhr.status && xhr.status < 300 ? $elm$http$Http$GoodStatus_ : $elm$http$Http$BadStatus_,
+		_Http_toMetadata(xhr),
+		toBody(xhr.response)
+	);
+}
+
+
+// METADATA
+
+function _Http_toMetadata(xhr)
+{
+	return {
+		url: xhr.responseURL,
+		statusCode: xhr.status,
+		statusText: xhr.statusText,
+		headers: _Http_parseHeaders(xhr.getAllResponseHeaders())
+	};
+}
+
+
+// HEADERS
+
+function _Http_parseHeaders(rawHeaders)
+{
+	if (!rawHeaders)
+	{
+		return $elm$core$Dict$empty;
+	}
+
+	var headers = $elm$core$Dict$empty;
+	var headerPairs = rawHeaders.split('\r\n');
+	for (var i = headerPairs.length; i--; )
+	{
+		var headerPair = headerPairs[i];
+		var index = headerPair.indexOf(': ');
+		if (index > 0)
+		{
+			var key = headerPair.substring(0, index);
+			var value = headerPair.substring(index + 2);
+
+			headers = A3($elm$core$Dict$update, key, function(oldValue) {
+				return $elm$core$Maybe$Just($elm$core$Maybe$isJust(oldValue)
+					? value + ', ' + oldValue.a
+					: value
+				);
+			}, headers);
+		}
+	}
+	return headers;
+}
+
+
+// EXPECT
+
+var _Http_expect = F3(function(type, toBody, toValue)
+{
+	return {
+		$: 0,
+		d: type,
+		b: toBody,
+		a: toValue
+	};
+});
+
+var _Http_mapExpect = F2(function(func, expect)
+{
+	return {
+		$: 0,
+		d: expect.d,
+		b: expect.b,
+		a: function(x) { return func(expect.a(x)); }
+	};
+});
+
+function _Http_toDataView(arrayBuffer)
+{
+	return new DataView(arrayBuffer);
+}
+
+
+// BODY and PARTS
+
+var _Http_emptyBody = { $: 0 };
+var _Http_pair = F2(function(a, b) { return { $: 0, a: a, b: b }; });
+
+function _Http_toFormData(parts)
+{
+	for (var formData = new FormData(); parts.b; parts = parts.b) // WHILE_CONS
+	{
+		var part = parts.a;
+		formData.append(part.a, part.b);
+	}
+	return formData;
+}
+
+var _Http_bytesToBlob = F2(function(mime, bytes)
+{
+	return new Blob([bytes], { type: mime });
+});
+
+
+// PROGRESS
+
+function _Http_track(router, xhr, tracker)
+{
+	// TODO check out lengthComputable on loadstart event
+
+	xhr.upload.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Sending({
+			sent: event.loaded,
+			size: event.total
+		}))));
+	});
+	xhr.addEventListener('progress', function(event) {
+		if (xhr.c) { return; }
+		_Scheduler_rawSpawn(A2($elm$core$Platform$sendToSelf, router, _Utils_Tuple2(tracker, $elm$http$Http$Receiving({
+			received: event.loaded,
+			size: event.lengthComputable ? $elm$core$Maybe$Just(event.total) : $elm$core$Maybe$Nothing
+		}))));
+	});
+}var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
@@ -5159,34 +5333,1927 @@ var $elm$core$Task$perform = F2(
 			$elm$core$Task$Perform(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$browser$Browser$element = _Browser_element;
+var $author$project$Model$csvUrl = '/data/olympics_dataset.csv';
+var $author$project$Model$DataReceived = function (a) {
+	return {$: 'DataReceived', a: a};
+};
+var $elm$http$Http$BadStatus_ = F2(
+	function (a, b) {
+		return {$: 'BadStatus_', a: a, b: b};
+	});
+var $elm$http$Http$BadUrl_ = function (a) {
+	return {$: 'BadUrl_', a: a};
+};
+var $elm$http$Http$GoodStatus_ = F2(
+	function (a, b) {
+		return {$: 'GoodStatus_', a: a, b: b};
+	});
+var $elm$http$Http$NetworkError_ = {$: 'NetworkError_'};
+var $elm$http$Http$Receiving = function (a) {
+	return {$: 'Receiving', a: a};
+};
+var $elm$http$Http$Sending = function (a) {
+	return {$: 'Sending', a: a};
+};
+var $elm$http$Http$Timeout_ = {$: 'Timeout_'};
+var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
+var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $elm$core$Maybe$isJust = function (maybe) {
+	if (maybe.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var $elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var $elm$core$Basics$compare = _Utils_compare;
+var $elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _v1 = A2($elm$core$Basics$compare, targetKey, key);
+				switch (_v1.$) {
+					case 'LT':
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 'EQ':
+						return $elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var $elm$core$Dict$Black = {$: 'Black'};
+var $elm$core$Dict$RBNode_elm_builtin = F5(
+	function (a, b, c, d, e) {
+		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
+	});
+var $elm$core$Dict$Red = {$: 'Red'};
+var $elm$core$Dict$balance = F5(
+	function (color, key, value, left, right) {
+		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
+			var _v1 = right.a;
+			var rK = right.b;
+			var rV = right.c;
+			var rLeft = right.d;
+			var rRight = right.e;
+			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
+				var _v3 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var lLeft = left.d;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					key,
+					value,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					rK,
+					rV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, left, rLeft),
+					rRight);
+			}
+		} else {
+			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
+				var _v5 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var _v6 = left.d;
+				var _v7 = _v6.a;
+				var llK = _v6.b;
+				var llV = _v6.c;
+				var llLeft = _v6.d;
+				var llRight = _v6.e;
+				var lRight = left.e;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Red,
+					lK,
+					lV,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, lRight, right));
+			} else {
+				return A5($elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
+			}
+		}
+	});
+var $elm$core$Dict$insertHelp = F3(
+	function (key, value, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
+		} else {
+			var nColor = dict.a;
+			var nKey = dict.b;
+			var nValue = dict.c;
+			var nLeft = dict.d;
+			var nRight = dict.e;
+			var _v1 = A2($elm$core$Basics$compare, key, nKey);
+			switch (_v1.$) {
+				case 'LT':
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						A3($elm$core$Dict$insertHelp, key, value, nLeft),
+						nRight);
+				case 'EQ':
+					return A5($elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
+				default:
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						nLeft,
+						A3($elm$core$Dict$insertHelp, key, value, nRight));
+			}
+		}
+	});
+var $elm$core$Dict$insert = F3(
+	function (key, value, dict) {
+		var _v0 = A3($elm$core$Dict$insertHelp, key, value, dict);
+		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$getMin = function (dict) {
+	getMin:
+	while (true) {
+		if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
+			var left = dict.d;
+			var $temp$dict = left;
+			dict = $temp$dict;
+			continue getMin;
+		} else {
+			return dict;
+		}
+	}
+};
+var $elm$core$Dict$moveRedLeft = function (dict) {
+	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
+		if ((dict.e.d.$ === 'RBNode_elm_builtin') && (dict.e.d.a.$ === 'Red')) {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v1 = dict.d;
+			var lClr = _v1.a;
+			var lK = _v1.b;
+			var lV = _v1.c;
+			var lLeft = _v1.d;
+			var lRight = _v1.e;
+			var _v2 = dict.e;
+			var rClr = _v2.a;
+			var rK = _v2.b;
+			var rV = _v2.c;
+			var rLeft = _v2.d;
+			var _v3 = rLeft.a;
+			var rlK = rLeft.b;
+			var rlV = rLeft.c;
+			var rlL = rLeft.d;
+			var rlR = rLeft.e;
+			var rRight = _v2.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				$elm$core$Dict$Red,
+				rlK,
+				rlV,
+				A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					rlL),
+				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, rK, rV, rlR, rRight));
+		} else {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v4 = dict.d;
+			var lClr = _v4.a;
+			var lK = _v4.b;
+			var lV = _v4.c;
+			var lLeft = _v4.d;
+			var lRight = _v4.e;
+			var _v5 = dict.e;
+			var rClr = _v5.a;
+			var rK = _v5.b;
+			var rV = _v5.c;
+			var rLeft = _v5.d;
+			var rRight = _v5.e;
+			if (clr.$ === 'Black') {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			}
+		}
+	} else {
+		return dict;
+	}
+};
+var $elm$core$Dict$moveRedRight = function (dict) {
+	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
+		if ((dict.d.d.$ === 'RBNode_elm_builtin') && (dict.d.d.a.$ === 'Red')) {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v1 = dict.d;
+			var lClr = _v1.a;
+			var lK = _v1.b;
+			var lV = _v1.c;
+			var _v2 = _v1.d;
+			var _v3 = _v2.a;
+			var llK = _v2.b;
+			var llV = _v2.c;
+			var llLeft = _v2.d;
+			var llRight = _v2.e;
+			var lRight = _v1.e;
+			var _v4 = dict.e;
+			var rClr = _v4.a;
+			var rK = _v4.b;
+			var rV = _v4.c;
+			var rLeft = _v4.d;
+			var rRight = _v4.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				$elm$core$Dict$Red,
+				lK,
+				lV,
+				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, llK, llV, llLeft, llRight),
+				A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					lRight,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight)));
+		} else {
+			var clr = dict.a;
+			var k = dict.b;
+			var v = dict.c;
+			var _v5 = dict.d;
+			var lClr = _v5.a;
+			var lK = _v5.b;
+			var lV = _v5.c;
+			var lLeft = _v5.d;
+			var lRight = _v5.e;
+			var _v6 = dict.e;
+			var rClr = _v6.a;
+			var rK = _v6.b;
+			var rV = _v6.c;
+			var rLeft = _v6.d;
+			var rRight = _v6.e;
+			if (clr.$ === 'Black') {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					$elm$core$Dict$Black,
+					k,
+					v,
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, rK, rV, rLeft, rRight));
+			}
+		}
+	} else {
+		return dict;
+	}
+};
+var $elm$core$Dict$removeHelpPrepEQGT = F7(
+	function (targetKey, dict, color, key, value, left, right) {
+		if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
+			var _v1 = left.a;
+			var lK = left.b;
+			var lV = left.c;
+			var lLeft = left.d;
+			var lRight = left.e;
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				lK,
+				lV,
+				lLeft,
+				A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Red, key, value, lRight, right));
+		} else {
+			_v2$2:
+			while (true) {
+				if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Black')) {
+					if (right.d.$ === 'RBNode_elm_builtin') {
+						if (right.d.a.$ === 'Black') {
+							var _v3 = right.a;
+							var _v4 = right.d;
+							var _v5 = _v4.a;
+							return $elm$core$Dict$moveRedRight(dict);
+						} else {
+							break _v2$2;
+						}
+					} else {
+						var _v6 = right.a;
+						var _v7 = right.d;
+						return $elm$core$Dict$moveRedRight(dict);
+					}
+				} else {
+					break _v2$2;
+				}
+			}
+			return dict;
+		}
+	});
+var $elm$core$Dict$removeMin = function (dict) {
+	if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
+		var color = dict.a;
+		var key = dict.b;
+		var value = dict.c;
+		var left = dict.d;
+		var lColor = left.a;
+		var lLeft = left.d;
+		var right = dict.e;
+		if (lColor.$ === 'Black') {
+			if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
+				var _v3 = lLeft.a;
+				return A5(
+					$elm$core$Dict$RBNode_elm_builtin,
+					color,
+					key,
+					value,
+					$elm$core$Dict$removeMin(left),
+					right);
+			} else {
+				var _v4 = $elm$core$Dict$moveRedLeft(dict);
+				if (_v4.$ === 'RBNode_elm_builtin') {
+					var nColor = _v4.a;
+					var nKey = _v4.b;
+					var nValue = _v4.c;
+					var nLeft = _v4.d;
+					var nRight = _v4.e;
+					return A5(
+						$elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						$elm$core$Dict$removeMin(nLeft),
+						nRight);
+				} else {
+					return $elm$core$Dict$RBEmpty_elm_builtin;
+				}
+			}
+		} else {
+			return A5(
+				$elm$core$Dict$RBNode_elm_builtin,
+				color,
+				key,
+				value,
+				$elm$core$Dict$removeMin(left),
+				right);
+		}
+	} else {
+		return $elm$core$Dict$RBEmpty_elm_builtin;
+	}
+};
+var $elm$core$Dict$removeHelp = F2(
+	function (targetKey, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		} else {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			if (_Utils_cmp(targetKey, key) < 0) {
+				if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Black')) {
+					var _v4 = left.a;
+					var lLeft = left.d;
+					if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
+						var _v6 = lLeft.a;
+						return A5(
+							$elm$core$Dict$RBNode_elm_builtin,
+							color,
+							key,
+							value,
+							A2($elm$core$Dict$removeHelp, targetKey, left),
+							right);
+					} else {
+						var _v7 = $elm$core$Dict$moveRedLeft(dict);
+						if (_v7.$ === 'RBNode_elm_builtin') {
+							var nColor = _v7.a;
+							var nKey = _v7.b;
+							var nValue = _v7.c;
+							var nLeft = _v7.d;
+							var nRight = _v7.e;
+							return A5(
+								$elm$core$Dict$balance,
+								nColor,
+								nKey,
+								nValue,
+								A2($elm$core$Dict$removeHelp, targetKey, nLeft),
+								nRight);
+						} else {
+							return $elm$core$Dict$RBEmpty_elm_builtin;
+						}
+					}
+				} else {
+					return A5(
+						$elm$core$Dict$RBNode_elm_builtin,
+						color,
+						key,
+						value,
+						A2($elm$core$Dict$removeHelp, targetKey, left),
+						right);
+				}
+			} else {
+				return A2(
+					$elm$core$Dict$removeHelpEQGT,
+					targetKey,
+					A7($elm$core$Dict$removeHelpPrepEQGT, targetKey, dict, color, key, value, left, right));
+			}
+		}
+	});
+var $elm$core$Dict$removeHelpEQGT = F2(
+	function (targetKey, dict) {
+		if (dict.$ === 'RBNode_elm_builtin') {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			if (_Utils_eq(targetKey, key)) {
+				var _v1 = $elm$core$Dict$getMin(right);
+				if (_v1.$ === 'RBNode_elm_builtin') {
+					var minKey = _v1.b;
+					var minValue = _v1.c;
+					return A5(
+						$elm$core$Dict$balance,
+						color,
+						minKey,
+						minValue,
+						left,
+						$elm$core$Dict$removeMin(right));
+				} else {
+					return $elm$core$Dict$RBEmpty_elm_builtin;
+				}
+			} else {
+				return A5(
+					$elm$core$Dict$balance,
+					color,
+					key,
+					value,
+					left,
+					A2($elm$core$Dict$removeHelp, targetKey, right));
+			}
+		} else {
+			return $elm$core$Dict$RBEmpty_elm_builtin;
+		}
+	});
+var $elm$core$Dict$remove = F2(
+	function (key, dict) {
+		var _v0 = A2($elm$core$Dict$removeHelp, key, dict);
+		if ((_v0.$ === 'RBNode_elm_builtin') && (_v0.a.$ === 'Red')) {
+			var _v1 = _v0.a;
+			var k = _v0.b;
+			var v = _v0.c;
+			var l = _v0.d;
+			var r = _v0.e;
+			return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, k, v, l, r);
+		} else {
+			var x = _v0;
+			return x;
+		}
+	});
+var $elm$core$Dict$update = F3(
+	function (targetKey, alter, dictionary) {
+		var _v0 = alter(
+			A2($elm$core$Dict$get, targetKey, dictionary));
+		if (_v0.$ === 'Just') {
+			var value = _v0.a;
+			return A3($elm$core$Dict$insert, targetKey, value, dictionary);
+		} else {
+			return A2($elm$core$Dict$remove, targetKey, dictionary);
+		}
+	});
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $elm$http$Http$expectStringResponse = F2(
+	function (toMsg, toResult) {
+		return A3(
+			_Http_expect,
+			'',
+			$elm$core$Basics$identity,
+			A2($elm$core$Basics$composeR, toResult, toMsg));
+	});
+var $elm$http$Http$BadBody = function (a) {
+	return {$: 'BadBody', a: a};
+};
+var $elm$http$Http$BadStatus = function (a) {
+	return {$: 'BadStatus', a: a};
+};
+var $elm$http$Http$BadUrl = function (a) {
+	return {$: 'BadUrl', a: a};
+};
+var $elm$http$Http$NetworkError = {$: 'NetworkError'};
+var $elm$http$Http$Timeout = {$: 'Timeout'};
+var $elm$core$Result$mapError = F2(
+	function (f, result) {
+		if (result.$ === 'Ok') {
+			var v = result.a;
+			return $elm$core$Result$Ok(v);
+		} else {
+			var e = result.a;
+			return $elm$core$Result$Err(
+				f(e));
+		}
+	});
+var $elm$http$Http$resolve = F2(
+	function (toResult, response) {
+		switch (response.$) {
+			case 'BadUrl_':
+				var url = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadUrl(url));
+			case 'Timeout_':
+				return $elm$core$Result$Err($elm$http$Http$Timeout);
+			case 'NetworkError_':
+				return $elm$core$Result$Err($elm$http$Http$NetworkError);
+			case 'BadStatus_':
+				var metadata = response.a;
+				return $elm$core$Result$Err(
+					$elm$http$Http$BadStatus(metadata.statusCode));
+			default:
+				var body = response.b;
+				return A2(
+					$elm$core$Result$mapError,
+					$elm$http$Http$BadBody,
+					toResult(body));
+		}
+	});
+var $elm$http$Http$expectString = function (toMsg) {
+	return A2(
+		$elm$http$Http$expectStringResponse,
+		toMsg,
+		$elm$http$Http$resolve($elm$core$Result$Ok));
+};
+var $elm$http$Http$emptyBody = _Http_emptyBody;
+var $elm$http$Http$Request = function (a) {
+	return {$: 'Request', a: a};
+};
+var $elm$http$Http$State = F2(
+	function (reqs, subs) {
+		return {reqs: reqs, subs: subs};
+	});
+var $elm$http$Http$init = $elm$core$Task$succeed(
+	A2($elm$http$Http$State, $elm$core$Dict$empty, _List_Nil));
+var $elm$core$Process$kill = _Scheduler_kill;
+var $elm$core$Process$spawn = _Scheduler_spawn;
+var $elm$http$Http$updateReqs = F3(
+	function (router, cmds, reqs) {
+		updateReqs:
+		while (true) {
+			if (!cmds.b) {
+				return $elm$core$Task$succeed(reqs);
+			} else {
+				var cmd = cmds.a;
+				var otherCmds = cmds.b;
+				if (cmd.$ === 'Cancel') {
+					var tracker = cmd.a;
+					var _v2 = A2($elm$core$Dict$get, tracker, reqs);
+					if (_v2.$ === 'Nothing') {
+						var $temp$router = router,
+							$temp$cmds = otherCmds,
+							$temp$reqs = reqs;
+						router = $temp$router;
+						cmds = $temp$cmds;
+						reqs = $temp$reqs;
+						continue updateReqs;
+					} else {
+						var pid = _v2.a;
+						return A2(
+							$elm$core$Task$andThen,
+							function (_v3) {
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A2($elm$core$Dict$remove, tracker, reqs));
+							},
+							$elm$core$Process$kill(pid));
+					}
+				} else {
+					var req = cmd.a;
+					return A2(
+						$elm$core$Task$andThen,
+						function (pid) {
+							var _v4 = req.tracker;
+							if (_v4.$ === 'Nothing') {
+								return A3($elm$http$Http$updateReqs, router, otherCmds, reqs);
+							} else {
+								var tracker = _v4.a;
+								return A3(
+									$elm$http$Http$updateReqs,
+									router,
+									otherCmds,
+									A3($elm$core$Dict$insert, tracker, pid, reqs));
+							}
+						},
+						$elm$core$Process$spawn(
+							A3(
+								_Http_toTask,
+								router,
+								$elm$core$Platform$sendToApp(router),
+								req)));
+				}
+			}
+		}
+	});
+var $elm$http$Http$onEffects = F4(
+	function (router, cmds, subs, state) {
+		return A2(
+			$elm$core$Task$andThen,
+			function (reqs) {
+				return $elm$core$Task$succeed(
+					A2($elm$http$Http$State, reqs, subs));
+			},
+			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
+	});
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$http$Http$maybeSend = F4(
+	function (router, desiredTracker, progress, _v0) {
+		var actualTracker = _v0.a;
+		var toMsg = _v0.b;
+		return _Utils_eq(desiredTracker, actualTracker) ? $elm$core$Maybe$Just(
+			A2(
+				$elm$core$Platform$sendToApp,
+				router,
+				toMsg(progress))) : $elm$core$Maybe$Nothing;
+	});
+var $elm$http$Http$onSelfMsg = F3(
+	function (router, _v0, state) {
+		var tracker = _v0.a;
+		var progress = _v0.b;
+		return A2(
+			$elm$core$Task$andThen,
+			function (_v1) {
+				return $elm$core$Task$succeed(state);
+			},
+			$elm$core$Task$sequence(
+				A2(
+					$elm$core$List$filterMap,
+					A3($elm$http$Http$maybeSend, router, tracker, progress),
+					state.subs)));
+	});
+var $elm$http$Http$Cancel = function (a) {
+	return {$: 'Cancel', a: a};
+};
+var $elm$http$Http$cmdMap = F2(
+	function (func, cmd) {
+		if (cmd.$ === 'Cancel') {
+			var tracker = cmd.a;
+			return $elm$http$Http$Cancel(tracker);
+		} else {
+			var r = cmd.a;
+			return $elm$http$Http$Request(
+				{
+					allowCookiesFromOtherDomains: r.allowCookiesFromOtherDomains,
+					body: r.body,
+					expect: A2(_Http_mapExpect, func, r.expect),
+					headers: r.headers,
+					method: r.method,
+					timeout: r.timeout,
+					tracker: r.tracker,
+					url: r.url
+				});
+		}
+	});
+var $elm$http$Http$MySub = F2(
+	function (a, b) {
+		return {$: 'MySub', a: a, b: b};
+	});
+var $elm$http$Http$subMap = F2(
+	function (func, _v0) {
+		var tracker = _v0.a;
+		var toMsg = _v0.b;
+		return A2(
+			$elm$http$Http$MySub,
+			tracker,
+			A2($elm$core$Basics$composeR, toMsg, func));
+	});
+_Platform_effectManagers['Http'] = _Platform_createManager($elm$http$Http$init, $elm$http$Http$onEffects, $elm$http$Http$onSelfMsg, $elm$http$Http$cmdMap, $elm$http$Http$subMap);
+var $elm$http$Http$command = _Platform_leaf('Http');
+var $elm$http$Http$subscription = _Platform_leaf('Http');
+var $elm$http$Http$request = function (r) {
+	return $elm$http$Http$command(
+		$elm$http$Http$Request(
+			{allowCookiesFromOtherDomains: false, body: r.body, expect: r.expect, headers: r.headers, method: r.method, timeout: r.timeout, tracker: r.tracker, url: r.url}));
+};
+var $elm$http$Http$get = function (r) {
+	return $elm$http$Http$request(
+		{body: $elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
+};
+var $author$project$Model$requestCsv = function (url) {
+	return $elm$http$Http$get(
+		{
+			expect: $elm$http$Http$expectString($author$project$Model$DataReceived),
+			url: url
+		});
+};
+var $author$project$Model$init = _Utils_Tuple2(
+	{error: $elm$core$Maybe$Nothing, loading: true, medaillen: _List_Nil},
+	$author$project$Model$requestCsv($author$project$Model$csvUrl));
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $elm$browser$Browser$sandbox = function (impl) {
-	return _Browser_element(
-		{
-			init: function (_v0) {
-				return _Utils_Tuple2(impl.init, $elm$core$Platform$Cmd$none);
+var $BrianHicks$elm_csv$Csv$Decode$FieldNamesFromFirstRow = {$: 'FieldNamesFromFirstRow'};
+var $BrianHicks$elm_csv$Csv$Decode$ParsingError = function (a) {
+	return {$: 'ParsingError', a: a};
+};
+var $elm$core$Result$andThen = F2(
+	function (callback, result) {
+		if (result.$ === 'Ok') {
+			var value = result.a;
+			return callback(value);
+		} else {
+			var msg = result.a;
+			return $elm$core$Result$Err(msg);
+		}
+	});
+var $BrianHicks$elm_csv$Csv$Decode$DecodingErrors = function (a) {
+	return {$: 'DecodingErrors', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Decode$OnlyColumn_ = {$: 'OnlyColumn_'};
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
+	});
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $BrianHicks$elm_csv$Csv$Decode$NoFieldNamesOnFirstRow = {$: 'NoFieldNamesOnFirstRow'};
+var $elm$core$String$trim = _String_trim;
+var $BrianHicks$elm_csv$Csv$Decode$getFieldNames = F2(
+	function (headers, rows) {
+		var fromList = function (names) {
+			return A3(
+				$elm$core$List$foldl,
+				F2(
+					function (name, _v2) {
+						var soFar = _v2.a;
+						var i = _v2.b;
+						return _Utils_Tuple2(
+							A3($elm$core$Dict$insert, name, i, soFar),
+							i + 1);
+					}),
+				_Utils_Tuple2($elm$core$Dict$empty, 0),
+				names).a;
+		};
+		switch (headers.$) {
+			case 'NoFieldNames':
+				return $elm$core$Result$Ok(
+					_Utils_Tuple3(
+						{available: false, names: $elm$core$Dict$empty},
+						0,
+						rows));
+			case 'CustomFieldNames':
+				var names = headers.a;
+				return $elm$core$Result$Ok(
+					_Utils_Tuple3(
+						{
+							available: true,
+							names: fromList(names)
+						},
+						0,
+						rows));
+			default:
+				if (!rows.b) {
+					return $elm$core$Result$Err($BrianHicks$elm_csv$Csv$Decode$NoFieldNamesOnFirstRow);
+				} else {
+					var first = rows.a;
+					var rest = rows.b;
+					return $elm$core$Result$Ok(
+						_Utils_Tuple3(
+							{
+								available: true,
+								names: fromList(
+									A2($elm$core$List$map, $elm$core$String$trim, first))
+							},
+							1,
+							rest));
+				}
+		}
+	});
+var $elm$core$Result$map = F2(
+	function (func, ra) {
+		if (ra.$ === 'Ok') {
+			var a = ra.a;
+			return $elm$core$Result$Ok(
+				func(a));
+		} else {
+			var e = ra.a;
+			return $elm$core$Result$Err(e);
+		}
+	});
+var $BrianHicks$elm_csv$Csv$Decode$applyDecoder = F3(
+	function (fieldNames, _v0, allRows) {
+		var decode = _v0.a;
+		var defaultLocation = $BrianHicks$elm_csv$Csv$Decode$OnlyColumn_;
+		return A2(
+			$elm$core$Result$andThen,
+			function (_v1) {
+				var resolvedNames = _v1.a;
+				var firstRowNumber = _v1.b;
+				var rows = _v1.c;
+				return A2(
+					$elm$core$Result$mapError,
+					A2(
+						$elm$core$Basics$composeL,
+						A2($elm$core$Basics$composeL, $BrianHicks$elm_csv$Csv$Decode$DecodingErrors, $elm$core$List$concat),
+						$elm$core$List$reverse),
+					A2(
+						$elm$core$Result$map,
+						$elm$core$List$reverse,
+						A3(
+							$elm$core$List$foldl,
+							F2(
+								function (row, _v2) {
+									var soFar = _v2.a;
+									var rowNum = _v2.b;
+									return _Utils_Tuple2(
+										function () {
+											var _v3 = A4(decode, defaultLocation, resolvedNames, rowNum, row);
+											if (_v3.$ === 'Ok') {
+												var val = _v3.a;
+												if (soFar.$ === 'Ok') {
+													var values = soFar.a;
+													return $elm$core$Result$Ok(
+														A2($elm$core$List$cons, val, values));
+												} else {
+													var errs = soFar.a;
+													return $elm$core$Result$Err(errs);
+												}
+											} else {
+												var err = _v3.a;
+												if (soFar.$ === 'Ok') {
+													return $elm$core$Result$Err(
+														_List_fromArray(
+															[err]));
+												} else {
+													var errs = soFar.a;
+													return $elm$core$Result$Err(
+														A2($elm$core$List$cons, err, errs));
+												}
+											}
+										}(),
+										rowNum + 1);
+								}),
+							_Utils_Tuple2(
+								$elm$core$Result$Ok(_List_Nil),
+								firstRowNumber),
+							rows).a));
 			},
-			subscriptions: function (_v1) {
-				return $elm$core$Platform$Sub$none;
+			A2($BrianHicks$elm_csv$Csv$Decode$getFieldNames, fieldNames, allRows));
+	});
+var $BrianHicks$elm_csv$Csv$Parser$AdditionalCharactersAfterClosingQuote = function (a) {
+	return {$: 'AdditionalCharactersAfterClosingQuote', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Parser$SourceEndedWithoutClosingQuote = function (a) {
+	return {$: 'SourceEndedWithoutClosingQuote', a: a};
+};
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
+var $elm$core$Basics$ge = _Utils_ge;
+var $BrianHicks$elm_csv$Csv$Parser$parse = F2(
+	function (config, source) {
+		var finalLength = $elm$core$String$length(source);
+		var parseQuotedField = F4(
+			function (isFieldSeparator, soFar, startOffset, endOffset) {
+				parseQuotedField:
+				while (true) {
+					if ((endOffset - finalLength) >= 0) {
+						return $elm$core$Result$Err($BrianHicks$elm_csv$Csv$Parser$SourceEndedWithoutClosingQuote);
+					} else {
+						if (A3($elm$core$String$slice, endOffset, endOffset + 1, source) === '\"') {
+							var segment = A3($elm$core$String$slice, startOffset, endOffset, source);
+							if (((endOffset + 1) - finalLength) >= 0) {
+								return $elm$core$Result$Ok(
+									_Utils_Tuple3(
+										_Utils_ap(soFar, segment),
+										endOffset + 1,
+										false));
+							} else {
+								var next = A3($elm$core$String$slice, endOffset + 1, endOffset + 2, source);
+								if (next === '\"') {
+									var newPos = endOffset + 2;
+									var $temp$isFieldSeparator = isFieldSeparator,
+										$temp$soFar = soFar + (segment + '\"'),
+										$temp$startOffset = newPos,
+										$temp$endOffset = newPos;
+									isFieldSeparator = $temp$isFieldSeparator;
+									soFar = $temp$soFar;
+									startOffset = $temp$startOffset;
+									endOffset = $temp$endOffset;
+									continue parseQuotedField;
+								} else {
+									if (isFieldSeparator(next)) {
+										return $elm$core$Result$Ok(
+											_Utils_Tuple3(
+												_Utils_ap(soFar, segment),
+												endOffset + 2,
+												false));
+									} else {
+										if (next === '\n') {
+											return $elm$core$Result$Ok(
+												_Utils_Tuple3(
+													_Utils_ap(soFar, segment),
+													endOffset + 2,
+													true));
+										} else {
+											if ((next === '\u000D') && (A3($elm$core$String$slice, endOffset + 2, endOffset + 3, source) === '\n')) {
+												return $elm$core$Result$Ok(
+													_Utils_Tuple3(
+														_Utils_ap(soFar, segment),
+														endOffset + 3,
+														true));
+											} else {
+												return $elm$core$Result$Err($BrianHicks$elm_csv$Csv$Parser$AdditionalCharactersAfterClosingQuote);
+											}
+										}
+									}
+								}
+							}
+						} else {
+							var $temp$isFieldSeparator = isFieldSeparator,
+								$temp$soFar = soFar,
+								$temp$startOffset = startOffset,
+								$temp$endOffset = endOffset + 1;
+							isFieldSeparator = $temp$isFieldSeparator;
+							soFar = $temp$soFar;
+							startOffset = $temp$startOffset;
+							endOffset = $temp$endOffset;
+							continue parseQuotedField;
+						}
+					}
+				}
+			});
+		var parseComma = F4(
+			function (row, rows, startOffset, endOffset) {
+				parseComma:
+				while (true) {
+					if ((endOffset - finalLength) >= 0) {
+						var finalField = A3($elm$core$String$slice, startOffset, endOffset, source);
+						return ((finalField === '') && _Utils_eq(row, _List_Nil)) ? $elm$core$Result$Ok(
+							$elm$core$List$reverse(rows)) : $elm$core$Result$Ok(
+							$elm$core$List$reverse(
+								A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2($elm$core$List$cons, finalField, row)),
+									rows)));
+					} else {
+						var first = A3($elm$core$String$slice, endOffset, endOffset + 1, source);
+						if (first === ',') {
+							var newPos = endOffset + 1;
+							var $temp$row = A2(
+								$elm$core$List$cons,
+								A3($elm$core$String$slice, startOffset, endOffset, source),
+								row),
+								$temp$rows = rows,
+								$temp$startOffset = newPos,
+								$temp$endOffset = newPos;
+							row = $temp$row;
+							rows = $temp$rows;
+							startOffset = $temp$startOffset;
+							endOffset = $temp$endOffset;
+							continue parseComma;
+						} else {
+							if (first === '\n') {
+								var newPos = endOffset + 1;
+								var $temp$row = _List_Nil,
+									$temp$rows = A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2(
+											$elm$core$List$cons,
+											A3($elm$core$String$slice, startOffset, endOffset, source),
+											row)),
+									rows),
+									$temp$startOffset = newPos,
+									$temp$endOffset = newPos;
+								row = $temp$row;
+								rows = $temp$rows;
+								startOffset = $temp$startOffset;
+								endOffset = $temp$endOffset;
+								continue parseComma;
+							} else {
+								if ((first === '\u000D') && (A3($elm$core$String$slice, endOffset + 1, endOffset + 2, source) === '\n')) {
+									var newPos = endOffset + 2;
+									var $temp$row = _List_Nil,
+										$temp$rows = A2(
+										$elm$core$List$cons,
+										$elm$core$List$reverse(
+											A2(
+												$elm$core$List$cons,
+												A3($elm$core$String$slice, startOffset, endOffset, source),
+												row)),
+										rows),
+										$temp$startOffset = newPos,
+										$temp$endOffset = newPos;
+									row = $temp$row;
+									rows = $temp$rows;
+									startOffset = $temp$startOffset;
+									endOffset = $temp$endOffset;
+									continue parseComma;
+								} else {
+									if (first === '\"') {
+										var newPos = endOffset + 1;
+										var _v0 = A4(
+											parseQuotedField,
+											function (c) {
+												return c === ',';
+											},
+											'',
+											newPos,
+											newPos);
+										if (_v0.$ === 'Ok') {
+											var _v1 = _v0.a;
+											var value = _v1.a;
+											var afterQuotedField = _v1.b;
+											var rowEnded = _v1.c;
+											if (_Utils_cmp(afterQuotedField, finalLength) > -1) {
+												return $elm$core$Result$Ok(
+													$elm$core$List$reverse(
+														A2(
+															$elm$core$List$cons,
+															$elm$core$List$reverse(
+																A2($elm$core$List$cons, value, row)),
+															rows)));
+											} else {
+												if (rowEnded) {
+													var $temp$row = _List_Nil,
+														$temp$rows = A2(
+														$elm$core$List$cons,
+														$elm$core$List$reverse(
+															A2($elm$core$List$cons, value, row)),
+														rows),
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseComma;
+												} else {
+													var $temp$row = A2($elm$core$List$cons, value, row),
+														$temp$rows = rows,
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseComma;
+												}
+											}
+										} else {
+											var problem = _v0.a;
+											return $elm$core$Result$Err(
+												problem(
+													$elm$core$List$length(rows) + 1));
+										}
+									} else {
+										var $temp$row = row,
+											$temp$rows = rows,
+											$temp$startOffset = startOffset,
+											$temp$endOffset = endOffset + 1;
+										row = $temp$row;
+										rows = $temp$rows;
+										startOffset = $temp$startOffset;
+										endOffset = $temp$endOffset;
+										continue parseComma;
+									}
+								}
+							}
+						}
+					}
+				}
+			});
+		var parseHelp = F5(
+			function (isFieldSeparator, row, rows, startOffset, endOffset) {
+				parseHelp:
+				while (true) {
+					if ((endOffset - finalLength) >= 0) {
+						var finalField = A3($elm$core$String$slice, startOffset, endOffset, source);
+						return ((finalField === '') && _Utils_eq(row, _List_Nil)) ? $elm$core$Result$Ok(
+							$elm$core$List$reverse(rows)) : $elm$core$Result$Ok(
+							$elm$core$List$reverse(
+								A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2($elm$core$List$cons, finalField, row)),
+									rows)));
+					} else {
+						var first = A3($elm$core$String$slice, endOffset, endOffset + 1, source);
+						if (isFieldSeparator(first)) {
+							var newPos = endOffset + 1;
+							var $temp$isFieldSeparator = isFieldSeparator,
+								$temp$row = A2(
+								$elm$core$List$cons,
+								A3($elm$core$String$slice, startOffset, endOffset, source),
+								row),
+								$temp$rows = rows,
+								$temp$startOffset = newPos,
+								$temp$endOffset = newPos;
+							isFieldSeparator = $temp$isFieldSeparator;
+							row = $temp$row;
+							rows = $temp$rows;
+							startOffset = $temp$startOffset;
+							endOffset = $temp$endOffset;
+							continue parseHelp;
+						} else {
+							if (first === '\n') {
+								var newPos = endOffset + 1;
+								var $temp$isFieldSeparator = isFieldSeparator,
+									$temp$row = _List_Nil,
+									$temp$rows = A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2(
+											$elm$core$List$cons,
+											A3($elm$core$String$slice, startOffset, endOffset, source),
+											row)),
+									rows),
+									$temp$startOffset = newPos,
+									$temp$endOffset = newPos;
+								isFieldSeparator = $temp$isFieldSeparator;
+								row = $temp$row;
+								rows = $temp$rows;
+								startOffset = $temp$startOffset;
+								endOffset = $temp$endOffset;
+								continue parseHelp;
+							} else {
+								if ((first === '\u000D') && (A3($elm$core$String$slice, endOffset + 1, endOffset + 2, source) === '\n')) {
+									var newPos = endOffset + 2;
+									var $temp$isFieldSeparator = isFieldSeparator,
+										$temp$row = _List_Nil,
+										$temp$rows = A2(
+										$elm$core$List$cons,
+										$elm$core$List$reverse(
+											A2(
+												$elm$core$List$cons,
+												A3($elm$core$String$slice, startOffset, endOffset, source),
+												row)),
+										rows),
+										$temp$startOffset = newPos,
+										$temp$endOffset = newPos;
+									isFieldSeparator = $temp$isFieldSeparator;
+									row = $temp$row;
+									rows = $temp$rows;
+									startOffset = $temp$startOffset;
+									endOffset = $temp$endOffset;
+									continue parseHelp;
+								} else {
+									if (first === '\"') {
+										var newPos = endOffset + 1;
+										var _v2 = A4(parseQuotedField, isFieldSeparator, '', newPos, newPos);
+										if (_v2.$ === 'Ok') {
+											var _v3 = _v2.a;
+											var value = _v3.a;
+											var afterQuotedField = _v3.b;
+											var rowEnded = _v3.c;
+											if (_Utils_cmp(afterQuotedField, finalLength) > -1) {
+												return $elm$core$Result$Ok(
+													$elm$core$List$reverse(
+														A2(
+															$elm$core$List$cons,
+															$elm$core$List$reverse(
+																A2($elm$core$List$cons, value, row)),
+															rows)));
+											} else {
+												if (rowEnded) {
+													var $temp$isFieldSeparator = isFieldSeparator,
+														$temp$row = _List_Nil,
+														$temp$rows = A2(
+														$elm$core$List$cons,
+														$elm$core$List$reverse(
+															A2($elm$core$List$cons, value, row)),
+														rows),
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													isFieldSeparator = $temp$isFieldSeparator;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseHelp;
+												} else {
+													var $temp$isFieldSeparator = isFieldSeparator,
+														$temp$row = A2($elm$core$List$cons, value, row),
+														$temp$rows = rows,
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													isFieldSeparator = $temp$isFieldSeparator;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseHelp;
+												}
+											}
+										} else {
+											var problem = _v2.a;
+											return $elm$core$Result$Err(
+												problem(
+													$elm$core$List$length(rows) + 1));
+										}
+									} else {
+										var $temp$isFieldSeparator = isFieldSeparator,
+											$temp$row = row,
+											$temp$rows = rows,
+											$temp$startOffset = startOffset,
+											$temp$endOffset = endOffset + 1;
+										isFieldSeparator = $temp$isFieldSeparator;
+										row = $temp$row;
+										rows = $temp$rows;
+										startOffset = $temp$startOffset;
+										endOffset = $temp$endOffset;
+										continue parseHelp;
+									}
+								}
+							}
+						}
+					}
+				}
+			});
+		var parseSemicolon = F4(
+			function (row, rows, startOffset, endOffset) {
+				parseSemicolon:
+				while (true) {
+					if ((endOffset - finalLength) >= 0) {
+						var finalField = A3($elm$core$String$slice, startOffset, endOffset, source);
+						return ((finalField === '') && _Utils_eq(row, _List_Nil)) ? $elm$core$Result$Ok(
+							$elm$core$List$reverse(rows)) : $elm$core$Result$Ok(
+							$elm$core$List$reverse(
+								A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2($elm$core$List$cons, finalField, row)),
+									rows)));
+					} else {
+						var first = A3($elm$core$String$slice, endOffset, endOffset + 1, source);
+						if (first === ';') {
+							var newPos = endOffset + 1;
+							var $temp$row = A2(
+								$elm$core$List$cons,
+								A3($elm$core$String$slice, startOffset, endOffset, source),
+								row),
+								$temp$rows = rows,
+								$temp$startOffset = newPos,
+								$temp$endOffset = newPos;
+							row = $temp$row;
+							rows = $temp$rows;
+							startOffset = $temp$startOffset;
+							endOffset = $temp$endOffset;
+							continue parseSemicolon;
+						} else {
+							if (first === '\n') {
+								var newPos = endOffset + 1;
+								var $temp$row = _List_Nil,
+									$temp$rows = A2(
+									$elm$core$List$cons,
+									$elm$core$List$reverse(
+										A2(
+											$elm$core$List$cons,
+											A3($elm$core$String$slice, startOffset, endOffset, source),
+											row)),
+									rows),
+									$temp$startOffset = newPos,
+									$temp$endOffset = newPos;
+								row = $temp$row;
+								rows = $temp$rows;
+								startOffset = $temp$startOffset;
+								endOffset = $temp$endOffset;
+								continue parseSemicolon;
+							} else {
+								if ((first === '\u000D') && (A3($elm$core$String$slice, endOffset + 1, endOffset + 2, source) === '\n')) {
+									var newPos = endOffset + 2;
+									var $temp$row = _List_Nil,
+										$temp$rows = A2(
+										$elm$core$List$cons,
+										$elm$core$List$reverse(
+											A2(
+												$elm$core$List$cons,
+												A3($elm$core$String$slice, startOffset, endOffset, source),
+												row)),
+										rows),
+										$temp$startOffset = newPos,
+										$temp$endOffset = newPos;
+									row = $temp$row;
+									rows = $temp$rows;
+									startOffset = $temp$startOffset;
+									endOffset = $temp$endOffset;
+									continue parseSemicolon;
+								} else {
+									if (first === '\"') {
+										var newPos = endOffset + 1;
+										var _v4 = A4(
+											parseQuotedField,
+											function (c) {
+												return c === ';';
+											},
+											'',
+											newPos,
+											newPos);
+										if (_v4.$ === 'Ok') {
+											var _v5 = _v4.a;
+											var value = _v5.a;
+											var afterQuotedField = _v5.b;
+											var rowEnded = _v5.c;
+											if (_Utils_cmp(afterQuotedField, finalLength) > -1) {
+												return $elm$core$Result$Ok(
+													$elm$core$List$reverse(
+														A2(
+															$elm$core$List$cons,
+															$elm$core$List$reverse(
+																A2($elm$core$List$cons, value, row)),
+															rows)));
+											} else {
+												if (rowEnded) {
+													var $temp$row = _List_Nil,
+														$temp$rows = A2(
+														$elm$core$List$cons,
+														$elm$core$List$reverse(
+															A2($elm$core$List$cons, value, row)),
+														rows),
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseSemicolon;
+												} else {
+													var $temp$row = A2($elm$core$List$cons, value, row),
+														$temp$rows = rows,
+														$temp$startOffset = afterQuotedField,
+														$temp$endOffset = afterQuotedField;
+													row = $temp$row;
+													rows = $temp$rows;
+													startOffset = $temp$startOffset;
+													endOffset = $temp$endOffset;
+													continue parseSemicolon;
+												}
+											}
+										} else {
+											var problem = _v4.a;
+											return $elm$core$Result$Err(
+												problem(
+													$elm$core$List$length(rows) + 1));
+										}
+									} else {
+										var $temp$row = row,
+											$temp$rows = rows,
+											$temp$startOffset = startOffset,
+											$temp$endOffset = endOffset + 1;
+										row = $temp$row;
+										rows = $temp$rows;
+										startOffset = $temp$startOffset;
+										endOffset = $temp$endOffset;
+										continue parseSemicolon;
+									}
+								}
+							}
+						}
+					}
+				}
+			});
+		var fieldSeparator = $elm$core$String$fromChar(config.fieldSeparator);
+		return $elm$core$String$isEmpty(source) ? $elm$core$Result$Ok(_List_Nil) : (_Utils_eq(
+			config.fieldSeparator,
+			_Utils_chr(',')) ? A4(parseComma, _List_Nil, _List_Nil, 0, 0) : (_Utils_eq(
+			config.fieldSeparator,
+			_Utils_chr(';')) ? A4(parseSemicolon, _List_Nil, _List_Nil, 0, 0) : A5(
+			parseHelp,
+			function (s) {
+				return _Utils_eq(s, fieldSeparator);
 			},
-			update: F2(
-				function (msg, model) {
-					return _Utils_Tuple2(
-						A2(impl.update, msg, model),
-						$elm$core$Platform$Cmd$none);
-				}),
-			view: impl.view
+			_List_Nil,
+			_List_Nil,
+			0,
+			0)));
+	});
+var $BrianHicks$elm_csv$Csv$Decode$decodeCustom = F4(
+	function (config, fieldNames, decoder, source) {
+		return A2(
+			$elm$core$Result$andThen,
+			A2($BrianHicks$elm_csv$Csv$Decode$applyDecoder, fieldNames, decoder),
+			A2(
+				$elm$core$Result$mapError,
+				$BrianHicks$elm_csv$Csv$Decode$ParsingError,
+				A2($BrianHicks$elm_csv$Csv$Parser$parse, config, source)));
+	});
+var $BrianHicks$elm_csv$Csv$Decode$decodeCsv = $BrianHicks$elm_csv$Csv$Decode$decodeCustom(
+	{
+		fieldSeparator: _Utils_chr(',')
+	});
+var $BrianHicks$elm_csv$Csv$Decode$Decoder = function (a) {
+	return {$: 'Decoder', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Decode$Field_ = function (a) {
+	return {$: 'Field_', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Decode$field = F2(
+	function (name, _v0) {
+		var decoder = _v0.a;
+		return $BrianHicks$elm_csv$Csv$Decode$Decoder(
+			F3(
+				function (_v1, fieldNames, row) {
+					return A3(
+						decoder,
+						$BrianHicks$elm_csv$Csv$Decode$Field_(name),
+						fieldNames,
+						row);
+				}));
+	});
+var $BrianHicks$elm_csv$Csv$Decode$ExpectedInt = function (a) {
+	return {$: 'ExpectedInt', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Decode$ColumnNotFound = function (a) {
+	return {$: 'ColumnNotFound', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Decode$ExpectedOneColumn = function (a) {
+	return {$: 'ExpectedOneColumn', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Decode$FieldDecodingError = function (a) {
+	return {$: 'FieldDecodingError', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Decode$FieldNotFound = function (a) {
+	return {$: 'FieldNotFound', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Decode$FieldNotProvided = function (a) {
+	return {$: 'FieldNotProvided', a: a};
+};
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $BrianHicks$elm_csv$Csv$Decode$Column = function (a) {
+	return {$: 'Column', a: a};
+};
+var $BrianHicks$elm_csv$Csv$Decode$Field = F2(
+	function (a, b) {
+		return {$: 'Field', a: a, b: b};
+	});
+var $BrianHicks$elm_csv$Csv$Decode$OnlyColumn = {$: 'OnlyColumn'};
+var $BrianHicks$elm_csv$Csv$Decode$locationToColumn = F2(
+	function (fieldNames, location) {
+		switch (location.$) {
+			case 'Column_':
+				var i = location.a;
+				return $BrianHicks$elm_csv$Csv$Decode$Column(i);
+			case 'Field_':
+				var name = location.a;
+				return A2(
+					$BrianHicks$elm_csv$Csv$Decode$Field,
+					name,
+					A2($elm$core$Dict$get, name, fieldNames));
+			default:
+				return $BrianHicks$elm_csv$Csv$Decode$OnlyColumn;
+		}
+	});
+var $BrianHicks$elm_csv$Csv$Decode$fromString = function (convert) {
+	return $BrianHicks$elm_csv$Csv$Decode$Decoder(
+		F4(
+			function (location, _v0, rowNum, row) {
+				var names = _v0.names;
+				var error = function (problem) {
+					return $elm$core$Result$Err(
+						_List_fromArray(
+							[
+								$BrianHicks$elm_csv$Csv$Decode$FieldDecodingError(
+								{
+									column: A2($BrianHicks$elm_csv$Csv$Decode$locationToColumn, names, location),
+									problem: problem,
+									row: rowNum
+								})
+							]));
+				};
+				switch (location.$) {
+					case 'Column_':
+						var colNum = location.a;
+						var _v2 = $elm$core$List$head(
+							A2($elm$core$List$drop, colNum, row));
+						if (_v2.$ === 'Just') {
+							var value = _v2.a;
+							var _v3 = convert(value);
+							if (_v3.$ === 'Ok') {
+								var converted = _v3.a;
+								return $elm$core$Result$Ok(converted);
+							} else {
+								var problem = _v3.a;
+								return error(problem);
+							}
+						} else {
+							return error(
+								$BrianHicks$elm_csv$Csv$Decode$ColumnNotFound(colNum));
+						}
+					case 'Field_':
+						var name = location.a;
+						var _v4 = A2($elm$core$Dict$get, name, names);
+						if (_v4.$ === 'Just') {
+							var colNum = _v4.a;
+							var _v5 = $elm$core$List$head(
+								A2($elm$core$List$drop, colNum, row));
+							if (_v5.$ === 'Just') {
+								var value = _v5.a;
+								var _v6 = convert(value);
+								if (_v6.$ === 'Ok') {
+									var converted = _v6.a;
+									return $elm$core$Result$Ok(converted);
+								} else {
+									var problem = _v6.a;
+									return error(problem);
+								}
+							} else {
+								return error(
+									$BrianHicks$elm_csv$Csv$Decode$FieldNotFound(name));
+							}
+						} else {
+							return $elm$core$Result$Err(
+								_List_fromArray(
+									[
+										$BrianHicks$elm_csv$Csv$Decode$FieldNotProvided(name)
+									]));
+						}
+					default:
+						if (!row.b) {
+							return error(
+								$BrianHicks$elm_csv$Csv$Decode$ColumnNotFound(0));
+						} else {
+							if (!row.b.b) {
+								var only = row.a;
+								var _v8 = convert(only);
+								if (_v8.$ === 'Ok') {
+									var converted = _v8.a;
+									return $elm$core$Result$Ok(converted);
+								} else {
+									var problem = _v8.a;
+									return error(problem);
+								}
+							} else {
+								return error(
+									$BrianHicks$elm_csv$Csv$Decode$ExpectedOneColumn(
+										$elm$core$List$length(row)));
+							}
+						}
+				}
+			}));
+};
+var $BrianHicks$elm_csv$Csv$Decode$int = $BrianHicks$elm_csv$Csv$Decode$fromString(
+	function (value) {
+		var _v0 = $elm$core$String$toInt(
+			$elm$core$String$trim(value));
+		if (_v0.$ === 'Just') {
+			var parsed = _v0.a;
+			return $elm$core$Result$Ok(parsed);
+		} else {
+			return $elm$core$Result$Err(
+				$BrianHicks$elm_csv$Csv$Decode$ExpectedInt(value));
+		}
+	});
+var $BrianHicks$elm_csv$Csv$Decode$succeed = function (value) {
+	return $BrianHicks$elm_csv$Csv$Decode$Decoder(
+		F4(
+			function (_v0, _v1, _v2, _v3) {
+				return $elm$core$Result$Ok(value);
+			}));
+};
+var $BrianHicks$elm_csv$Csv$Decode$into = $BrianHicks$elm_csv$Csv$Decode$succeed;
+var $BrianHicks$elm_csv$Csv$Decode$map2 = F3(
+	function (transform, _v0, _v1) {
+		var decodeA = _v0.a;
+		var decodeB = _v1.a;
+		return $BrianHicks$elm_csv$Csv$Decode$Decoder(
+			F4(
+				function (location, fieldNames, rowNum, row) {
+					var _v2 = _Utils_Tuple2(
+						A4(decodeA, location, fieldNames, rowNum, row),
+						A4(decodeB, location, fieldNames, rowNum, row));
+					if (_v2.a.$ === 'Ok') {
+						if (_v2.b.$ === 'Ok') {
+							var a = _v2.a.a;
+							var b = _v2.b.a;
+							return $elm$core$Result$Ok(
+								A2(transform, a, b));
+						} else {
+							var b = _v2.b.a;
+							return $elm$core$Result$Err(b);
+						}
+					} else {
+						if (_v2.b.$ === 'Err') {
+							var a = _v2.a.a;
+							var b = _v2.b.a;
+							return $elm$core$Result$Err(
+								_Utils_ap(a, b));
+						} else {
+							var a = _v2.a.a;
+							return $elm$core$Result$Err(a);
+						}
+					}
+				}));
+	});
+var $BrianHicks$elm_csv$Csv$Decode$pipeline = $BrianHicks$elm_csv$Csv$Decode$map2(
+	F2(
+		function (value, fn) {
+			return fn(value);
+		}));
+var $BrianHicks$elm_csv$Csv$Decode$string = $BrianHicks$elm_csv$Csv$Decode$fromString($elm$core$Result$Ok);
+var $author$project$Model$participationDecoder = A2(
+	$BrianHicks$elm_csv$Csv$Decode$pipeline,
+	A2($BrianHicks$elm_csv$Csv$Decode$field, 'Medal', $BrianHicks$elm_csv$Csv$Decode$string),
+	A2(
+		$BrianHicks$elm_csv$Csv$Decode$pipeline,
+		A2($BrianHicks$elm_csv$Csv$Decode$field, 'Event', $BrianHicks$elm_csv$Csv$Decode$string),
+		A2(
+			$BrianHicks$elm_csv$Csv$Decode$pipeline,
+			A2($BrianHicks$elm_csv$Csv$Decode$field, 'Sport', $BrianHicks$elm_csv$Csv$Decode$string),
+			A2(
+				$BrianHicks$elm_csv$Csv$Decode$pipeline,
+				A2($BrianHicks$elm_csv$Csv$Decode$field, 'City', $BrianHicks$elm_csv$Csv$Decode$string),
+				A2(
+					$BrianHicks$elm_csv$Csv$Decode$pipeline,
+					A2($BrianHicks$elm_csv$Csv$Decode$field, 'Season', $BrianHicks$elm_csv$Csv$Decode$string),
+					A2(
+						$BrianHicks$elm_csv$Csv$Decode$pipeline,
+						A2($BrianHicks$elm_csv$Csv$Decode$field, 'Year', $BrianHicks$elm_csv$Csv$Decode$int),
+						A2(
+							$BrianHicks$elm_csv$Csv$Decode$pipeline,
+							A2($BrianHicks$elm_csv$Csv$Decode$field, 'NOC', $BrianHicks$elm_csv$Csv$Decode$string),
+							A2(
+								$BrianHicks$elm_csv$Csv$Decode$pipeline,
+								A2($BrianHicks$elm_csv$Csv$Decode$field, 'Team', $BrianHicks$elm_csv$Csv$Decode$string),
+								A2(
+									$BrianHicks$elm_csv$Csv$Decode$pipeline,
+									A2($BrianHicks$elm_csv$Csv$Decode$field, 'Sex', $BrianHicks$elm_csv$Csv$Decode$string),
+									A2(
+										$BrianHicks$elm_csv$Csv$Decode$pipeline,
+										A2($BrianHicks$elm_csv$Csv$Decode$field, 'Name', $BrianHicks$elm_csv$Csv$Decode$string),
+										A2(
+											$BrianHicks$elm_csv$Csv$Decode$pipeline,
+											A2($BrianHicks$elm_csv$Csv$Decode$field, 'player_id', $BrianHicks$elm_csv$Csv$Decode$int),
+											$BrianHicks$elm_csv$Csv$Decode$into(
+												function (playerId) {
+													return function (name) {
+														return function (sex) {
+															return function (team) {
+																return function (noc) {
+																	return function (year) {
+																		return function (season) {
+																			return function (city) {
+																				return function (sport) {
+																					return function (event) {
+																						return function (medal) {
+																							return {city: city, event: event, medal: medal, name: name, noc: noc, playerId: playerId, season: season, sex: sex, sport: sport, team: team, year: year};
+																						};
+																					};
+																				};
+																			};
+																		};
+																	};
+																};
+															};
+														};
+													};
+												}))))))))))));
+var $author$project$Model$decodeCsv = function (body) {
+	var _v0 = A3($BrianHicks$elm_csv$Csv$Decode$decodeCsv, $BrianHicks$elm_csv$Csv$Decode$FieldNamesFromFirstRow, $author$project$Model$participationDecoder, body);
+	if (_v0.$ === 'Ok') {
+		var rows = _v0.a;
+		return $elm$core$Result$Ok(rows);
+	} else {
+		return $elm$core$Result$Err('CSV decode error');
+	}
+};
+var $author$project$Update$httpErrorToString = function (err) {
+	switch (err.$) {
+		case 'BadUrl':
+			var u = err.a;
+			return 'BadUrl: ' + u;
+		case 'Timeout':
+			return 'Timeout';
+		case 'NetworkError':
+			return 'NetworkError';
+		case 'BadStatus':
+			var s = err.a;
+			return 'BadStatus: ' + $elm$core$String$fromInt(s);
+		default:
+			var msg = err.a;
+			return 'BadBody: ' + msg;
+	}
+};
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $elm$core$Dict$values = function (dict) {
+	return A3(
+		$elm$core$Dict$foldr,
+		F3(
+			function (key, value, valueList) {
+				return A2($elm$core$List$cons, value, valueList);
+			}),
+		_List_Nil,
+		dict);
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Model$toMedaillen = function (participations) {
+	var getLand = function (p) {
+		return (p.team !== '') ? p.team : p.noc;
+	};
+	var addMedal = F2(
+		function (medal, landMedaillen) {
+			switch (medal) {
+				case 'Gold':
+					return _Utils_update(
+						landMedaillen,
+						{gold: landMedaillen.gold + 1});
+				case 'Silver':
+					return _Utils_update(
+						landMedaillen,
+						{silber: landMedaillen.silber + 1});
+				case 'Bronze':
+					return _Utils_update(
+						landMedaillen,
+						{bronze: landMedaillen.bronze + 1});
+				default:
+					return landMedaillen;
+			}
 		});
+	var updateDict = F2(
+		function (p, dict) {
+			if ((p.medal === 'Gold') || ((p.medal === 'Silver') || (p.medal === 'Bronze'))) {
+				var land = getLand(p);
+				var old = A2(
+					$elm$core$Maybe$withDefault,
+					{bronze: 0, gold: 0, land: land, silber: 0},
+					A2($elm$core$Dict$get, land, dict));
+				var _new = A2(addMedal, p.medal, old);
+				return A3($elm$core$Dict$insert, land, _new, dict);
+			} else {
+				return dict;
+			}
+		});
+	var medaillenDict = A3($elm$core$List$foldl, updateDict, $elm$core$Dict$empty, participations);
+	return $elm$core$Dict$values(medaillenDict);
 };
 var $author$project$Update$update = F2(
 	function (msg, model) {
-		var newMessage = msg.a;
-		return _Utils_update(
-			model,
-			{message: newMessage});
+		var result = msg.a;
+		if (result.$ === 'Ok') {
+			var body = result.a;
+			var _v2 = $author$project$Model$decodeCsv(body);
+			if (_v2.$ === 'Ok') {
+				var parts = _v2.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							error: $elm$core$Maybe$Nothing,
+							loading: false,
+							medaillen: $author$project$Model$toMedaillen(parts)
+						}),
+					$elm$core$Platform$Cmd$none);
+			} else {
+				var decodeErr = _v2.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							error: $elm$core$Maybe$Just(decodeErr),
+							loading: false
+						}),
+					$elm$core$Platform$Cmd$none);
+			}
+		} else {
+			var httpErr = result.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						error: $elm$core$Maybe$Just(
+							$author$project$Update$httpErrorToString(httpErr)),
+						loading: false
+					}),
+				$elm$core$Platform$Cmd$none);
+		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$a = _VirtualDom_node('a');
@@ -5349,9 +7416,26 @@ var $author$project$View$headerSection = A2(
 						]))
 				]))
 		]));
-var $elm$core$Basics$compare = _Utils_compare;
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $author$project$View$nextLink = function (target) {
+	return A2(
+		$elm$html$Html$a,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$href(target),
+				A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
+				A2($elm$html$Html$Attributes$style, 'padding', '10px 16px'),
+				A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
+				A2($elm$html$Html$Attributes$style, 'color', '#fff'),
+				A2($elm$html$Html$Attributes$style, 'border-radius', '4px'),
+				A2($elm$html$Html$Attributes$style, 'text-decoration', 'none')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text('Weiter')
+			]));
+};
 var $elm$core$List$sortWith = _List_sortWith;
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$html$Html$tbody = _VirtualDom_node('tbody');
@@ -5359,7 +7443,7 @@ var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$View$medaillenspiegelSection = function (llm) {
+var $author$project$View$medaillenspiegelSection = function (model) {
 	var totalMed = function (lm) {
 		return (lm.gold + lm.silber) + lm.bronze;
 	};
@@ -5376,7 +7460,7 @@ var $author$project$View$medaillenspiegelSection = function (llm) {
 						a.gold,
 						totalMed(a)));
 			}),
-		llm);
+		model.medaillen);
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -5408,6 +7492,34 @@ var $author$project$View$medaillenspiegelSection = function (llm) {
 							[
 								$elm$html$Html$text('1. Medaillenspiegel')
 							])),
+						function () {
+						if (model.loading) {
+							return A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Lade Daten...')
+									]));
+						} else {
+							var _v0 = model.error;
+							if (_v0.$ === 'Just') {
+								var err = _v0.a;
+								return A2(
+									$elm$html$Html$p,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'color', '#b00020')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Fehler beim Laden: ' + err)
+										]));
+							} else {
+								return $elm$html$Html$text('');
+							}
+						}
+					}(),
 						A2(
 						$elm$html$Html$table,
 						_List_fromArray(
@@ -5590,6 +7702,18 @@ var $author$project$View$medaillenspiegelSection = function (llm) {
 										}),
 									sortedLlm))
 							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+						A2($elm$html$Html$Attributes$style, 'max-width', '900px'),
+						A2($elm$html$Html$Attributes$style, 'margin', '10px auto 0')
+					]),
+				_List_fromArray(
+					[
+						$author$project$View$nextLink('#medaillenverteilung')
 					]))
 			]));
 };
@@ -5602,15 +7726,29 @@ var $author$project$View$medaillenverteilungSection = A2(
 			A2($elm$html$Html$Attributes$style, 'padding', '20px'),
 			A2($elm$html$Html$Attributes$style, 'background-color', '#f8f9fa')
 		]),
-	_List_Nil);
-var $author$project$Model$mockData = _List_fromArray(
-	[
-		{bronze: 42, gold: 40, land: 'USA', silber: 44},
-		{bronze: 24, gold: 40, land: 'China', silber: 27},
-		{bronze: 13, gold: 20, land: 'Japan', silber: 12},
-		{bronze: 16, gold: 18, land: 'Australien', silber: 19},
-		{bronze: 22, gold: 16, land: 'Frankreich', silber: 26}
-	]);
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h2,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'margin', '0 0 16px 0')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('2. Medaillenverteilung')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'text-align', 'right')
+				]),
+			_List_fromArray(
+				[
+					$author$project$View$nextLink('#visualisierung3')
+				]))
+		]));
 var $author$project$View$visualisierung3 = A2(
 	$elm$html$Html$div,
 	_List_fromArray(
@@ -5619,7 +7757,29 @@ var $author$project$View$visualisierung3 = A2(
 			A2($elm$html$Html$Attributes$style, 'margin', '60px 0'),
 			A2($elm$html$Html$Attributes$style, 'padding', '20px')
 		]),
-	_List_Nil);
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h2,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'margin', '0 0 16px 0')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('3. Visualisierung')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'text-align', 'right')
+				]),
+			_List_fromArray(
+				[
+					$author$project$View$nextLink('#visualisierung4')
+				]))
+		]));
 var $author$project$View$visualisierung4 = A2(
 	$elm$html$Html$div,
 	_List_fromArray(
@@ -5629,7 +7789,29 @@ var $author$project$View$visualisierung4 = A2(
 			A2($elm$html$Html$Attributes$style, 'padding', '20px'),
 			A2($elm$html$Html$Attributes$style, 'background-color', '#f8f9fa')
 		]),
-	_List_Nil);
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h2,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'margin', '0 0 16px 0')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('4. Visualisierung')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'text-align', 'right')
+				]),
+			_List_fromArray(
+				[
+					$author$project$View$nextLink('#medaillenspiegel')
+				]))
+		]));
 var $author$project$View$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -5650,14 +7832,23 @@ var $author$project$View$view = function (model) {
 					]),
 				_List_fromArray(
 					[
-						$author$project$View$medaillenspiegelSection($author$project$Model$mockData),
+						$author$project$View$medaillenspiegelSection(model),
 						$author$project$View$medaillenverteilungSection,
 						$author$project$View$visualisierung3,
 						$author$project$View$visualisierung4
 					]))
 			]));
 };
-var $author$project$Main$main = $elm$browser$Browser$sandbox(
-	{init: $author$project$Model$init, update: $author$project$Update$update, view: $author$project$View$view});
+var $author$project$Main$main = $elm$browser$Browser$element(
+	{
+		init: function (_v0) {
+			return $author$project$Model$init;
+		},
+		subscriptions: function (_v1) {
+			return $elm$core$Platform$Sub$none;
+		},
+		update: $author$project$Update$update,
+		view: $author$project$View$view
+	});
 _Platform_export({'Main':{'init':$author$project$Main$main(
 	$elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));

@@ -8,8 +8,9 @@ import View exposing (view)
 
 main : Program () Model Msg
 main =
-    Browser.sandbox
-        { init = init
+    Browser.element
+        { init = \_ -> init
         , view = view
         , update = update
+        , subscriptions = \_ -> Sub.none
         }

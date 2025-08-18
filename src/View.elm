@@ -11,7 +11,7 @@ view model =
           headerSection
         , -- Visualisierungen untereinander
           div [ style "max-width" "1200px", style "margin" "0 auto", style "padding" "20px" ]
-            [ medaillenspiegelSection mockData
+            [ medaillenspiegelSection model
             , medaillenverteilungSection
             , visualisierung3
             , visualisierung4
@@ -48,8 +48,8 @@ headerSection =
         ]
 
 -- Sektion 1: Traditioneller Medaillenspiegel
-medaillenspiegelSection : List LandMedaillen -> Html Msg
-medaillenspiegelSection llm =
+medaillenspiegelSection : Model -> Html Msg
+medaillenspiegelSection model =
     let
         totalMed : LandMedaillen -> Int
         totalMed lm =
@@ -57,13 +57,21 @@ medaillenspiegelSection llm =
 
         -- Sortierung: absteigend nach Gold, dann Gesamt
         sortedLlm =
-            llm
+            model.medaillen
                 |> List.sortWith (\a b -> compare ( b.gold, totalMed b ) ( a.gold, totalMed a ))
     in
     div [ id "medaillenspiegel", style "margin" "60px 0", style "padding" "20px" ]
         [ div [ style "max-width" "900px", style "margin" "0 auto" ]
             [ h2 [ style "text-align" "left", style "margin-bottom" "20px", style "color" "#333" ]
                 [ text "1. Medaillenspiegel" ]
+            , if model.loading then
+                p [] [ text "Lade Daten..." ]
+              else
+                case model.error of
+                    Just err ->
+                        p [ style "color" "#b00020" ] [ text ("Fehler beim Laden: " ++ err) ]
+                    Nothing ->
+                        text ""
             , table [ style "width" "100%", style "border-collapse" "collapse" ]
                 [ thead []
                     [ tr [ style "background-color" "#007cba", style "color" "white" ]
