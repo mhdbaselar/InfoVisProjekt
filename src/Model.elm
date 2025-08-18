@@ -95,6 +95,12 @@ participationDecoder =
         |> Csv.pipeline (Csv.field "Medal" Csv.string)
 
 
+-- Filter: Nur Datensätze eines bestimmten Jahres behalten
+filterByYear : Int -> List Participation -> List Participation
+filterByYear year participations =
+    List.filter (\p -> p.year == year) participations
+
+
 -- Aggregation: Participation -> List LandMedaillen
 toMedaillen : List Participation -> List LandMedaillen
 toMedaillen participations =

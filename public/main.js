@@ -7135,6 +7135,26 @@ var $author$project$Model$decodeCsv = function (body) {
 		return $elm$core$Result$Err('CSV decode error');
 	}
 };
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $author$project$Model$filterByYear = F2(
+	function (year, participations) {
+		return A2(
+			$elm$core$List$filter,
+			function (p) {
+				return _Utils_eq(p.year, year);
+			},
+			participations);
+	});
 var $author$project$Update$httpErrorToString = function (err) {
 	switch (err.$) {
 		case 'BadUrl':
@@ -7228,7 +7248,8 @@ var $author$project$Update$update = F2(
 						{
 							error: $elm$core$Maybe$Nothing,
 							loading: false,
-							medaillen: $author$project$Model$toMedaillen(parts)
+							medaillen: $author$project$Model$toMedaillen(
+								A2($author$project$Model$filterByYear, 2024, parts))
 						}),
 					$elm$core$Platform$Cmd$none);
 			} else {

@@ -11,7 +11,13 @@ update msg model =
                 Ok body ->
                     case decodeCsv body of
                         Ok parts ->
-                            ( { model | medaillen = toMedaillen parts, loading = False, error = Nothing }, Cmd.none )
+                            ( { model
+                                    | medaillen = parts |> filterByYear 2024 |> toMedaillen
+                                    , loading = False
+                                    , error = Nothing
+                                }
+                            , Cmd.none
+                            )
                         Err decodeErr ->
                             ( { model | loading = False, error = Just decodeErr }, Cmd.none )
 
@@ -26,4 +32,3 @@ httpErrorToString err =
         Http.NetworkError -> "NetworkError"
         Http.BadStatus s -> "BadStatus: " ++ String.fromInt s
         Http.BadBody msg -> "BadBody: " ++ msg
-
