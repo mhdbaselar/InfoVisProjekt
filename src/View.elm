@@ -51,13 +51,13 @@ headerSection =
 medaillenspiegelSection : Model -> Html Msg
 medaillenspiegelSection model =
     let
-        totalMed : LandMedaillen -> Int
+        totalMed : CountryMedals -> Int
         totalMed lm =
-            lm.gold + lm.silber + lm.bronze
+            lm.gold + lm.silver + lm.bronze
 
         -- Sortierung: absteigend nach Gold, dann Gesamt
         sortedLlm =
-            model.medaillen
+            model.medals
                 |> List.sortWith (\a b -> compare ( b.gold, totalMed b ) ( a.gold, totalMed a ))
     in
     div [ id "medaillenspiegel", style "margin" "60px 0", style "padding" "20px" ]
@@ -89,9 +89,9 @@ medaillenspiegelSection model =
                             (\i lm ->
                                 tr [ style "border-bottom" "1px solid #ddd" ]
                                     [ td [ style "padding" "10px" ] [ text (String.fromInt (i + 1)) ]
-                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text lm.land ]
+                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text lm.country ]
                                     , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.gold) ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.silber) ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.silver) ]
                                     , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.bronze) ]
                                     , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt (totalMed lm)) ]
                                     ]

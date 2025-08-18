@@ -12,7 +12,7 @@ update msg model =
                     case decodeCsv body of
                         Ok parts ->
                             ( { model
-                                    | medaillen = parts |> filterByYear 2024 |> toMedaillen
+                                    | medals = parts |> filterByYear 2024 |> toMedals
                                     , loading = False
                                     , error = Nothing
                                 }

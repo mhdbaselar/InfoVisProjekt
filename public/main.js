@@ -6125,7 +6125,7 @@ var $author$project$Model$requestCsv = function (url) {
 		});
 };
 var $author$project$Model$init = _Utils_Tuple2(
-	{error: $elm$core$Maybe$Nothing, loading: true, medaillen: _List_Nil},
+	{error: $elm$core$Maybe$Nothing, loading: true, medals: _List_Nil},
 	$author$project$Model$requestCsv($author$project$Model$csvUrl));
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
@@ -7194,27 +7194,27 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
-var $author$project$Model$toMedaillen = function (participations) {
+var $author$project$Model$toMedals = function (participations) {
 	var getLand = function (p) {
 		return (p.team !== '') ? p.team : p.noc;
 	};
 	var addMedal = F2(
-		function (medal, landMedaillen) {
+		function (medal, countryMedals) {
 			switch (medal) {
 				case 'Gold':
 					return _Utils_update(
-						landMedaillen,
-						{gold: landMedaillen.gold + 1});
+						countryMedals,
+						{gold: countryMedals.gold + 1});
 				case 'Silver':
 					return _Utils_update(
-						landMedaillen,
-						{silber: landMedaillen.silber + 1});
+						countryMedals,
+						{silver: countryMedals.silver + 1});
 				case 'Bronze':
 					return _Utils_update(
-						landMedaillen,
-						{bronze: landMedaillen.bronze + 1});
+						countryMedals,
+						{bronze: countryMedals.bronze + 1});
 				default:
-					return landMedaillen;
+					return countryMedals;
 			}
 		});
 	var updateDict = F2(
@@ -7223,7 +7223,7 @@ var $author$project$Model$toMedaillen = function (participations) {
 				var land = getLand(p);
 				var old = A2(
 					$elm$core$Maybe$withDefault,
-					{bronze: 0, gold: 0, land: land, silber: 0},
+					{bronze: 0, country: land, gold: 0, silver: 0},
 					A2($elm$core$Dict$get, land, dict));
 				var _new = A2(addMedal, p.medal, old);
 				return A3($elm$core$Dict$insert, land, _new, dict);
@@ -7231,8 +7231,8 @@ var $author$project$Model$toMedaillen = function (participations) {
 				return dict;
 			}
 		});
-	var medaillenDict = A3($elm$core$List$foldl, updateDict, $elm$core$Dict$empty, participations);
-	return $elm$core$Dict$values(medaillenDict);
+	var medalsDict = A3($elm$core$List$foldl, updateDict, $elm$core$Dict$empty, participations);
+	return $elm$core$Dict$values(medalsDict);
 };
 var $author$project$Update$update = F2(
 	function (msg, model) {
@@ -7248,7 +7248,7 @@ var $author$project$Update$update = F2(
 						{
 							error: $elm$core$Maybe$Nothing,
 							loading: false,
-							medaillen: $author$project$Model$toMedaillen(
+							medals: $author$project$Model$toMedals(
 								A2($author$project$Model$filterByYear, 2024, parts))
 						}),
 					$elm$core$Platform$Cmd$none);
@@ -7466,7 +7466,7 @@ var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $author$project$View$medaillenspiegelSection = function (model) {
 	var totalMed = function (lm) {
-		return (lm.gold + lm.silber) + lm.bronze;
+		return (lm.gold + lm.silver) + lm.bronze;
 	};
 	var sortedLlm = A2(
 		$elm$core$List$sortWith,
@@ -7481,7 +7481,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 						a.gold,
 						totalMed(a)));
 			}),
-		model.medaillen);
+		model.medals);
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -7667,7 +7667,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text(lm.land)
+																$elm$html$Html$text(lm.country)
 															])),
 														A2(
 														$elm$html$Html$td,
@@ -7691,7 +7691,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromInt(lm.silber))
+																$elm$core$String$fromInt(lm.silver))
 															])),
 														A2(
 														$elm$html$Html$td,

@@ -19,22 +19,22 @@ type alias Participation =
     , medal : String
     }
 
-type alias LandMedaillen =
-    { land : String
+type alias CountryMedals =
+    { country : String
     , gold : Int
-    , silber : Int
+    , silver : Int
     , bronze : Int
     }
 
 type alias Model =
-    { medaillen : List LandMedaillen
+    { medals : List CountryMedals
     , loading : Bool
     , error : Maybe String
     }
 
 init : ( Model, Cmd Msg )
 init =
-    ( { medaillen = []
+    ( { medals = []
       , loading = True
       , error = Nothing
       }
@@ -101,9 +101,9 @@ filterByYear year participations =
     List.filter (\p -> p.year == year) participations
 
 
--- Aggregation: Participation -> List LandMedaillen
-toMedaillen : List Participation -> List LandMedaillen
-toMedaillen participations =
+-- Aggregation: Participation -> List CountryMedals
+toMedals : List Participation -> List CountryMedals
+toMedals participations =
     let
         -- Hilfsfunktion: Land bestimmen
         getLand : Participation -> String
@@ -111,39 +111,39 @@ toMedaillen participations =
             if p.team /= "" then p.team else p.noc
 
         -- Hilfsfunktion: Medaillen zählen
-        addMedal : String -> LandMedaillen -> LandMedaillen
-        addMedal medal landMedaillen =
+        addMedal : String -> CountryMedals -> CountryMedals
+        addMedal medal countryMedals =
             case medal of
-                "Gold" -> { landMedaillen | gold = landMedaillen.gold + 1 }
-                "Silver" -> { landMedaillen | silber = landMedaillen.silber + 1 }
-                "Bronze" -> { landMedaillen | bronze = landMedaillen.bronze + 1 }
-                _ -> landMedaillen
+                "Gold" -> { countryMedals | gold = countryMedals.gold + 1 }
+                "Silver" -> { countryMedals | silver = countryMedals.silver + 1 }
+                "Bronze" -> { countryMedals | bronze = countryMedals.bronze + 1 }
+                _ -> countryMedals
 
         -- Schrittweise Aufbau eines Dicts mit Land als Schlüssel
-        updateDict : Participation -> Dict.Dict String LandMedaillen -> Dict.Dict String LandMedaillen
+        updateDict : Participation -> Dict.Dict String CountryMedals -> Dict.Dict String CountryMedals
         updateDict p dict =
             if p.medal == "Gold" || p.medal == "Silver" || p.medal == "Bronze" then
                 let
                     land = getLand p
-                    old = Dict.get land dict |> Maybe.withDefault { land = land, gold = 0, silber = 0, bronze = 0 }
+                    old = Dict.get land dict |> Maybe.withDefault { country = land, gold = 0, silver = 0, bronze = 0 }
                     new = addMedal p.medal old
                 in
                 Dict.insert land new dict
             else
                 dict
-        medaillenDict : Dict.Dict String LandMedaillen
-        medaillenDict =
+        medalsDict : Dict.Dict String CountryMedals
+        medalsDict =
             List.foldl updateDict Dict.empty participations
     in
-    Dict.values medaillenDict
+    Dict.values medalsDict
 
 
 -- Mockdaten
-mockData : List LandMedaillen
+mockData : List CountryMedals
 mockData =
-    [ { land = "USA", gold = 40, silber = 44, bronze = 42 }
-    , { land = "China", gold = 40, silber = 27, bronze = 24 }
-    , { land = "Japan", gold = 20, silber = 12, bronze = 13 }
-    , { land = "Australien", gold = 18, silber = 19, bronze = 16 }
-    , { land = "Frankreich", gold = 16, silber = 26, bronze = 22 }
+    [ { country = "USA", gold = 40, silver = 44, bronze = 42 }
+    , { country = "China", gold = 40, silver = 27, bronze = 24 }
+    , { country = "Japan", gold = 20, silver = 12, bronze = 13 }
+    , { country = "Australien", gold = 18, silver = 19, bronze = 16 }
+    , { country = "Frankreich", gold = 16, silver = 26, bronze = 22 }
     ]
