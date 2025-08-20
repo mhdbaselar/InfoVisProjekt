@@ -11,7 +11,7 @@ view model =
           headerSection
         , -- Visualisierungen untereinander
           div [ style "max-width" "1200px", style "margin" "0 auto", style "padding" "20px" ]
-            [ medaillenspiegelSection mockData
+            [ medaillenspiegelSection model
             , medaillenverteilungSection
             , visualisierung3
             , visualisierung4
@@ -48,22 +48,35 @@ headerSection =
         ]
 
 -- Sektion 1: Traditioneller Medaillenspiegel
-medaillenspiegelSection : List LandMedaillen -> Html Msg
-medaillenspiegelSection llm =
+medaillenspiegelSection : Model -> Html Msg
+medaillenspiegelSection model =
     let
-        totalMed : LandMedaillen -> Int
-        totalMed lm =
-            lm.gold + lm.silber + lm.bronze
+        totalMed r = r.gold + r.silver + r.bronze
 
-        -- Sortierung: absteigend nach Gold, dann Gesamt
-        sortedLlm =
-            llm
-                |> List.sortWith (\a b -> compare ( b.gold, totalMed b ) ( a.gold, totalMed a ))
+        sortedRows =
+            model.countryMedals
+                |> List.sortWith (\a b ->
+                    case compare b.gold a.gold of
+                        EQ ->
+                            case compare b.silver a.silver of
+                                EQ ->
+                                    compare b.bronze a.bronze
+                                ord -> ord
+                        ord -> ord
+                )
     in
     div [ id "medaillenspiegel", style "margin" "60px 0", style "padding" "20px" ]
         [ div [ style "max-width" "900px", style "margin" "0 auto" ]
             [ h2 [ style "text-align" "left", style "margin-bottom" "20px", style "color" "#333" ]
                 [ text "1. Medaillenspiegel" ]
+            , if model.loading then
+                p [] [ text "Lade Daten..." ]
+              else
+                case model.error of
+                    Just err ->
+                        p [ style "color" "#b00020" ] [ text ("Fehler beim Laden: " ++ err) ]
+                    Nothing ->
+                        text ""
             , table [ style "width" "100%", style "border-collapse" "collapse" ]
                 [ thead []
                     [ tr [ style "background-color" "#007cba", style "color" "white" ]
@@ -76,41 +89,62 @@ medaillenspiegelSection llm =
                         ]
                     ]
                 , tbody []
-                    (sortedLlm
+                    (sortedRows
                         |> List.indexedMap
-                            (\i lm ->
+                            (\i r ->
                                 tr [ style "border-bottom" "1px solid #ddd" ]
                                     [ td [ style "padding" "10px" ] [ text (String.fromInt (i + 1)) ]
-                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text lm.land ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.gold) ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.silber) ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.bronze) ]
-                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt (totalMed lm)) ]
+                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text r.country ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.gold) ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.silver) ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.bronze) ]
+                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt (totalMed r)) ]
                                     ]
                             )
                     )
                 ]
             ]
+        , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
+            [ nextLink "#medaillenverteilung" ]
         ]
 
 -- Sektion 2: Medaillenverteilung
 medaillenverteilungSection : Html Msg
 medaillenverteilungSection =
     div [ id "medaillenverteilung", style "margin" "60px 0", style "padding" "20px", style "background-color" "#f8f9fa" ]
-        [
+        [ h2 [ style "margin" "0 0 16px 0" ] [ text "2. Medaillenverteilung" ]
+        , div [ style "text-align" "right" ] [ nextLink "#visualisierung3" ]
         ]
 
 -- Sektion 3: Visualisierung 3
 visualisierung3 : Html Msg
 visualisierung3 =
     div [ id "visualisierung3", style "margin" "60px 0", style "padding" "20px" ]
-        [
+        [ h2 [ style "margin" "0 0 16px 0" ] [ text "3. Visualisierung" ]
+        , div [ style "text-align" "right" ] [ nextLink "#visualisierung4" ]
         ]
 
 -- Sektion 4: Visualisierung 4
 visualisierung4 : Html Msg
 visualisierung4 =
     div [ id "visualisierung4", style "margin" "60px 0", style "padding" "20px", style "background-color" "#f8f9fa" ]
-        [
+        [ h2 [ style "margin" "0 0 16px 0" ] [ text "4. Visualisierung" ]
+        , div [ style "text-align" "right" ] [ nextLink "#medaillenspiegel" ]
         ]
+
+
+-- "Weiter" CTA as styled link
+nextLink : String -> Html msg
+nextLink target =
+    a
+        [ href target
+        , style "display" "inline-block"
+        , style "padding" "10px 16px"
+        , style "background-color" "#007cba"
+        , style "color" "#fff"
+        , style "border-radius" "4px"
+        , style "text-decoration" "none"
+        ]
+        [ text "Weiter" ]
+
 
