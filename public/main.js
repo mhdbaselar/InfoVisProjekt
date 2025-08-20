@@ -7465,10 +7465,10 @@ var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $author$project$View$medaillenspiegelSection = function (model) {
-	var totalMed = function (lm) {
-		return (lm.gold + lm.silver) + lm.bronze;
+	var totalMed = function (cm) {
+		return (cm.gold + cm.silver) + cm.bronze;
 	};
-	var sortedLlm = A2(
+	var sortedCmList = A2(
 		$elm$core$List$sortWith,
 		F2(
 			function (a, b) {
@@ -7652,7 +7652,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 								A2(
 									$elm$core$List$indexedMap,
 									F2(
-										function (i, lm) {
+										function (i, cm) {
 											return A2(
 												$elm$html$Html$tr,
 												_List_fromArray(
@@ -7681,7 +7681,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text(lm.country)
+																$elm$html$Html$text(cm.country)
 															])),
 														A2(
 														$elm$html$Html$td,
@@ -7693,7 +7693,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromInt(lm.gold))
+																$elm$core$String$fromInt(cm.gold))
 															])),
 														A2(
 														$elm$html$Html$td,
@@ -7705,7 +7705,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromInt(lm.silver))
+																$elm$core$String$fromInt(cm.silver))
 															])),
 														A2(
 														$elm$html$Html$td,
@@ -7717,7 +7717,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromInt(lm.bronze))
+																$elm$core$String$fromInt(cm.bronze))
 															])),
 														A2(
 														$elm$html$Html$td,
@@ -7731,11 +7731,11 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 															[
 																$elm$html$Html$text(
 																$elm$core$String$fromInt(
-																	totalMed(lm)))
+																	totalMed(cm)))
 															]))
 													]));
 										}),
-									sortedLlm))
+									sortedCmList))
 							]))
 					])),
 				A2(

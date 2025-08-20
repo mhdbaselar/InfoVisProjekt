@@ -52,11 +52,11 @@ medaillenspiegelSection : Model -> Html Msg
 medaillenspiegelSection model =
     let
         totalMed : CountryMedals -> Int
-        totalMed lm =
-            lm.gold + lm.silver + lm.bronze
+        totalMed cm =
+            cm.gold + cm.silver + cm.bronze
 
         -- Sortierung: absteigend nach Gold -> Gesamt -> Silber -> Bronze
-        sortedLlm =
+        sortedCmList =
             model.medals
                 |> List.sortWith (\a b ->
                     case compare b.gold a.gold of
@@ -98,16 +98,16 @@ medaillenspiegelSection model =
                         ]
                     ]
                 , tbody []
-                    (sortedLlm
+                    (sortedCmList
                         |> List.indexedMap
-                            (\i lm ->
+                            (\i cm ->
                                 tr [ style "border-bottom" "1px solid #ddd" ]
                                     [ td [ style "padding" "10px" ] [ text (String.fromInt (i + 1)) ]
-                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text lm.country ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.gold) ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.silver) ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt lm.bronze) ]
-                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt (totalMed lm)) ]
+                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text cm.country ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt cm.gold) ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt cm.silver) ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt cm.bronze) ]
+                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt (totalMed cm)) ]
                                     ]
                             )
                     )
