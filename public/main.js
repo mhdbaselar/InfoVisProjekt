@@ -6125,7 +6125,7 @@ var $author$project$Model$requestCsv = function (url) {
 		});
 };
 var $author$project$Model$init = _Utils_Tuple2(
-	{error: $elm$core$Maybe$Nothing, loading: true, medals: _List_Nil},
+	{countryMedals: _List_Nil, error: $elm$core$Maybe$Nothing, loading: true, participations: _List_Nil},
 	$author$project$Model$requestCsv($author$project$Model$csvUrl));
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
@@ -7155,6 +7155,38 @@ var $author$project$Model$filterByYear = F2(
 			},
 			participations);
 	});
+var $elm$core$String$concat = function (strings) {
+	return A2($elm$core$String$join, '', strings);
+};
+var $elm$core$Dict$values = function (dict) {
+	return A3(
+		$elm$core$Dict$foldr,
+		F3(
+			function (key, value, valueList) {
+				return A2($elm$core$List$cons, value, valueList);
+			}),
+		_List_Nil,
+		dict);
+};
+var $elm$core$String$words = _String_words;
+var $author$project$Model$filterSportsEventMedal = function (participations) {
+	var updateDict = F2(
+		function (p, dict) {
+			var sKey = $elm$core$String$concat(
+				$elm$core$String$words(
+					$elm$core$String$concat(
+						_List_fromArray(
+							[p.event, p.sport, p.team, p.medal]))));
+			var _v0 = A2($elm$core$Dict$get, sKey, dict);
+			if (_v0.$ === 'Just') {
+				return dict;
+			} else {
+				return A3($elm$core$Dict$insert, sKey, p, dict);
+			}
+		});
+	var sportsEventsDict = A3($elm$core$List$foldl, updateDict, $elm$core$Dict$empty, participations);
+	return $elm$core$Dict$values(sportsEventsDict);
+};
 var $author$project$Update$httpErrorToString = function (err) {
 	switch (err.$) {
 		case 'BadUrl':
@@ -7175,16 +7207,6 @@ var $author$project$Update$httpErrorToString = function (err) {
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Basics$neq = _Utils_notEqual;
-var $elm$core$Dict$values = function (dict) {
-	return A3(
-		$elm$core$Dict$foldr,
-		F3(
-			function (key, value, valueList) {
-				return A2($elm$core$List$cons, value, valueList);
-			}),
-		_List_Nil,
-		dict);
-};
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (maybe.$ === 'Just') {
@@ -7194,7 +7216,7 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
-var $author$project$Model$toMedals = function (participations) {
+var $author$project$Model$toCountryMedals = function (participations) {
 	var getLand = function (p) {
 		return (p.team !== '') ? p.team : p.noc;
 	};
@@ -7242,14 +7264,16 @@ var $author$project$Update$update = F2(
 			var _v2 = $author$project$Model$decodeCsv(body);
 			if (_v2.$ === 'Ok') {
 				var parts = _v2.a;
+				var filteredParts = $author$project$Model$filterSportsEventMedal(
+					A2($author$project$Model$filterByYear, 2024, parts));
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
+							countryMedals: $author$project$Model$toCountryMedals(filteredParts),
 							error: $elm$core$Maybe$Nothing,
 							loading: false,
-							medals: $author$project$Model$toMedals(
-								A2($author$project$Model$filterByYear, 2024, parts))
+							participations: filteredParts
 						}),
 					$elm$core$Platform$Cmd$none);
 			} else {
@@ -7465,27 +7489,18 @@ var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $author$project$View$medaillenspiegelSection = function (model) {
-	var totalMed = function (cm) {
-		return (cm.gold + cm.silver) + cm.bronze;
+	var totalMed = function (r) {
+		return (r.gold + r.silver) + r.bronze;
 	};
-	var sortedCmList = A2(
+	var sortedRows = A2(
 		$elm$core$List$sortWith,
 		F2(
 			function (a, b) {
 				var _v1 = A2($elm$core$Basics$compare, b.gold, a.gold);
 				if (_v1.$ === 'EQ') {
-					var _v2 = A2(
-						$elm$core$Basics$compare,
-						totalMed(b),
-						totalMed(a));
+					var _v2 = A2($elm$core$Basics$compare, b.silver, a.silver);
 					if (_v2.$ === 'EQ') {
-						var _v3 = A2($elm$core$Basics$compare, b.silver, a.silver);
-						if (_v3.$ === 'EQ') {
-							return A2($elm$core$Basics$compare, b.bronze, a.bronze);
-						} else {
-							var ord = _v3;
-							return ord;
-						}
+						return A2($elm$core$Basics$compare, b.bronze, a.bronze);
 					} else {
 						var ord = _v2;
 						return ord;
@@ -7495,7 +7510,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 					return ord;
 				}
 			}),
-		model.medals);
+		model.countryMedals);
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -7652,7 +7667,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 								A2(
 									$elm$core$List$indexedMap,
 									F2(
-										function (i, cm) {
+										function (i, r) {
 											return A2(
 												$elm$html$Html$tr,
 												_List_fromArray(
@@ -7681,7 +7696,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 															]),
 														_List_fromArray(
 															[
-																$elm$html$Html$text(cm.country)
+																$elm$html$Html$text(r.country)
 															])),
 														A2(
 														$elm$html$Html$td,
@@ -7693,7 +7708,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromInt(cm.gold))
+																$elm$core$String$fromInt(r.gold))
 															])),
 														A2(
 														$elm$html$Html$td,
@@ -7705,7 +7720,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromInt(cm.silver))
+																$elm$core$String$fromInt(r.silver))
 															])),
 														A2(
 														$elm$html$Html$td,
@@ -7717,7 +7732,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														_List_fromArray(
 															[
 																$elm$html$Html$text(
-																$elm$core$String$fromInt(cm.bronze))
+																$elm$core$String$fromInt(r.bronze))
 															])),
 														A2(
 														$elm$html$Html$td,
@@ -7731,11 +7746,11 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 															[
 																$elm$html$Html$text(
 																$elm$core$String$fromInt(
-																	totalMed(cm)))
+																	totalMed(r)))
 															]))
 													]));
 										}),
-									sortedCmList))
+									sortedRows))
 							]))
 					])),
 				A2(

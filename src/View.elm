@@ -51,27 +51,18 @@ headerSection =
 medaillenspiegelSection : Model -> Html Msg
 medaillenspiegelSection model =
     let
-        totalMed : CountryMedals -> Int
-        totalMed cm =
-            cm.gold + cm.silver + cm.bronze
+        totalMed r = r.gold + r.silver + r.bronze
 
-        -- Sortierung: absteigend nach Gold -> Gesamt -> Silber -> Bronze
-        sortedCmList =
-            model.medals
+        sortedRows =
+            model.countryMedals
                 |> List.sortWith (\a b ->
                     case compare b.gold a.gold of
                         EQ ->
-                            case compare (totalMed b) (totalMed a) of
+                            case compare b.silver a.silver of
                                 EQ ->
-                                    case compare b.silver a.silver of
-                                        EQ ->
-                                            compare b.bronze a.bronze
-                                        ord ->
-                                            ord
-                                ord ->
-                                    ord
-                        ord ->
-                            ord
+                                    compare b.bronze a.bronze
+                                ord -> ord
+                        ord -> ord
                 )
     in
     div [ id "medaillenspiegel", style "margin" "60px 0", style "padding" "20px" ]
@@ -98,16 +89,16 @@ medaillenspiegelSection model =
                         ]
                     ]
                 , tbody []
-                    (sortedCmList
+                    (sortedRows
                         |> List.indexedMap
-                            (\i cm ->
+                            (\i r ->
                                 tr [ style "border-bottom" "1px solid #ddd" ]
                                     [ td [ style "padding" "10px" ] [ text (String.fromInt (i + 1)) ]
-                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text cm.country ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt cm.gold) ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt cm.silver) ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt cm.bronze) ]
-                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt (totalMed cm)) ]
+                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text r.country ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.gold) ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.silver) ]
+                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.bronze) ]
+                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt (totalMed r)) ]
                                     ]
                             )
                     )

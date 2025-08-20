@@ -27,14 +27,16 @@ type alias CountryMedals =
     }
 
 type alias Model =
-    { medals : List CountryMedals
+    { participations : List Participation
+    , countryMedals : List CountryMedals
     , loading : Bool
     , error : Maybe String
     }
 
 init : ( Model, Cmd Msg )
 init =
-    ( { medals = []
+    ( { participations = []
+      , countryMedals = []
       , loading = True
       , error = Nothing
       }
@@ -101,9 +103,9 @@ filterByYear year participations =
     List.filter (\p -> p.year == year) participations
 
 
--- Aggregation: Participation -> List CountryMedals
-toMedals : List Participation -> List CountryMedals
-toMedals participations =
+-- Aggregation: List Participation -> List CountryMedals
+toCountryMedals : List Participation -> List CountryMedals
+toCountryMedals participations =
     let
         -- Hilfsfunktion: Land bestimmen
         getLand : Participation -> String
@@ -137,6 +139,25 @@ toMedals participations =
     in
     Dict.values medalsDict
 
+-- Filter: Nur Datensätze eines bestimmten Sports, Events und Medaillenart behalten
+filterSportsEventMedal : List Participation -> List Participation
+filterSportsEventMedal participations =
+    let
+        updateDict : Participation -> Dict.Dict String Participation -> Dict.Dict String Participation
+        updateDict p dict =
+            let
+                sKey = String.concat[p.event, p.sport, p.team, p.medal] |> String.words |> String.concat
+            in
+            case Dict.get sKey dict of
+                Just _ -> dict
+                Nothing ->
+                    Dict.insert sKey p dict
+
+        sportsEventsDict : Dict.Dict String Participation
+        sportsEventsDict =
+            List.foldl updateDict Dict.empty participations
+    in
+    Dict.values sportsEventsDict
 
 -- Mockdaten
 mockData : List CountryMedals

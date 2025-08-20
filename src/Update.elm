@@ -11,8 +11,13 @@ update msg model =
                 Ok body ->
                     case decodeCsv body of
                         Ok parts ->
+                            let
+                                filteredParts =
+                                    parts |> filterByYear 2024 |> filterSportsEventMedal
+                            in
                             ( { model
-                                    | medals = parts |> filterByYear 2024 |> toMedals
+                                    | participations = filteredParts
+                                    , countryMedals = toCountryMedals filteredParts
                                     , loading = False
                                     , error = Nothing
                                 }
