@@ -136,7 +136,7 @@ medaillenverteilungSection model =
                     Nothing ->
                         text ""
             , div [style "display" "flex", style "flex-direction" "row", style "align-items" "flex-start"] [
-                sunburst model.sbdata
+                sunburst model.sbmodel
                 , div [style "width" "300px", style "display" "flex", style "flex-direction" "column", style "align-items" "center"] [
                     h3 [] [ text "Selected Country" ]
                     , select [style "width" "150px"]

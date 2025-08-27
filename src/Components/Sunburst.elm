@@ -26,12 +26,12 @@ import Model exposing (..)
 
 sb_w : Float
 sb_w =
-    400
+    500
 
 
 sb_h : Float
 sb_h =
-    350
+    450
 
 
 radius : Float
@@ -62,12 +62,16 @@ sunburst sbmodel =
     svg [ viewBox 0 0 sb_w sb_h ]
         [ g [ transform [ Translate radius radius ] ]
             [ g []
-                (sbmodel.layout
-                    |> List.map
-                        (\item ->
-                            Path.element (arc item)
-                                [ fill (Paint (Scale.convert colorScale item.node.category |> Maybe.withDefault Color.black)) ]
-                        )
+                (if sbmodel.total == 0 then
+                    [text_ [] [text "Keine Medaillen gewonnen"]]
+                else
+                    (sbmodel.layout
+                        |> List.map
+                            (\item ->
+                                Path.element (arc item)
+                                    [ fill (Paint (Scale.convert colorScale item.node.category |> Maybe.withDefault Color.black)) ]
+                            )
+                    )
                 )
             , Svg.Lazy.lazy2 mouseInteractionArcs sbmodel.layout sbmodel.total
             , case sbmodel.hovered of
