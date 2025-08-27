@@ -1,7 +1,8 @@
 module View exposing (..)
 
 import Html exposing (Html, div, h1, h2, h3, text, a, img, p, table, thead, tbody, tr, th, td, select, option)
-import Html.Attributes exposing (href, src, alt, style, id, selected)
+import Html.Attributes exposing (href, src, alt, style, id, selected, value)
+import Html.Events exposing (onInput)
 import Set
 import Components.Sunburst exposing (sunburst)
 import Model exposing (..)
@@ -139,8 +140,8 @@ medaillenverteilungSection model =
                 sunburst model.sbmodel
                 , div [style "width" "300px", style "display" "flex", style "flex-direction" "column", style "align-items" "center"] [
                     h3 [] [ text "Selected Country" ]
-                    , select [style "width" "150px"]
-                        ( List.map (\p -> if p == "Germany" then option [selected True] [ text p ] else option [] [ text p ]) countries)
+                    , select [style "width" "150px", onInput ChangeSBCountry ]
+                        ( List.map (\p -> if p == "Germany" then option [selected True, value p] [ text p ] else option [value p] [ text p ]) countries)
                     ]
                 ]
             ]

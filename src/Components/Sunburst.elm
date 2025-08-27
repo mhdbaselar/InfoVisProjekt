@@ -77,8 +77,8 @@ sunburst sbmodel =
             , case sbmodel.hovered of
                 Just { percentage, sequence } ->
                     g [ textAnchor AnchorMiddle, TypedSvg.Attributes.fontFamily [ "sans-serif" ], fill (Paint (Color.rgb 0.5 0.5 0.5)) ]
-                        [ text_ [ TypedSvg.Attributes.InPx.fontSize 28, y -8 ] [ text (format percentage) ]
-                        , text_ [] [ text (List.Extra.last sequence |> Maybe.withDefault "") ]
+                        [ text_ [ TypedSvg.Attributes.InPx.fontSize 28, y -15 ] [ text (format percentage) ]
+                        , text_ [ y 15 ] [ text (List.Extra.last sequence |> Maybe.withDefault "") ]
                         ]
 
                 Nothing ->

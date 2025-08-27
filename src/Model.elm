@@ -53,6 +53,11 @@ type alias Model =
     , error : Maybe String
     }
 
+type Msg
+    = DataReceived (Result Http.Error String)
+    | HoverSB (Maybe { sequence : List String, percentage : Float })
+    | ChangeSBCountry String
+
 init : ( Model, Cmd Msg )
 init =
     ( { participations = []
@@ -64,9 +69,6 @@ init =
       }
     , requestCsv csvUrl
     )
-
-type Msg
-    = DataReceived (Result Http.Error String)
 
 -- CSV laden
 csvUrl : String
@@ -181,14 +183,15 @@ filterSportsEventMedal participations =
     in
     Dict.values sportsEventsDict
 
-toSBModel : List Participation -> SBModel
-toSBModel parts =
+toSBModel : List Participation -> String -> SBModel
+toSBModel parts country =
     let
         radius = 175
         
         -- Convert Participation to List of records
         recordData =
             parts
+            |> List.filter (\c -> c.team == country && c.medal /= "No medal" )
             |> List.map (\p -> { sequence = List.append [ p.sport ] [ p.event ], medalCount = 1 })
             -- TODO: uniqueBy is a temporary solution!!!
             --       If one country won 2 medals in the same event medalCount must be 2 (or 3)
