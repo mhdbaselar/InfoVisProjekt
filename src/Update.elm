@@ -18,6 +18,7 @@ update msg model =
                             ( { model
                                     | participations = filteredParts
                                     , countryMedals = toCountryMedals filteredParts
+                                    , sbmodel = toSBModel filteredParts "Germany"
                                     , loading = False
                                     , error = Nothing
                                 }
@@ -28,6 +29,14 @@ update msg model =
 
                 Err httpErr ->
                     ( { model | loading = False, error = Just (httpErrorToString httpErr) }, Cmd.none )
+        HoverSB hover ->
+            let
+                modelSB = model.sbmodel
+                updateSBData = { modelSB | hovered = hover }
+            in
+            ( { model | sbmodel = updateSBData }, Cmd.none )
+        ChangeSBCountry country ->
+            ( { model | sbcountry = country, sbmodel = toSBModel model.participations country }, Cmd.none )
 
 httpErrorToString : Http.Error -> String
 httpErrorToString err =

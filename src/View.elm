@@ -1,7 +1,10 @@
 module View exposing (..)
 
-import Html exposing (Html, div, h1, h2, text, a, img, p, table, thead, tbody, tr, th, td)
-import Html.Attributes exposing (href, src, alt, style, id)
+import Html exposing (Html, div, h1, h2, h3, text, a, img, p, table, thead, tbody, tr, th, td, select, option)
+import Html.Attributes exposing (href, src, alt, style, id, selected, value)
+import Html.Events exposing (onInput)
+import Set
+import Components.Sunburst exposing (sunburst)
 import Model exposing (..)
 
 view : Model -> Html Msg
@@ -12,7 +15,7 @@ view model =
         , -- Visualisierungen untereinander
           div [ style "max-width" "1200px", style "margin" "0 auto", style "padding" "20px" ]
             [ medaillenspiegelSection model
-            , medaillenverteilungSection
+            , medaillenverteilungSection model
             , visualisierung3
             , visualisierung4
             ]
@@ -109,11 +112,41 @@ medaillenspiegelSection model =
         ]
 
 -- Sektion 2: Medaillenverteilung
-medaillenverteilungSection : Html Msg
-medaillenverteilungSection =
-    div [ id "medaillenverteilung", style "margin" "60px 0", style "padding" "20px", style "background-color" "#f8f9fa" ]
-        [ h2 [ style "margin" "0 0 16px 0" ] [ text "2. Medaillenverteilung" ]
-        , div [ style "text-align" "right" ] [ nextLink "#visualisierung3" ]
+medaillenverteilungSection : Model -> Html Msg
+medaillenverteilungSection model =
+    let
+        -- Hilfsfunktion: Alle Ländernamen laden
+        countries : List String
+        countries =
+            model.participations
+            |> List.map (\p -> if p.team /= "" then p.team else p.noc)
+            |> Set.fromList
+            |> Set.toList
+            
+    in
+    div [ id "medaillenverteilung", style "margin" "60px 0", style "padding" "20px"]
+        [ div [ style "max-width" "900px", style "margin" "0 auto" ]
+            [ h2 [ style "text-align" "left", style "margin-bottom" "20px", style "color" "#333" ]
+                [ text "2. Medaillenverteilung" ]
+            , if model.loading then
+                p [] [ text "Lade Daten..." ]
+              else
+                case model.error of
+                    Just err ->
+                        p [ style "color" "#b00020" ] [ text ("Fehler beim Laden: " ++ err) ]
+                    Nothing ->
+                        text ""
+            , div [style "display" "flex", style "flex-direction" "row", style "align-items" "flex-start"] [
+                sunburst model.sbmodel
+                , div [style "width" "300px", style "display" "flex", style "flex-direction" "column", style "align-items" "center"] [
+                    h3 [] [ text "Selected Country" ]
+                    , select [style "width" "150px", onInput ChangeSBCountry ]
+                        ( List.map (\p -> if p == "Germany" then option [selected True, value p] [ text p ] else option [value p] [ text p ]) countries)
+                    ]
+                ]
+            ]
+        , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
+            [ nextLink "#visualisierung3" ]
         ]
 
 -- Sektion 3: Visualisierung 3

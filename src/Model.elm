@@ -3,6 +3,9 @@ module Model exposing (..)
 import Dict
 import Http
 import Csv.Decode as Csv
+import Tree exposing (Tree)
+import Hierarchy
+import List.Extra
 
 -- Datenmodell
 type alias Participation =
@@ -26,25 +29,46 @@ type alias CountryMedals =
     , bronze : Int
     }
 
+-- Tree Data for SunBurst-Vis
+type alias SBTreeData =
+    { sequence : List String, category : String, medalCount : Int }
+
+-- Calculated svg-data for SunBurst-Vis
+type alias LayedOutDatum =
+    { x : Float, y : Float, width : Float, height : Float, value : Float, node : SBTreeData }
+
+-- Advanced SunBurst-Vis model
+type alias SBModel =
+    { layout : List LayedOutDatum
+    , hovered : Maybe { sequence : List String, percentage : Float }
+    , total : Float
+    }
+
 type alias Model =
     { participations : List Participation
     , countryMedals : List CountryMedals
+    , sbmodel : SBModel
+    , sbcountry: String
     , loading : Bool
     , error : Maybe String
     }
+
+type Msg
+    = DataReceived (Result Http.Error String)
+    | HoverSB (Maybe { sequence : List String, percentage : Float })
+    | ChangeSBCountry String
 
 init : ( Model, Cmd Msg )
 init =
     ( { participations = []
       , countryMedals = []
+      , sbmodel = { layout = [], total = 0, hovered = Nothing }
+      , sbcountry = ""
       , loading = True
       , error = Nothing
       }
     , requestCsv csvUrl
     )
-
-type Msg
-    = DataReceived (Result Http.Error String)
 
 -- CSV laden
 csvUrl : String
@@ -159,12 +183,47 @@ filterSportsEventMedal participations =
     in
     Dict.values sportsEventsDict
 
--- Mockdaten
-mockData : List CountryMedals
-mockData =
-    [ { country = "USA", gold = 40, silver = 44, bronze = 42 }
-    , { country = "China", gold = 40, silver = 27, bronze = 24 }
-    , { country = "Japan", gold = 20, silver = 12, bronze = 13 }
-    , { country = "Australien", gold = 18, silver = 19, bronze = 16 }
-    , { country = "Frankreich", gold = 16, silver = 26, bronze = 22 }
-    ]
+toSBModel : List Participation -> String -> SBModel
+toSBModel parts country =
+    let
+        radius = 175
+        
+        -- Convert Participation to List of records
+        recordData =
+            parts
+            |> List.filter (\c -> c.team == country && c.medal /= "No medal" )
+            |> List.map (\p -> { sequence = List.append [ p.sport ] [ p.event ], medalCount = 1 })
+            -- TODO: uniqueBy is a temporary solution!!!
+            --       If one country won 2 medals in the same event medalCount must be 2 (or 3)
+            |> List.Extra.uniqueBy (\r -> r.sequence)
+
+        treeData =
+            recordData
+            |> Tree.stratifyWithPath
+                { path = \item -> List.Extra.inits item.sequence
+                , createMissingNode = \path -> { sequence = List.Extra.last path |> Maybe.withDefault [], medalCount = 0 }
+                }
+            |> Result.withDefault (Tree.singleton { sequence = ["Tree error"], medalCount = 0 })
+            |> Tree.sumUp identity
+                (\node children -> 
+                    { node | medalCount = List.sum (List.map .medalCount children) }
+                )
+            |> Tree.map
+                (\node ->
+                    { sequence = node.sequence
+                    , medalCount = node.medalCount
+                    , category = List.Extra.last node.sequence |> Maybe.withDefault "end"
+                    }
+                )
+            |> Tree.sortWith (\_ a b -> compare (Tree.label b).medalCount (Tree.label a).medalCount)
+    in
+    { layout = 
+        treeData
+            |> Hierarchy.partition [ Hierarchy.size (2 * pi) (radius * radius) ] (.medalCount >> toFloat)
+            |> Tree.toList
+            |> List.tail
+            |> Maybe.withDefault []
+            |> List.filter (\d -> d.width > 0.001)
+    , total = toFloat (Tree.label treeData).medalCount
+    , hovered = Nothing
+    }
