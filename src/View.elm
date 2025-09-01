@@ -202,7 +202,7 @@ parallelekoordinatensection model =
             , div [ style "display" "flex", style "justify-content" "center" ]
                 [ PC.view cfg axes series model.pcHover SetPcHover ]
             , div [ style "max-width" "950px", style "margin" "8px auto 0", style "color" "#555", style "font-size" "12px" ]
-                [ p [] [ text "Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Values for population, GDP or age may be missing or not applicable for these teams." ]
+                [ p [] [ text "Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Values for population, GDP or age have been set to 0 for these teams, as they may be missing or not applicable." ]
                 , p [] [ text "Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop)." ]
                 ]
             -- Hilfstabelle

@@ -13575,7 +13575,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											$elm$html$Html$text('Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Values for population, GDP or age may be missing or not applicable for these teams.')
+											$elm$html$Html$text('Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Values for population, GDP or age have been set to 0 for these teams, as they may be missing or not applicable.')
 										])),
 									A2(
 									$elm$html$Html$p,
