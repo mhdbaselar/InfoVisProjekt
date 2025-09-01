@@ -1,10 +1,14 @@
 module View exposing (..)
 
-import Html exposing (Html, div, h1, h2, h3, text, a, img, p, table, thead, tbody, tr, th, td, select, option)
-import Html.Attributes exposing (href, src, alt, style, id, selected, value)
-import Html.Events exposing (onInput)
+import Html exposing (Html, div, h1, h2, h3, text, a, img, p, table, thead, tbody, tr, th, td, select, option, input, span)
+import Html.Attributes exposing (href, src, alt, style, id, selected, value, draggable, type_, checked)
+import Html.Events as Events exposing (onInput, onCheck, on)
+import Dict
+import List.Extra as ListExtra
+import Json.Decode as Decode
 import Set
 import Components.Sunburst exposing (sunburst)
+import Components.ParallelCoordinates as PC
 import Model exposing (..)
 
 view : Model -> Html Msg
@@ -16,7 +20,7 @@ view model =
           div [ style "max-width" "1200px", style "margin" "0 auto", style "padding" "20px" ]
             [ medaillenspiegelSection model
             , medaillenverteilungSection model
-            , visualisierung3
+            , parallelekoordinatensection model
             , visualisierung4
             ]
         ]
@@ -33,8 +37,8 @@ headerSection =
             , a [ href "#medaillenverteilung", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
                 [ text "Medaillenverteilung" ]
             , text " | "
-            , a [ href "#visualisierung3", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
-                [ text "Visualisierung 3" ]
+            , a [ href "#parallele-koordinaten", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
+                [ text "Parallele Koordinaten" ]
             , text " | "
             , a [ href "#visualisierung4", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
                 [ text "Visualisierung 4" ]
@@ -54,19 +58,9 @@ headerSection =
 medaillenspiegelSection : Model -> Html Msg
 medaillenspiegelSection model =
     let
-        totalMed r = r.gold + r.silver + r.bronze
-
         sortedRows =
-            model.countryMedals
-                |> List.sortWith (\a b ->
-                    case compare b.gold a.gold of
-                        EQ ->
-                            case compare b.silver a.silver of
-                                EQ ->
-                                    compare b.bronze a.bronze
-                                ord -> ord
-                        ord -> ord
-                )
+            model.medalTable
+                |> List.sortBy .placement
     in
     div [ id "medaillenspiegel", style "margin" "60px 0", style "padding" "20px" ]
         [ div [ style "max-width" "900px", style "margin" "0 auto" ]
@@ -83,7 +77,7 @@ medaillenspiegelSection model =
             , table [ style "width" "100%", style "border-collapse" "collapse" ]
                 [ thead []
                     [ tr [ style "background-color" "#007cba", style "color" "white" ]
-                        [ th [ style "text-align" "left", style "padding" "12px" ] [ text "Platz" ]
+                        [ th [ style "text-align" "left", style "padding" "12px" ] [ text "Rank" ]
                         , th [ style "text-align" "left", style "padding" "12px" ] [ text "Land" ]
                         , th [ style "text-align" "center", style "padding" "12px" ] [ text "Gold" ]
                         , th [ style "text-align" "center", style "padding" "12px" ] [ text "Silber" ]
@@ -93,15 +87,15 @@ medaillenspiegelSection model =
                     ]
                 , tbody []
                     (sortedRows
-                        |> List.indexedMap
-                            (\i r ->
+                        |> List.map
+                            (\r ->
                                 tr [ style "border-bottom" "1px solid #ddd" ]
-                                    [ td [ style "padding" "10px" ] [ text (String.fromInt (i + 1)) ]
+                                    [ td [ style "padding" "10px" ] [ text (String.fromInt r.placement) ]
                                     , td [ style "padding" "10px", style "font-weight" "bold" ] [ text r.country ]
                                     , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.gold) ]
                                     , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.silver) ]
                                     , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.bronze) ]
-                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt (totalMed r)) ]
+                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt r.total) ]
                                     ]
                             )
                     )
@@ -122,7 +116,7 @@ medaillenverteilungSection model =
             |> List.map (\p -> if p.team /= "" then p.team else p.noc)
             |> Set.fromList
             |> Set.toList
-            
+
     in
     div [ id "medaillenverteilung", style "margin" "60px 0", style "padding" "20px"]
         [ div [ style "max-width" "900px", style "margin" "0 auto" ]
@@ -146,14 +140,222 @@ medaillenverteilungSection model =
                 ]
             ]
         , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
-            [ nextLink "#visualisierung3" ]
+            [ nextLink "#parallele-koordinaten" ]
         ]
 
--- Sektion 3: Visualisierung 3
-visualisierung3 : Html Msg
-visualisierung3 =
-    div [ id "visualisierung3", style "margin" "60px 0", style "padding" "20px" ]
-        [ h2 [ style "margin" "0 0 16px 0" ] [ text "3. Visualisierung" ]
+-- Sektion 3: Parallele Koordinaten
+parallelekoordinatensection : Model -> Html Msg
+parallelekoordinatensection model =
+    div [ id "parallele-koordinaten", style "margin" "60px 0", style "padding" "20px" ]
+        [ h2 [ style "margin" "0 0 16px 0" ] [ text "3. Parallele Koordinaten" ]
+        , let
+            axes = model.pcmodel.axes
+
+            series = model.pcmodel.series
+
+            cfg =
+                { width = 950, height = 520, padding = 50, ranking = model.pcmodel.ranking }
+          in
+          div []
+            [ div [ style "display" "flex", style "justify-content" "center", style "gap" "8px", style "margin-bottom" "8px" ]
+                (List.concat
+                    [ [ span
+                            ([ style "padding" "4px 8px"
+                            , style "border" (if model.dropTargetAxis == Just "__start__" then "2px dashed #007cba" else "1px dashed #ccc")
+                            , style "border-radius" "4px"
+                            , style "color" "#777"
+                            , Events.preventDefaultOn "dragover" (Decode.map (\_ -> ( DragOverAxis "__start__", True )) Decode.value)
+                            , Events.preventDefaultOn "drop" (Decode.map (\_ -> ( DropAxis "__start__", True )) Decode.value)
+                            ] ++ (if model.dropTargetAxis == Just "__start__" then [ style "background-color" "#eaf5ff" ] else []))
+                            [ text "Drop am Anfang" ]
+                      ]
+                    , List.map (\a ->
+                        span
+                            ([ style "padding" "4px 8px"
+                            , style "border" (if model.dropTargetAxis == Just a.id then "2px solid #007cba" else "1px solid #ccc")
+                            , style "border-radius" "4px"
+                            , style "cursor" "grab"
+                            , draggable "true"
+                            , on "dragstart" (Decode.succeed (StartDragAxis a.id))
+                            , Events.preventDefaultOn "dragover" (Decode.map (\_ -> ( DragOverAxis a.id, True )) Decode.value)
+                            , Events.preventDefaultOn "drop" (Decode.map (\_ -> ( DropAxis a.id, True )) Decode.value)
+                            ] ++ (if model.dropTargetAxis == Just a.id then [ style "background-color" "#eaf5ff" ] else []))
+                            [ text a.label ]
+                        ) axes
+                    , [ span
+                            ([ style "padding" "4px 8px"
+                            , style "border" (if model.dropTargetAxis == Just "__end__" then "2px dashed #007cba" else "1px dashed #ccc")
+                            , style "border-radius" "4px"
+                            , style "color" "#777"
+                            , Events.preventDefaultOn "dragover" (Decode.map (\_ -> ( DragOverAxis "__end__", True )) Decode.value)
+                            , Events.preventDefaultOn "drop" (Decode.map (\_ -> ( DropAxis "__end__", True )) Decode.value)
+                            ] ++ (if model.dropTargetAxis == Just "__end__" then [ style "background-color" "#eaf5ff" ] else []))
+                            [ text "Drop ans Ende" ]
+                      ]
+                    ])
+            , div [ style "display" "flex", style "justify-content" "center", style "margin-bottom" "12px", style "gap" "8px", style "align-items" "center" ]
+                [ span [] [ text "Ranking" ]
+                , input [ type_ "checkbox", checked model.ranking, onCheck ToggleRanking ] []
+                , span [ style "margin-left" "16px" ] [ text "Tabelle" ]
+                , input [ type_ "checkbox", checked model.showPcDebug, onCheck TogglePcDebug ] []
+                ]
+            , div [ style "display" "flex", style "justify-content" "center" ]
+                [ PC.view cfg axes series model.pcHover SetPcHover ]
+            , div [ style "max-width" "950px", style "margin" "8px auto 0", style "color" "#555", style "font-size" "12px" ]
+                [ p [] [ text "Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Values for population, GDP or age may be missing or not applicable for these teams." ]
+                , p [] [ text "Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop)." ]
+                ]
+            -- Hilfstabelle
+            , if model.showPcDebug then
+                let
+                    -- 1) Platzierungen und Medaillen-Summen je Land vorbereiten
+                    placementBy : Dict.Dict String Int
+                    placementBy =
+                        series
+                            |> List.filterMap (\s ->
+                                s.values
+                                    |> List.filter (\( id, _ ) -> id == "medals")
+                                    |> List.head
+                                    |> Maybe.map (\(_, v) -> ( s.name, round v ))
+                            )
+                            |> Dict.fromList
+
+                    medalSumBy : Dict.Dict String Int
+                    medalSumBy =
+                        model.medalTable
+                            |> List.map (\r -> ( r.country, r.total ))
+                            |> Dict.fromList
+
+                    -- 2) Werte je Achse vorab in Dicts legen: axisId -> (country -> value)
+                    axisValuesBy : Dict.Dict String (Dict.Dict String Float)
+                    axisValuesBy =
+                        axes
+                            |> List.map (\a ->
+                                ( a.id
+                                , series
+                                    |> List.filterMap (\s ->
+                                        s.values
+                                            |> List.filter (\( id, _ ) -> id == a.id)
+                                            |> List.head
+                                            |> Maybe.map (\(_, v) -> ( s.name, v ))
+                                    )
+                                    |> Dict.fromList
+                                )
+                            )
+                            |> Dict.fromList
+
+                    nonMedalAxes = axes |> List.filter (\a -> a.id /= "medals")
+
+                    -- 3) Rang-Maps pro Nicht-Medaillenachse: axisId -> (value -> rank)
+                    rankDictByAxis : Dict.Dict String (Dict.Dict Float Int)
+                    rankDictByAxis =
+                        nonMedalAxes
+                            |> List.map (\a ->
+                                let
+                                    vals =
+                                        axisValuesBy
+                                            |> Dict.get a.id
+                                            |> Maybe.withDefault Dict.empty
+                                            |> Dict.values
+                                            |> List.sort
+                                            |> List.reverse
+                                    uniques = ListExtra.unique vals
+                                    dict = uniques |> List.indexedMap (\i v -> ( v, i + 1 )) |> Dict.fromList
+                                in
+                                ( a.id, dict )
+                            )
+                            |> Dict.fromList
+
+                    -- 4) Länder nach Platz sortieren
+                    rows =
+                        series
+                            |> List.map .name
+                            |> List.sortWith (\a b ->
+                                compare (Dict.get a placementBy |> Maybe.withDefault 9999)
+                                        (Dict.get b placementBy |> Maybe.withDefault 9999)
+                            )
+
+                    -- Headerzellen
+                    headerCells =
+                        let
+                            valueHeaders =
+                                axes
+                                    |> List.concatMap (\a ->
+                                        if a.id == "medals" then
+                                            [ th [ style "text-align" "center", style "padding" "6px" ] [ text "Medaillenspiegel" ]
+                                            , th [ style "text-align" "center", style "padding" "6px" ] [ text "Medaillen" ]
+                                            ]
+                                        else
+                                            [ th [ style "text-align" "center", style "padding" "6px" ] [ text (a.label ++ " (Wert)") ] ]
+                                    )
+
+                            rankHeaders =
+                                nonMedalAxes
+                                    |> List.map (\a -> th [ style "text-align" "center", style "padding" "6px" ] [ text (a.label ++ " (Rang)") ])
+                        in
+                        th [ style "text-align" "left", style "padding" "6px" ] [ text "Land" ]
+                            :: (valueHeaders ++ rankHeaders)
+                in
+                div [ style "max-width" "1000px", style "margin" "16px auto", style "font-size" "12px" ]
+                    [ table [ style "width" "100%", style "border-collapse" "collapse" ]
+                        ([ thead [] [ tr [] headerCells ]
+                         , tbody []
+                            (rows
+                                |> List.map (\name ->
+                                    let
+                                        valueTds =
+                                            axes
+                                                |> List.concatMap (\a ->
+                                                    case a.id of
+                                                        "medals" ->
+                                                            [ td [ style "padding" "4px", style "text-align" "center" ] [ text (Dict.get name placementBy |> Maybe.withDefault 0 |> String.fromInt) ]
+                                                            , td [ style "padding" "4px", style "text-align" "center" ] [ text (Dict.get name medalSumBy |> Maybe.withDefault 0 |> String.fromInt) ]
+                                                            ]
+                                                        _ ->
+                                                            let
+                                                                vVal =
+                                                                    axisValuesBy
+                                                                        |> Dict.get a.id
+                                                                        |> Maybe.withDefault Dict.empty
+                                                                        |> Dict.get name
+                                                                        |> Maybe.withDefault 0
+                                                            in
+                                                            [ td [ style "padding" "4px", style "text-align" "center" ] [ text (String.fromFloat vVal) ] ]
+                                                )
+
+                                        rankTds =
+                                            nonMedalAxes
+                                                |> List.map (\a ->
+                                                    let
+                                                        v =
+                                                            axisValuesBy
+                                                                |> Dict.get a.id
+                                                                |> Maybe.withDefault Dict.empty
+                                                                |> Dict.get name
+                                                                |> Maybe.withDefault 0
+                                                        r =
+                                                            rankDictByAxis
+                                                                |> Dict.get a.id
+                                                                |> Maybe.withDefault Dict.empty
+                                                                |> Dict.get v
+                                                                |> Maybe.withDefault 0
+                                                    in
+                                                    td [ style "padding" "4px", style "text-align" "center" ] [ text (String.fromInt r) ]
+                                                )
+                                    in
+                                    tr [ style "border-bottom" "1px solid #eee" ]
+                                        ( td [ style "padding" "4px", style "text-align" "left" ] [ text name ]
+                                            :: (valueTds ++ rankTds)
+                                        )
+                                )
+                            )
+                         ]
+                        )
+                    ]
+              else
+                text ""
+            ]
+
         , div [ style "text-align" "right" ] [ nextLink "#visualisierung4" ]
         ]
 
