@@ -482,9 +482,9 @@ toPCModel model =
     let
         axes = model.axisOrder |> List.map (\aid -> { id = aid, label = axisLabel aid })
 
-        placementBy : Dict String Float
+        placementBy : Dict String (Float, Int)
         placementBy =
-            model.medalTable |> List.map (\r -> ( r.country, toFloat r.placement )) |> Dict.fromList
+            model.medalTable |> List.map (\r -> ( r.country, (toFloat r.placement, r.total) )) |> Dict.fromList
 
         popBy : Dict String Float
         popBy = model.populationByCountry |> Dict.map (\_ v -> toFloat v.population)
@@ -497,15 +497,18 @@ toPCModel model =
 
         getValue : String -> String -> Float
         getValue axisId country =
+            let
+                total_medals = Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.second |> toFloat
+            in
             case axisId of
-                "medals" -> Dict.get country placementBy |> Maybe.withDefault 9999
-                "pop" -> Dict.get country popBy |> Maybe.withDefault 0
-                "gdp" -> Dict.get country gdpBy |> Maybe.withDefault 0
-                "age" -> Dict.get country ageBy |> Maybe.withDefault 0
+                "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
+                "pop" -> total_medals / (Dict.get country popBy |> Maybe.withDefault 0)
+                "gdp" -> total_medals / (Dict.get country gdpBy |> Maybe.withDefault 0)
+                "age" -> total_medals / (Dict.get country ageBy |> Maybe.withDefault 0)
                 _ -> 0
 
         countries : List String
-        countries = model.medalTable |> List.map .country
+        countries = model.medalTable |> List.map .country |> List.filter (\c -> c /= "EOR" && c /= "AIN")
 
         seriesFor : String -> PCSeries
         seriesFor country =
