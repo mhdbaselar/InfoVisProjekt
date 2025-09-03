@@ -193,6 +193,9 @@ parallelekoordinatensection model =
                             [ text "Drop ans Ende" ]
                       ]
                     ])
+                , div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
+                        [ p [] [ text "Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop)." ]  ]  
+                    
             , div [ style "display" "flex", style "justify-content" "center", style "margin-bottom" "12px", style "gap" "8px", style "align-items" "center" ]
                 [ span [] [ text "Ranking" ]
                 , input [ type_ "checkbox", checked model.ranking, onCheck ToggleRanking ] []
@@ -201,10 +204,8 @@ parallelekoordinatensection model =
                 ]
             , div [ style "display" "flex", style "justify-content" "center" ]
                 [ PC.view cfg axes series model.pcHover SetPcHover ]
-            , div [ style "max-width" "950px", style "margin" "8px auto 0", style "color" "#555", style "font-size" "12px" ]
-                [ p [] [ text "Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Values for population, GDP or age have been set to 0 for these teams, as they may be missing or not applicable." ]
-                , p [] [ text "Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop)." ]
-                ]
+            , div [ style "max-width" "750px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
+                [ p [] [ text "Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Therefore, there are no values for population, GDP or age, which is why they are not included in this ranking." ] ]
             -- Hilfstabelle
             , if model.showPcDebug then
                 let
