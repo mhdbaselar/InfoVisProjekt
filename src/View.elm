@@ -11,6 +11,128 @@ import Components.Sunburst exposing (sunburst)
 import Components.ParallelCoordinates as PC
 import Model exposing (..)
 
+
+-- Hilfsfunktionen: kompakte Zahlenformate für Debug-Tabelle
+
+roundTo : Int -> Float -> Float
+roundTo n v =
+    let
+        factor = 10 ^ n |> toFloat
+    in
+    (toFloat (round (v * factor))) / factor
+
+
+trimFloat : String -> String
+trimFloat s =
+    if String.contains "." s then
+        let
+            noZeros =
+                s
+                    |> String.toList
+                    |> List.reverse
+                    |> ListExtra.dropWhile (\c -> c == '0')
+                    |> (\cs ->
+                        case cs of
+                            '.' :: rest -> rest
+                            _ -> cs
+                       )
+                    |> List.reverse
+                    |> String.fromList
+        in
+        if noZeros == "-0" then "0" else noZeros
+    else
+        s
+
+
+formatFixed : Int -> Float -> String
+formatFixed n v =
+    v |> roundTo n |> String.fromFloat |> trimFloat
+
+
+formatWithSuffix : Float -> String
+formatWithSuffix v =
+    let
+        absV = abs v
+    in
+    if absV >= 1.0e12 then
+        formatFixed 1 (v / 1.0e12) ++ "T"
+    else if absV >= 1.0e9 then
+        formatFixed 1 (v / 1.0e9) ++ "B"
+    else if absV >= 1.0e6 then
+        formatFixed 1 (v / 1.0e6) ++ "M"
+    else if absV >= 1.0e3 then
+        formatFixed 0 (v / 1.0e3) ++ "K"
+    else
+        formatFixed 0 v
+
+
+formatRelativeValue : String -> Float -> String
+formatRelativeValue axisId v =
+    case axisId of
+        -- Für Bevölkerung: "pro 1M Einwohner"
+        "pop" ->
+            let
+                per1M = v * 1.0e6
+                a = abs per1M
+                -- Schwelle: alles darunter als <0.001 anzeigen, um 0 zu vermeiden
+                threshold = 0.001
+            in
+            if per1M == 0 then
+                "0"
+            else if a < threshold then
+                "<0.001"
+            else
+                let
+                    decs =
+                        if a >= 100 then 0
+                        else if a >= 10 then 1
+                        else if a >= 1 then 2
+                        else if a >= 0.1 then 3
+                        else 4
+                in
+                formatFixed decs per1M
+
+        -- Für BIP: "pro $1B"
+        "gdp" ->
+            let
+                per1B = v * 1.0e9
+                a = abs per1B
+                threshold = 0.001
+            in
+            if per1B == 0 then
+                "0"
+            else if a < threshold then
+                "<0.001"
+            else
+                let
+                    decs =
+                        if a >= 100 then 0
+                        else if a >= 10 then 1
+                        else if a >= 1 then 2
+                        else if a >= 0.1 then 3
+                        else 4
+                in
+                formatFixed decs per1B
+
+        -- Für Alter: direkt (kleine Dezimalzahlen)
+        "age" ->
+            formatFixed 3 v
+
+        _ ->
+            formatFixed 3 v
+
+
+formatPcValue : Bool -> String -> Float -> String
+formatPcValue useRelative axisId v =
+    if useRelative then
+        formatRelativeValue axisId v
+    else
+        case axisId of
+            "pop" -> formatWithSuffix v
+            "gdp" -> formatWithSuffix v
+            "age" -> formatFixed 0 v
+            _ -> formatFixed 0 v
+
 view : Model -> Html Msg
 view model =
     div [ style "font-family" "Arial, sans-serif" ]
@@ -289,7 +411,18 @@ parallelekoordinatensection model =
                                             , th [ style "text-align" "center", style "padding" "6px" ] [ text "Medaillen" ]
                                             ]
                                         else
-                                            [ th [ style "text-align" "center", style "padding" "6px" ] [ text (a.label ++ " (Wert)") ] ]
+                                            let
+                                                labelSuffix =
+                                                    if model.useRelative then
+                                                        case a.id of
+                                                            "pop" -> " (pro 1M)"
+                                                            "gdp" -> " (pro $1B)"
+                                                            "age" -> " (rel.)"
+                                                            _ -> " (rel.)"
+                                                    else
+                                                        " (Wert)"
+                                            in
+                                            [ th [ style "text-align" "center", style "padding" "6px" ] [ text (a.label ++ labelSuffix) ] ]
                                     )
 
                             rankHeaders =
@@ -323,7 +456,8 @@ parallelekoordinatensection model =
                                                                         |> Dict.get name
                                                                         |> Maybe.withDefault 0
                                                             in
-                                                            [ td [ style "padding" "4px", style "text-align" "center" ] [ text (String.fromFloat vVal) ] ]
+                                                            [ td [ style "padding" "4px", style "text-align" "center" ] [ text (formatPcValue model.useRelative a.id vVal) ] ]
+                                                            -- [ td [ style "padding" "4px", style "text-align" "center" ] [ text (String.fromFloat vVal) ] ]
                                                 )
 
                                         rankTds =

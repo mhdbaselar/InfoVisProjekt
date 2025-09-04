@@ -11990,6 +11990,127 @@ var $elm$core$List$concatMap = F2(
 			A2($elm$core$List$map, f, list));
 	});
 var $elm$html$Html$Attributes$draggable = _VirtualDom_attribute('draggable');
+var $author$project$View$roundTo = F2(
+	function (n, v) {
+		var factor = A2($elm$core$Basics$pow, 10, n);
+		return $elm$core$Basics$round(v * factor) / factor;
+	});
+var $elm_community$list_extra$List$Extra$dropWhile = F2(
+	function (predicate, list) {
+		dropWhile:
+		while (true) {
+			if (!list.b) {
+				return _List_Nil;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (predicate(x)) {
+					var $temp$predicate = predicate,
+						$temp$list = xs;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue dropWhile;
+				} else {
+					return list;
+				}
+			}
+		}
+	});
+var $elm$core$String$fromList = _String_fromList;
+var $elm$core$String$foldr = _String_foldr;
+var $elm$core$String$toList = function (string) {
+	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
+};
+var $author$project$View$trimFloat = function (s) {
+	if (A2($elm$core$String$contains, '.', s)) {
+		var noZeros = $elm$core$String$fromList(
+			$elm$core$List$reverse(
+				function (cs) {
+					if (cs.b && ('.' === cs.a.valueOf())) {
+						var rest = cs.b;
+						return rest;
+					} else {
+						return cs;
+					}
+				}(
+					A2(
+						$elm_community$list_extra$List$Extra$dropWhile,
+						function (c) {
+							return _Utils_eq(
+								c,
+								_Utils_chr('0'));
+						},
+						$elm$core$List$reverse(
+							$elm$core$String$toList(s))))));
+		return (noZeros === '-0') ? '0' : noZeros;
+	} else {
+		return s;
+	}
+};
+var $author$project$View$formatFixed = F2(
+	function (n, v) {
+		return $author$project$View$trimFloat(
+			$elm$core$String$fromFloat(
+				A2($author$project$View$roundTo, n, v)));
+	});
+var $author$project$View$formatRelativeValue = F2(
+	function (axisId, v) {
+		switch (axisId) {
+			case 'pop':
+				var threshold = 0.001;
+				var per1M = v * 1.0e6;
+				var a = $elm$core$Basics$abs(per1M);
+				if (!per1M) {
+					return '0';
+				} else {
+					if (_Utils_cmp(a, threshold) < 0) {
+						return '<0.001';
+					} else {
+						var decs = (a >= 100) ? 0 : ((a >= 10) ? 1 : ((a >= 1) ? 2 : ((a >= 0.1) ? 3 : 4)));
+						return A2($author$project$View$formatFixed, decs, per1M);
+					}
+				}
+			case 'gdp':
+				var threshold = 0.001;
+				var per1B = v * 1.0e9;
+				var a = $elm$core$Basics$abs(per1B);
+				if (!per1B) {
+					return '0';
+				} else {
+					if (_Utils_cmp(a, threshold) < 0) {
+						return '<0.001';
+					} else {
+						var decs = (a >= 100) ? 0 : ((a >= 10) ? 1 : ((a >= 1) ? 2 : ((a >= 0.1) ? 3 : 4)));
+						return A2($author$project$View$formatFixed, decs, per1B);
+					}
+				}
+			case 'age':
+				return A2($author$project$View$formatFixed, 3, v);
+			default:
+				return A2($author$project$View$formatFixed, 3, v);
+		}
+	});
+var $author$project$View$formatWithSuffix = function (v) {
+	var absV = $elm$core$Basics$abs(v);
+	return (absV >= 1.0e12) ? (A2($author$project$View$formatFixed, 1, v / 1.0e12) + 'T') : ((absV >= 1.0e9) ? (A2($author$project$View$formatFixed, 1, v / 1.0e9) + 'B') : ((absV >= 1.0e6) ? (A2($author$project$View$formatFixed, 1, v / 1.0e6) + 'M') : ((absV >= 1.0e3) ? (A2($author$project$View$formatFixed, 0, v / 1.0e3) + 'K') : A2($author$project$View$formatFixed, 0, v))));
+};
+var $author$project$View$formatPcValue = F3(
+	function (useRelative, axisId, v) {
+		if (useRelative) {
+			return A2($author$project$View$formatRelativeValue, axisId, v);
+		} else {
+			switch (axisId) {
+				case 'pop':
+					return $author$project$View$formatWithSuffix(v);
+				case 'gdp':
+					return $author$project$View$formatWithSuffix(v);
+				case 'age':
+					return A2($author$project$View$formatFixed, 0, v);
+				default:
+					return A2($author$project$View$formatFixed, 0, v);
+			}
+		}
+	});
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Events$on = F2(
 	function (event, decoder) {
@@ -13689,8 +13810,8 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 										function (s) {
 											return A2(
 												$elm$core$Maybe$map,
-												function (_v10) {
-													var v = _v10.b;
+												function (_v11) {
+													var v = _v11.b;
 													return _Utils_Tuple2(
 														s.name,
 														$elm$core$Basics$round(v));
@@ -13698,8 +13819,8 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 												$elm$core$List$head(
 													A2(
 														$elm$core$List$filter,
-														function (_v9) {
-															var id = _v9.a;
+														function (_v10) {
+															var id = _v10.a;
 															return id === 'medals';
 														},
 														s.values)));
@@ -13743,44 +13864,66 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 									var valueHeaders = A2(
 										$elm$core$List$concatMap,
 										function (a) {
-											return (a.id === 'medals') ? _List_fromArray(
-												[
-													A2(
-													$elm$html$Html$th,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-															A2($elm$html$Html$Attributes$style, 'padding', '6px')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('Medaillenspiegel')
-														])),
-													A2(
-													$elm$html$Html$th,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-															A2($elm$html$Html$Attributes$style, 'padding', '6px')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text('Medaillen')
-														]))
-												]) : _List_fromArray(
-												[
-													A2(
-													$elm$html$Html$th,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-															A2($elm$html$Html$Attributes$style, 'padding', '6px')
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text(a.label + ' (Wert)')
-														]))
-												]);
+											if (a.id === 'medals') {
+												return _List_fromArray(
+													[
+														A2(
+														$elm$html$Html$th,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+																A2($elm$html$Html$Attributes$style, 'padding', '6px')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('Medaillenspiegel')
+															])),
+														A2(
+														$elm$html$Html$th,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+																A2($elm$html$Html$Attributes$style, 'padding', '6px')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('Medaillen')
+															]))
+													]);
+											} else {
+												var labelSuffix = function () {
+													if (model.useRelative) {
+														var _v9 = a.id;
+														switch (_v9) {
+															case 'pop':
+																return ' (pro 1M)';
+															case 'gdp':
+																return ' (pro $1B)';
+															case 'age':
+																return ' (rel.)';
+															default:
+																return ' (rel.)';
+														}
+													} else {
+														return ' (Wert)';
+													}
+												}();
+												return _List_fromArray(
+													[
+														A2(
+														$elm$html$Html$th,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+																A2($elm$html$Html$Attributes$style, 'padding', '6px')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(
+																_Utils_ap(a.label, labelSuffix))
+															]))
+													]);
+											}
 										},
 										axes);
 									var rankHeaders = A2(
@@ -13960,7 +14103,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 																				_List_fromArray(
 																					[
 																						$elm$html$Html$text(
-																						$elm$core$String$fromFloat(vVal))
+																						A3($author$project$View$formatPcValue, model.useRelative, a.id, vVal))
 																					]))
 																			]);
 																	}
