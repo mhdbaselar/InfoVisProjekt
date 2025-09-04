@@ -6201,7 +6201,8 @@ var $author$project$Model$init = _Utils_Tuple2(
 		ranking: true,
 		sbcountry: '',
 		sbmodel: {hovered: $elm$core$Maybe$Nothing, layout: _List_Nil, total: 0},
-		showPcDebug: false
+		showPcDebug: false,
+		useRelative: false
 	},
 	$elm$core$Platform$Cmd$batch(
 		_List_fromArray(
@@ -7509,11 +7510,19 @@ var $elm$core$Dict$map = F2(
 				A2($elm$core$Dict$map, func, right));
 		}
 	});
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
 var $author$project$Model$toPCModel = function (model) {
+	var safeDiv = F2(
+		function (num, den) {
+			return (den <= 0) ? 0 : (num / den);
+		});
 	var popBy = A2(
 		$elm$core$Dict$map,
 		F2(
-			function (_v2, v) {
+			function (_v3, v) {
 				return v.population;
 			}),
 		model.populationByCountry);
@@ -7521,16 +7530,23 @@ var $author$project$Model$toPCModel = function (model) {
 		A2(
 			$elm$core$List$map,
 			function (r) {
-				return _Utils_Tuple2(r.country, r.placement);
+				return _Utils_Tuple2(
+					r.country,
+					_Utils_Tuple2(r.placement, r.total));
 			},
 			model.medalTable));
 	var gdpBy = model.gdpByCountry;
 	var countries = A2(
-		$elm$core$List$map,
-		function ($) {
-			return $.country;
+		$elm$core$List$filter,
+		function (c) {
+			return (c !== 'EOR') && (c !== 'AIN');
 		},
-		model.medalTable);
+		A2(
+			$elm$core$List$map,
+			function ($) {
+				return $.country;
+			},
+			model.medalTable));
 	var axes = A2(
 		$elm$core$List$map,
 		function (aid) {
@@ -7543,35 +7559,75 @@ var $author$project$Model$toPCModel = function (model) {
 	var ageBy = A2(
 		$elm$core$Dict$map,
 		F2(
-			function (_v1, v) {
+			function (_v2, v) {
 				return v.medianAge;
 			}),
 		model.populationByCountry);
 	var getValue = F2(
 		function (axisId, country) {
-			switch (axisId) {
-				case 'medals':
-					return A2(
-						$elm$core$Maybe$withDefault,
-						9999,
-						A2($elm$core$Dict$get, country, placementBy));
-				case 'pop':
-					return A2(
-						$elm$core$Maybe$withDefault,
-						0,
-						A2($elm$core$Dict$get, country, popBy));
-				case 'gdp':
-					return A2(
-						$elm$core$Maybe$withDefault,
-						0,
-						A2($elm$core$Dict$get, country, gdpBy));
-				case 'age':
-					return A2(
-						$elm$core$Maybe$withDefault,
-						0,
-						A2($elm$core$Dict$get, country, ageBy));
-				default:
-					return 0;
+			if (model.useRelative) {
+				var total_medals = A2(
+					$elm$core$Maybe$withDefault,
+					_Utils_Tuple2(9999, 0),
+					A2($elm$core$Dict$get, country, placementBy)).b;
+				switch (axisId) {
+					case 'medals':
+						return A2(
+							$elm$core$Maybe$withDefault,
+							_Utils_Tuple2(9999, 0),
+							A2($elm$core$Dict$get, country, placementBy)).a;
+					case 'pop':
+						return A2(
+							safeDiv,
+							total_medals,
+							A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2($elm$core$Dict$get, country, popBy)));
+					case 'gdp':
+						return A2(
+							safeDiv,
+							total_medals,
+							A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2($elm$core$Dict$get, country, gdpBy)));
+					case 'age':
+						return A2(
+							safeDiv,
+							total_medals,
+							A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2($elm$core$Dict$get, country, ageBy)));
+					default:
+						return 0;
+				}
+			} else {
+				switch (axisId) {
+					case 'medals':
+						return A2(
+							$elm$core$Maybe$withDefault,
+							_Utils_Tuple2(9999, 0),
+							A2($elm$core$Dict$get, country, placementBy)).a;
+					case 'pop':
+						return A2(
+							$elm$core$Maybe$withDefault,
+							0,
+							A2($elm$core$Dict$get, country, popBy));
+					case 'gdp':
+						return A2(
+							$elm$core$Maybe$withDefault,
+							0,
+							A2($elm$core$Dict$get, country, gdpBy));
+					case 'age':
+						return A2(
+							$elm$core$Maybe$withDefault,
+							0,
+							A2($elm$core$Dict$get, country, ageBy));
+					default:
+						return 0;
+				}
 			}
 		});
 	var seriesFor = function (country) {
@@ -8016,10 +8072,6 @@ var $gampleman$elm_rosetree$Tree$mapAccumulate = F3(
 			state,
 			t);
 	});
-var $elm$core$Tuple$second = function (_v0) {
-	var y = _v0.b;
-	return y;
-};
 var $gampleman$elm_rosetree$Tree$map = F2(
 	function (f, t) {
 		return A3(
@@ -9152,6 +9204,14 @@ var $author$project$Update$update = F2(
 						_Utils_update(
 							model,
 							{ranking: on})),
+					$elm$core$Platform$Cmd$none);
+			case 'TogglePcMode':
+				var on = msg.a;
+				return _Utils_Tuple2(
+					$author$project$Model$recomputePcModel(
+						_Utils_update(
+							model,
+							{useRelative: on})),
 					$elm$core$Platform$Cmd$none);
 			case 'TogglePcDebug':
 				var on = msg.a;
@@ -11917,6 +11977,9 @@ var $author$project$Model$StartDragAxis = function (a) {
 var $author$project$Model$TogglePcDebug = function (a) {
 	return {$: 'TogglePcDebug', a: a};
 };
+var $author$project$Model$TogglePcMode = function (a) {
+	return {$: 'TogglePcMode', a: a};
+};
 var $author$project$Model$ToggleRanking = function (a) {
 	return {$: 'ToggleRanking', a: a};
 };
@@ -13504,6 +13567,26 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
+									A2($elm$html$Html$Attributes$style, 'max-width', '950px'),
+									A2($elm$html$Html$Attributes$style, 'margin', '8px auto 0'),
+									A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+									A2($elm$html$Html$Attributes$style, 'color', '#555'),
+									A2($elm$html$Html$Attributes$style, 'font-size', '12px')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$p,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop).')
+										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
 									A2($elm$html$Html$Attributes$style, 'display', 'flex'),
 									A2($elm$html$Html$Attributes$style, 'justify-content', 'center'),
 									A2($elm$html$Html$Attributes$style, 'margin-bottom', '12px'),
@@ -13526,6 +13609,25 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 											$elm$html$Html$Attributes$type_('checkbox'),
 											$elm$html$Html$Attributes$checked(model.ranking),
 											$elm$html$Html$Events$onCheck($author$project$Model$ToggleRanking)
+										]),
+									_List_Nil),
+									A2(
+									$elm$html$Html$span,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'margin-left', '16px')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Relative (Medaillen / Pop, GDP, Age)')
+										])),
+									A2(
+									$elm$html$Html$input,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$type_('checkbox'),
+											$elm$html$Html$Attributes$checked(model.useRelative),
+											$elm$html$Html$Events$onCheck($author$project$Model$TogglePcMode)
 										]),
 									_List_Nil),
 									A2(
@@ -13563,8 +13665,9 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									A2($elm$html$Html$Attributes$style, 'max-width', '950px'),
+									A2($elm$html$Html$Attributes$style, 'max-width', '750px'),
 									A2($elm$html$Html$Attributes$style, 'margin', '8px auto 0'),
+									A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
 									A2($elm$html$Html$Attributes$style, 'color', '#555'),
 									A2($elm$html$Html$Attributes$style, 'font-size', '12px')
 								]),
@@ -13575,14 +13678,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 									_List_Nil,
 									_List_fromArray(
 										[
-											$elm$html$Html$text('Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Values for population, GDP or age have been set to 0 for these teams, as they may be missing or not applicable.')
-										])),
-									A2(
-									$elm$html$Html$p,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop).')
+											$elm$html$Html$text('Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Therefore, there are no values for population, GDP or age, which is why they are not included in this ranking.')
 										]))
 								])),
 							function () {

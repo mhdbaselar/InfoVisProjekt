@@ -194,11 +194,13 @@ parallelekoordinatensection model =
                       ]
                     ])
                 , div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
-                        [ p [] [ text "Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop)." ]  ]  
-                    
+                        [ p [] [ text "Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop)." ]  ]
+
             , div [ style "display" "flex", style "justify-content" "center", style "margin-bottom" "12px", style "gap" "8px", style "align-items" "center" ]
                 [ span [] [ text "Ranking" ]
                 , input [ type_ "checkbox", checked model.ranking, onCheck ToggleRanking ] []
+                , span [ style "margin-left" "16px" ] [ text "Relative (Medaillen / Pop, GDP, Age)" ]
+                , input [ type_ "checkbox", checked model.useRelative, onCheck TogglePcMode ] []
                 , span [ style "margin-left" "16px" ] [ text "Tabelle" ]
                 , input [ type_ "checkbox", checked model.showPcDebug, onCheck TogglePcDebug ] []
                 ]

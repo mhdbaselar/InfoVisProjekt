@@ -125,6 +125,8 @@ update msg model =
             ( recomputePcModel { model | axisOrder = newOrder, draggingAxis = Nothing, dropTargetAxis = Nothing }, Cmd.none )
         ToggleRanking on ->
             ( recomputePcModel { model | ranking = on }, Cmd.none )
+        TogglePcMode on ->
+            ( recomputePcModel { model | useRelative = on }, Cmd.none )
         TogglePcDebug on ->
             ( { model | showPcDebug = on }, Cmd.none )
         SetPcHover name ->

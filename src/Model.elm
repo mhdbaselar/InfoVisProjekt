@@ -84,6 +84,7 @@ type alias Model =
     , draggingAxis : Maybe String
     , dropTargetAxis : Maybe String
     , ranking : Bool
+    , useRelative : Bool
     , showPcDebug : Bool
     , pcHover : Maybe String
     , pcmodel : PCModel
@@ -101,6 +102,7 @@ type Msg
     | DragOverAxis String
     | DropAxis String
     | ToggleRanking Bool
+    | TogglePcMode Bool
     | TogglePcDebug Bool
     | SetPcHover (Maybe String)
 
@@ -116,6 +118,7 @@ init =
       , draggingAxis = Nothing
       , dropTargetAxis = Nothing
       , ranking = True
+    , useRelative = False
       , showPcDebug = False
       , pcHover = Nothing
       , pcmodel = { axes = [], series = [], hovered = Nothing, ranking = False }
@@ -495,17 +498,28 @@ toPCModel model =
         gdpBy : Dict String Float
         gdpBy = model.gdpByCountry
 
+        safeDiv : Float -> Float -> Float
+        safeDiv num den = if den <= 0 then 0 else num / den
+
         getValue : String -> String -> Float
         getValue axisId country =
-            let
-                total_medals = Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.second |> toFloat
-            in
-            case axisId of
-                "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
-                "pop" -> total_medals / (Dict.get country popBy |> Maybe.withDefault 0)
-                "gdp" -> total_medals / (Dict.get country gdpBy |> Maybe.withDefault 0)
-                "age" -> total_medals / (Dict.get country ageBy |> Maybe.withDefault 0)
-                _ -> 0
+            if model.useRelative then
+                let
+                    total_medals = Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.second |> toFloat
+                in
+                case axisId of
+                    "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
+                    "pop" -> safeDiv total_medals (Dict.get country popBy |> Maybe.withDefault 0)
+                    "gdp" -> safeDiv total_medals (Dict.get country gdpBy |> Maybe.withDefault 0)
+                    "age" -> safeDiv total_medals (Dict.get country ageBy |> Maybe.withDefault 0)
+                    _ -> 0
+            else
+                case axisId of
+                    "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
+                    "pop" -> Dict.get country popBy |> Maybe.withDefault 0
+                    "gdp" -> Dict.get country gdpBy |> Maybe.withDefault 0
+                    "age" -> Dict.get country ageBy |> Maybe.withDefault 0
+                    _ -> 0
 
         countries : List String
         countries = model.medalTable |> List.map .country |> List.filter (\c -> c /= "EOR" && c /= "AIN")
