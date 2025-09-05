@@ -211,13 +211,25 @@ medaillenspiegelSection model =
                     (sortedRows
                         |> List.map
                             (\r ->
-                                tr [ style "border-bottom" "1px solid #ddd" ]
-                                    [ td [ style "padding" "10px" ] [ text (String.fromInt r.placement) ]
-                                    , td [ style "padding" "10px", style "font-weight" "bold" ] [ text r.country ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.gold) ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.silver) ]
-                                    , td [ style "padding" "10px", style "text-align" "center" ] [ text (String.fromInt r.bronze) ]
-                                    , td [ style "padding" "10px", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt r.total) ]
+                                let
+                                    isHovered = model.hoverTable == Just r.country
+                                    rowBg = if isHovered then "#e6f5ff" else "transparent"
+                                    rowCursor = "pointer"
+                                in
+                                tr
+                                    [ style "border-bottom" "1px solid #ddd"
+                                    , style "background-color" rowBg
+                                    , style "cursor" rowCursor
+                                    , Events.onMouseEnter (HoverMedalTable (Just r.country))
+                                    , Events.onMouseLeave (HoverMedalTable Nothing)
+                                    , Events.onClick (SelectCountryFromTable r.country)
+                                    ]
+                                    [ td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none" ] [ text (String.fromInt r.placement) ] ]
+                                    , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "font-weight" "bold" ] [ text r.country ] ]
+                                    , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ] [ text (String.fromInt r.gold) ] ]
+                                    , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ] [ text (String.fromInt r.silver) ] ]
+                                    , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ] [ text (String.fromInt r.bronze) ] ]
+                                    , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt r.total) ] ]
                                     ]
                             )
                     )
@@ -257,7 +269,7 @@ medaillenverteilungSection model =
                 , div [style "width" "300px", style "display" "flex", style "flex-direction" "column", style "align-items" "center"] [
                     h3 [] [ text "Selected Country" ]
                     , select [style "width" "150px", onInput ChangeSBCountry ]
-                        ( List.map (\p -> if p == "Germany" then option [selected True, value p] [ text p ] else option [value p] [ text p ]) countries)
+                        ( List.map (\p -> if p == model.sbcountry then option [selected True, value p] [ text p ] else option [value p] [ text p ]) countries)
                     ]
                 ]
             ]
