@@ -21,7 +21,8 @@ update msg model =
                                     { model
                                         | participations = filteredParts
                                         , medalTable = mt
-                                        , sbmodel = toSBModel filteredParts "Germany"
+                                        , sbcountry = if model.sbcountry == "" then "Germany" else model.sbcountry
+                                        , sbmodel = toSBModel filteredParts (if model.sbcountry == "" then "Germany" else model.sbcountry)
                                         , loading = False
                                         , error = Nothing
                                     }
@@ -84,6 +85,12 @@ update msg model =
             ( { model | sbmodel = updateSBData }, Cmd.none )
         ChangeSBCountry country ->
             ( { model | sbcountry = country, sbmodel = toSBModel model.participations country }, Cmd.none )
+        SelectCountryFromTable country ->
+            ( { model | sbcountry = country, sbmodel = toSBModel model.participations country }, Cmd.none )
+        HoverMedalTable name ->
+            ( { model | hoverTable = name }, Cmd.none )
+        NoOp ->
+            ( model, Cmd.none )
         StartDragAxis axisId ->
             ( { model | draggingAxis = Just axisId }, Cmd.none )
         DragOverAxis axisId ->

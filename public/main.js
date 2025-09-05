@@ -6192,6 +6192,7 @@ var $author$project$Model$init = _Utils_Tuple2(
 		dropTargetAxis: $elm$core$Maybe$Nothing,
 		error: $elm$core$Maybe$Nothing,
 		gdpByCountry: $elm$core$Dict$empty,
+		hoverTable: $elm$core$Maybe$Nothing,
 		loading: true,
 		medalTable: _List_Nil,
 		participations: _List_Nil,
@@ -8990,7 +8991,11 @@ var $author$project$Update$update = F2(
 								loading: false,
 								medalTable: mt,
 								participations: filteredParts,
-								sbmodel: A2($author$project$Model$toSBModel, filteredParts, 'Germany')
+								sbcountry: (model.sbcountry === '') ? 'Germany' : model.sbcountry,
+								sbmodel: A2(
+									$author$project$Model$toSBModel,
+									filteredParts,
+									(model.sbcountry === '') ? 'Germany' : model.sbcountry)
 							});
 						return _Utils_Tuple2(
 							$author$project$Model$recomputePcModel(base),
@@ -9125,6 +9130,25 @@ var $author$project$Update$update = F2(
 							sbmodel: A2($author$project$Model$toSBModel, model.participations, country)
 						}),
 					$elm$core$Platform$Cmd$none);
+			case 'SelectCountryFromTable':
+				var country = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							sbcountry: country,
+							sbmodel: A2($author$project$Model$toSBModel, model.participations, country)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'HoverMedalTable':
+				var name = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{hoverTable: name}),
+					$elm$core$Platform$Cmd$none);
+			case 'NoOp':
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'StartDragAxis':
 				var axisId = msg.a;
 				return _Utils_Tuple2(
@@ -9390,6 +9414,12 @@ var $author$project$View$headerSection = A2(
 						]))
 				]))
 		]));
+var $author$project$Model$HoverMedalTable = function (a) {
+	return {$: 'HoverMedalTable', a: a};
+};
+var $author$project$Model$SelectCountryFromTable = function (a) {
+	return {$: 'SelectCountryFromTable', a: a};
+};
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $author$project$View$nextLink = function (target) {
@@ -9409,6 +9439,35 @@ var $author$project$View$nextLink = function (target) {
 			[
 				$elm$html$Html$text('Weiter')
 			]));
+};
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Events$onMouseEnter = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseenter',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Events$onMouseLeave = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseleave',
+		$elm$json$Json$Decode$succeed(msg));
 };
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$html$Html$tbody = _VirtualDom_node('tbody');
@@ -9579,11 +9638,25 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 								A2(
 									$elm$core$List$map,
 									function (r) {
+										var rowCursor = 'pointer';
+										var isHovered = _Utils_eq(
+											model.hoverTable,
+											$elm$core$Maybe$Just(r.country));
+										var rowBg = isHovered ? '#e6f5ff' : 'transparent';
 										return A2(
 											$elm$html$Html$tr,
 											_List_fromArray(
 												[
-													A2($elm$html$Html$Attributes$style, 'border-bottom', '1px solid #ddd')
+													A2($elm$html$Html$Attributes$style, 'border-bottom', '1px solid #ddd'),
+													A2($elm$html$Html$Attributes$style, 'background-color', rowBg),
+													A2($elm$html$Html$Attributes$style, 'cursor', rowCursor),
+													$elm$html$Html$Events$onMouseEnter(
+													$author$project$Model$HoverMedalTable(
+														$elm$core$Maybe$Just(r.country))),
+													$elm$html$Html$Events$onMouseLeave(
+													$author$project$Model$HoverMedalTable($elm$core$Maybe$Nothing)),
+													$elm$html$Html$Events$onClick(
+													$author$project$Model$SelectCountryFromTable(r.country))
 												]),
 											_List_fromArray(
 												[
@@ -9591,72 +9664,150 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 													$elm$html$Html$td,
 													_List_fromArray(
 														[
-															A2($elm$html$Html$Attributes$style, 'padding', '10px')
+															A2($elm$html$Html$Attributes$style, 'padding', '0')
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(
-															$elm$core$String$fromInt(r.placement))
+															A2(
+															$elm$html$Html$a,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(
+																	$elm$core$String$fromInt(r.placement))
+																]))
 														])),
 													A2(
 													$elm$html$Html$td,
 													_List_fromArray(
 														[
-															A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-															A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+															A2($elm$html$Html$Attributes$style, 'padding', '0')
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(r.country)
+															A2(
+															$elm$html$Html$a,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(r.country)
+																]))
 														])),
 													A2(
 													$elm$html$Html$td,
 													_List_fromArray(
 														[
-															A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-															A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+															A2($elm$html$Html$Attributes$style, 'padding', '0')
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(
-															$elm$core$String$fromInt(r.gold))
+															A2(
+															$elm$html$Html$a,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																	A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(
+																	$elm$core$String$fromInt(r.gold))
+																]))
 														])),
 													A2(
 													$elm$html$Html$td,
 													_List_fromArray(
 														[
-															A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-															A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+															A2($elm$html$Html$Attributes$style, 'padding', '0')
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(
-															$elm$core$String$fromInt(r.silver))
+															A2(
+															$elm$html$Html$a,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																	A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(
+																	$elm$core$String$fromInt(r.silver))
+																]))
 														])),
 													A2(
 													$elm$html$Html$td,
 													_List_fromArray(
 														[
-															A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-															A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+															A2($elm$html$Html$Attributes$style, 'padding', '0')
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(
-															$elm$core$String$fromInt(r.bronze))
+															A2(
+															$elm$html$Html$a,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																	A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(
+																	$elm$core$String$fromInt(r.bronze))
+																]))
 														])),
 													A2(
 													$elm$html$Html$td,
 													_List_fromArray(
 														[
-															A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-															A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-															A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+															A2($elm$html$Html$Attributes$style, 'padding', '0')
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(
-															$elm$core$String$fromInt(r.total))
+															A2(
+															$elm$html$Html$a,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																	A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(
+																	$elm$core$String$fromInt(r.total))
+																]))
 														]))
 												]));
 									},
@@ -9690,7 +9841,6 @@ var $elm$html$Html$Events$alwaysStop = function (x) {
 var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 'MayStopPropagation', a: a};
 };
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var $elm$html$Html$Events$stopPropagationOn = F2(
 	function (event, decoder) {
 		return A2(
@@ -11529,9 +11679,6 @@ var $author$project$Components$Sunburst$mouseArc = function (s) {
 			startAngle: s.x
 		});
 };
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
 var $elm_community$typed_svg$TypedSvg$Events$on = $elm$virtual_dom$VirtualDom$on;
 var $elm_community$typed_svg$TypedSvg$Events$simpleOn = function (name) {
 	return function (msg) {
@@ -11923,7 +12070,7 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 										A2(
 											$elm$core$List$map,
 											function (p) {
-												return (p === 'Germany') ? A2(
+												return _Utils_eq(p, model.sbcountry) ? A2(
 													$elm$html$Html$option,
 													_List_fromArray(
 														[
@@ -12112,13 +12259,6 @@ var $author$project$View$formatPcValue = F3(
 		}
 	});
 var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$Events$targetChecked = A2(
 	$elm$json$Json$Decode$at,

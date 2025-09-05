@@ -80,6 +80,7 @@ type alias Model =
     , gdpByCountry : Dict String Float
     , sbmodel : SBModel
     , sbcountry : String
+    , hoverTable : Maybe String
     , axisOrder : List String
     , draggingAxis : Maybe String
     , dropTargetAxis : Maybe String
@@ -98,6 +99,9 @@ type Msg
     | GdpReceived (Result Http.Error String)
     | HoverSB (Maybe { sequence : List String, percentage : Float })
     | ChangeSBCountry String
+    | HoverMedalTable (Maybe String)
+    | SelectCountryFromTable String
+    | NoOp
     | StartDragAxis String
     | DragOverAxis String
     | DropAxis String
@@ -113,7 +117,8 @@ init =
       , populationByCountry = Dict.empty
       , gdpByCountry = Dict.empty
       , sbmodel = { layout = [], total = 0, hovered = Nothing }
-      , sbcountry = ""
+    , sbcountry = ""
+    , hoverTable = Nothing
       , axisOrder = [ "medals", "pop", "gdp", "age" ]
       , draggingAxis = Nothing
       , dropTargetAxis = Nothing
