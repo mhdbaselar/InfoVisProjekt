@@ -91,6 +91,8 @@ update msg model =
             ( { model | hoverTable = name }, Cmd.none )
         NoOp ->
             ( model, Cmd.none )
+        SetTableCriterion crit ->
+            ( { model | tableCriterion = crit }, Cmd.none )
         StartDragAxis axisId ->
             ( { model | draggingAxis = Just axisId }, Cmd.none )
         DragOverAxis axisId ->

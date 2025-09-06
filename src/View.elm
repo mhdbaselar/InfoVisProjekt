@@ -158,7 +158,6 @@ headerSection =
             , text " | "
             , a [ href "#medaillenverteilung", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
                 [ text "Medaillenverteilung" ]
-            , text " | "
             , a [ href "#parallele-koordinaten", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
                 [ text "Parallele Koordinaten" ]
             , text " | "
@@ -180,14 +179,133 @@ headerSection =
 medaillenspiegelSection : Model -> Html Msg
 medaillenspiegelSection model =
     let
+        selectedId = model.tableCriterion
+
+        -- Dictionaries für absolute Werte
+        popBy : Dict.Dict String Float
+        popBy = model.populationByCountry |> Dict.map (\_ v -> toFloat v.population)
+
+        ageBy : Dict.Dict String Float
+        ageBy = model.populationByCountry |> Dict.map (\_ v -> toFloat v.medianAge)
+
+        gdpBy : Dict.Dict String Float
+        gdpBy = model.gdpByCountry
+
+        medalTotalBy : Dict.Dict String Int
+        medalTotalBy = model.medalTable |> List.map (\r -> ( r.country, r.total )) |> Dict.fromList
+
+        -- Kriterium: absolute Werte je Land
+        absByCountry : Dict.Dict String Float
+        absByCountry =
+            case selectedId of
+                "pop" -> popBy
+                "gdp" -> gdpBy
+                "age" -> ageBy
+                _ -> Dict.empty
+
+        -- Kriterium: relative Werte je Land (Medaillen geteilt durch Wert, skaliert im Formatter)
+        relByCountry : Dict.Dict String Float
+        relByCountry =
+            case selectedId of
+                "pop" ->
+                    Dict.foldl (\country pop acc ->
+                        let m = medalTotalBy |> Dict.get country |> Maybe.withDefault 0 |> toFloat in
+                        if pop <= 0 then acc else Dict.insert country (m / pop) acc
+                    ) Dict.empty popBy
+
+                "gdp" ->
+                    Dict.foldl (\country gdp acc ->
+                        let m = medalTotalBy |> Dict.get country |> Maybe.withDefault 0 |> toFloat in
+                        if gdp <= 0 then acc else Dict.insert country (m / gdp) acc
+                    ) Dict.empty gdpBy
+
+                "age" ->
+                    Dict.foldl (\country age acc ->
+                        let m = medalTotalBy |> Dict.get country |> Maybe.withDefault 0 |> toFloat in
+                        if age <= 0 then acc else Dict.insert country (m / age) acc
+                    ) Dict.empty ageBy
+
+                _ -> Dict.empty
+
+        -- Rang je Land für aktuelles Kriterium (1-basiert)
+        rankByCountry : Dict.Dict String Int
+        rankByCountry =
+            if selectedId == "medals" then
+                model.medalTable |> List.map (\r -> ( r.country, r.placement )) |> Dict.fromList
+            else
+                let
+                    namesSorted =
+                        model.medalTable
+                            |> List.sortWith (\a b ->
+                                compare
+                                    (Dict.get b.country relByCountry |> Maybe.withDefault 0)
+                                    (Dict.get a.country relByCountry |> Maybe.withDefault 0)
+                            )
+                            |> List.map .country
+                in
+                namesSorted |> List.indexedMap (\i name -> ( name, i + 1 )) |> Dict.fromList
+
         sortedRows =
-            model.medalTable
-                |> List.sortBy .placement
+            if selectedId == "medals" then
+                model.medalTable |> List.sortBy .placement
+            else
+                model.medalTable
+                    |> List.sortWith (\a b ->
+                        compare
+                            (Dict.get b.country relByCountry |> Maybe.withDefault 0)
+                            (Dict.get a.country relByCountry |> Maybe.withDefault 0)
+                    )
+
+        relHeader : List (Html Msg)
+        relHeader =
+            case selectedId of
+                "pop" ->
+                    [ th [ style "text-align" "center", style "padding" "12px" ] [ text (axisLabel "pop" ++ " (Wert)") ]
+                    , th [ style "text-align" "center", style "padding" "12px" ] [ text "Med/Pop" ]
+                    ]
+                "gdp" ->
+                    [ th [ style "text-align" "center", style "padding" "12px" ] [ text (axisLabel "gdp" ++ " (Wert)") ]
+                    , th [ style "text-align" "center", style "padding" "12px" ] [ text "Med/GDP" ]
+                    ]
+                "age" ->
+                    [ th [ style "text-align" "center", style "padding" "12px" ] [ text (axisLabel "age" ++ " (Wert)") ]
+                    , th [ style "text-align" "center", style "padding" "12px" ] [ text "Med/Age" ]
+                    ]
+                _ -> []
     in
     div [ id "medaillenspiegel", style "margin" "60px 0", style "padding" "20px" ]
         [ div [ style "max-width" "900px", style "margin" "0 auto" ]
             [ h2 [ style "text-align" "left", style "margin-bottom" "20px", style "color" "#333" ]
                 [ text "1. Medaillenspiegel" ]
+            , div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
+                [ p [] [ text "Tip: Click any table row to select the country and jump to its medal distribution below." ] ]
+                        , -- Kriterium-Auswahl + Sprung zu Parallelen Koordinaten
+                            div [ style "margin" "8px 0 16px 0", style "display" "flex", style "align-items" "center", style "justify-content" "space-between" ]
+                                [ -- links: Auswahl
+                                    div [ style "display" "flex", style "gap" "8px", style "align-items" "center" ]
+                                        [ span [] [ text "Kriterium für Ranking:" ]
+                                        , select [ onInput SetTableCriterion ]
+                                                (model.pcmodel.axes
+                                                        |> List.map (\ax ->
+                                                                if ax.id == selectedId then
+                                                                        option [ selected True, value ax.id ] [ text (axisLabel ax.id) ]
+                                                                else
+                                                                        option [ value ax.id ] [ text (axisLabel ax.id) ]
+                                                        )
+                                                )
+                                        ]
+                                    -- rechts: Button-Link
+                                , a
+                                        [ href "#parallele-koordinaten"
+                                        , style "display" "inline-block"
+                                        , style "padding" "8px 12px"
+                                        , style "background-color" "#007cba"
+                                        , style "color" "#fff"
+                                        , style "border-radius" "4px"
+                                        , style "text-decoration" "none"
+                                        ]
+                                        [ text "Vergleiche Kriterien" ]
+                                ]
             , if model.loading then
                 p [] [ text "Lade Daten..." ]
               else
@@ -199,13 +317,13 @@ medaillenspiegelSection model =
             , table [ style "width" "100%", style "border-collapse" "collapse" ]
                 [ thead []
                     [ tr [ style "background-color" "#007cba", style "color" "white" ]
-                        [ th [ style "text-align" "left", style "padding" "12px" ] [ text "Rank" ]
-                        , th [ style "text-align" "left", style "padding" "12px" ] [ text "Land" ]
-                        , th [ style "text-align" "center", style "padding" "12px" ] [ text "Gold" ]
-                        , th [ style "text-align" "center", style "padding" "12px" ] [ text "Silber" ]
-                        , th [ style "text-align" "center", style "padding" "12px" ] [ text "Bronze" ]
-                        , th [ style "text-align" "center", style "padding" "12px" ] [ text "Gesamt" ]
-                        ]
+                        ( [ th [ style "text-align" "left", style "padding" "12px" ] [ text "Platz" ]
+                          , th [ style "text-align" "left", style "padding" "12px" ] [ text "Land" ]
+                          , th [ style "text-align" "center", style "padding" "12px" ] [ text "Gold" ]
+                          , th [ style "text-align" "center", style "padding" "12px" ] [ text "Silber" ]
+                          , th [ style "text-align" "center", style "padding" "12px" ] [ text "Bronze" ]
+                          , th [ style "text-align" "center", style "padding" "12px" ] [ text "Gesamt" ]
+                          ] ++ relHeader)
                     ]
                 , tbody []
                     (sortedRows
@@ -215,6 +333,9 @@ medaillenspiegelSection model =
                                     isHovered = model.hoverTable == Just r.country
                                     rowBg = if isHovered then "#e6f5ff" else "transparent"
                                     rowCursor = "pointer"
+                                    rankVal = Dict.get r.country rankByCountry |> Maybe.withDefault r.placement
+                                    absVal = Dict.get r.country absByCountry
+                                    relVal = Dict.get r.country relByCountry
                                 in
                                 tr
                                     [ style "border-bottom" "1px solid #ddd"
@@ -224,13 +345,59 @@ medaillenspiegelSection model =
                                     , Events.onMouseLeave (HoverMedalTable Nothing)
                                     , Events.onClick (SelectCountryFromTable r.country)
                                     ]
-                                    [ td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none" ] [ text (String.fromInt r.placement) ] ]
+                                    ([ td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none" ] [ text (String.fromInt rankVal) ] ]
                                     , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "font-weight" "bold" ] [ text r.country ] ]
                                     , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ] [ text (String.fromInt r.gold) ] ]
                                     , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ] [ text (String.fromInt r.silver) ] ]
                                     , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ] [ text (String.fromInt r.bronze) ] ]
-                                    , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center", style "font-weight" "bold" ] [ text (String.fromInt r.total) ] ]
+                                    , td [ style "padding" "0" ]
+                                        [ a
+                                            ( [ href "#medaillenverteilung"
+                                                , style "display" "block"
+                                                , style "padding" "10px"
+                                                , style "color" "inherit"
+                                                , style "text-decoration" "none"
+                                                , style "text-align" "center"
+                                                ]
+                                                ++ (if selectedId == "medals" then [ style "font-weight" "bold" ] else [])
+                                            )
+                                            [ text (String.fromInt r.total) ]
+                                        ]
                                     ]
+                                    ++ (case selectedId of
+                                            "pop" ->
+                                                [ td [ style "padding" "0" ]
+                                                    [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ]
+                                                        [ text (absVal |> Maybe.map (formatPcValue False "pop") |> Maybe.withDefault "-") ]
+                                                    ]
+                                                , td [ style "padding" "0" ]
+                                                    [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center", style "font-weight" "bold" ]
+                                                        [ text (relVal |> Maybe.map (formatRelativeValue "pop") |> Maybe.withDefault "-") ]
+                                                    ]
+                                                ]
+                                            "gdp" ->
+                                                [ td [ style "padding" "0" ]
+                                                    [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ]
+                                                        [ text (absVal |> Maybe.map (formatPcValue False "gdp") |> Maybe.withDefault "-") ]
+                                                    ]
+                                                , td [ style "padding" "0" ]
+                                                    [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center", style "font-weight" "bold" ]
+                                                        [ text (relVal |> Maybe.map (formatRelativeValue "gdp") |> Maybe.withDefault "-") ]
+                                                    ]
+                                                ]
+                                            "age" ->
+                                                [ td [ style "padding" "0" ]
+                                                    [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ]
+                                                        [ text (absVal |> Maybe.map (formatPcValue False "age") |> Maybe.withDefault "-") ]
+                                                    ]
+                                                , td [ style "padding" "0" ]
+                                                    [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center", style "font-weight" "bold" ]
+                                                        [ text (relVal |> Maybe.map (formatRelativeValue "age") |> Maybe.withDefault "-") ]
+                                                    ]
+                                                ]
+                                            _ -> []
+                                       )
+                                    )
                             )
                     )
                 ]
@@ -295,7 +462,7 @@ parallelekoordinatensection model =
                 (List.concat
                     [ [ span
                             ([ style "padding" "4px 8px"
-                            , style "border" (if model.dropTargetAxis == Just "__start__" then "2px dashed #007cba" else "1px dashed #ccc")
+                            , style "border" (if model.dropTargetAxis == Just "__start__" then "2px dashed #007cba" else "1px solid #ccc")
                             , style "border-radius" "4px"
                             , style "color" "#777"
                             , Events.preventDefaultOn "dragover" (Decode.map (\_ -> ( DragOverAxis "__start__", True )) Decode.value)
@@ -314,7 +481,14 @@ parallelekoordinatensection model =
                             , Events.preventDefaultOn "dragover" (Decode.map (\_ -> ( DragOverAxis a.id, True )) Decode.value)
                             , Events.preventDefaultOn "drop" (Decode.map (\_ -> ( DropAxis a.id, True )) Decode.value)
                             ] ++ (if model.dropTargetAxis == Just a.id then [ style "background-color" "#eaf5ff" ] else []))
-                            [ text a.label ]
+                            [ Html.a
+                                [ href "#medaillenspiegel"
+                                , Events.onClick (SetTableCriterion a.id)
+                                , style "color" "#007cba"
+                                , style "text-decoration" (if model.tableCriterion == a.id then "underline" else "none")
+                                ]
+                                [ text a.label ]
+                            ]
                         ) axes
                     , [ span
                             ([ style "padding" "4px 8px"
@@ -327,8 +501,10 @@ parallelekoordinatensection model =
                             [ text "Drop ans Ende" ]
                       ]
                     ])
-                , div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
-                        [ p [] [ text "Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop)." ]  ]
+        , div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
+            [ p [] [ text "Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop)." ]
+            , p [] [ text "Tip: Click any axis label above to jump to the medal table and set that criterion." ]
+            ]
 
             , div [ style "display" "flex", style "justify-content" "center", style "margin-bottom" "12px", style "gap" "8px", style "align-items" "center" ]
                 [ span [] [ text "Ranking" ]
