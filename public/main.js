@@ -6203,6 +6203,7 @@ var $author$project$Model$init = _Utils_Tuple2(
 		sbcountry: '',
 		sbmodel: {hovered: $elm$core$Maybe$Nothing, layout: _List_Nil, total: 0},
 		showPcDebug: false,
+		tableCriterion: 'medals',
 		useRelative: false
 	},
 	$elm$core$Platform$Cmd$batch(
@@ -9149,6 +9150,13 @@ var $author$project$Update$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'NoOp':
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 'SetTableCriterion':
+				var crit = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{tableCriterion: crit}),
+					$elm$core$Platform$Cmd$none);
 			case 'StartDragAxis':
 				var axisId = msg.a;
 				return _Utils_Tuple2(
@@ -9330,7 +9338,6 @@ var $author$project$View$headerSection = A2(
 						[
 							$elm$html$Html$text('Medaillenverteilung')
 						])),
-					$elm$html$Html$text(' | '),
 					A2(
 					$elm$html$Html$a,
 					_List_fromArray(
@@ -9420,8 +9427,151 @@ var $author$project$Model$HoverMedalTable = function (a) {
 var $author$project$Model$SelectCountryFromTable = function (a) {
 	return {$: 'SelectCountryFromTable', a: a};
 };
+var $author$project$Model$SetTableCriterion = function (a) {
+	return {$: 'SetTableCriterion', a: a};
+};
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $elm$core$Basics$pow = _Basics_pow;
+var $elm$core$Basics$round = _Basics_round;
+var $author$project$View$roundTo = F2(
+	function (n, v) {
+		var factor = A2($elm$core$Basics$pow, 10, n);
+		return $elm$core$Basics$round(v * factor) / factor;
+	});
+var $elm_community$list_extra$List$Extra$dropWhile = F2(
+	function (predicate, list) {
+		dropWhile:
+		while (true) {
+			if (!list.b) {
+				return _List_Nil;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (predicate(x)) {
+					var $temp$predicate = predicate,
+						$temp$list = xs;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue dropWhile;
+				} else {
+					return list;
+				}
+			}
+		}
+	});
+var $elm$core$String$fromList = _String_fromList;
+var $elm$core$String$foldr = _String_foldr;
+var $elm$core$String$toList = function (string) {
+	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
+};
+var $author$project$View$trimFloat = function (s) {
+	if (A2($elm$core$String$contains, '.', s)) {
+		var noZeros = $elm$core$String$fromList(
+			$elm$core$List$reverse(
+				function (cs) {
+					if (cs.b && ('.' === cs.a.valueOf())) {
+						var rest = cs.b;
+						return rest;
+					} else {
+						return cs;
+					}
+				}(
+					A2(
+						$elm_community$list_extra$List$Extra$dropWhile,
+						function (c) {
+							return _Utils_eq(
+								c,
+								_Utils_chr('0'));
+						},
+						$elm$core$List$reverse(
+							$elm$core$String$toList(s))))));
+		return (noZeros === '-0') ? '0' : noZeros;
+	} else {
+		return s;
+	}
+};
+var $author$project$View$formatFixed = F2(
+	function (n, v) {
+		return $author$project$View$trimFloat(
+			$elm$core$String$fromFloat(
+				A2($author$project$View$roundTo, n, v)));
+	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $author$project$View$formatRelativeValue = F2(
+	function (axisId, v) {
+		switch (axisId) {
+			case 'pop':
+				var threshold = 0.001;
+				var per1M = v * 1.0e6;
+				var a = $elm$core$Basics$abs(per1M);
+				if (!per1M) {
+					return '0';
+				} else {
+					if (_Utils_cmp(a, threshold) < 0) {
+						return '<0.001';
+					} else {
+						var decs = (a >= 100) ? 0 : ((a >= 10) ? 1 : ((a >= 1) ? 2 : ((a >= 0.1) ? 3 : 4)));
+						return A2($author$project$View$formatFixed, decs, per1M);
+					}
+				}
+			case 'gdp':
+				var threshold = 0.001;
+				var per1B = v * 1.0e9;
+				var a = $elm$core$Basics$abs(per1B);
+				if (!per1B) {
+					return '0';
+				} else {
+					if (_Utils_cmp(a, threshold) < 0) {
+						return '<0.001';
+					} else {
+						var decs = (a >= 100) ? 0 : ((a >= 10) ? 1 : ((a >= 1) ? 2 : ((a >= 0.1) ? 3 : 4)));
+						return A2($author$project$View$formatFixed, decs, per1B);
+					}
+				}
+			case 'age':
+				return A2($author$project$View$formatFixed, 3, v);
+			default:
+				return A2($author$project$View$formatFixed, 3, v);
+		}
+	});
+var $author$project$View$formatWithSuffix = function (v) {
+	var absV = $elm$core$Basics$abs(v);
+	return (absV >= 1.0e12) ? (A2($author$project$View$formatFixed, 1, v / 1.0e12) + 'T') : ((absV >= 1.0e9) ? (A2($author$project$View$formatFixed, 1, v / 1.0e9) + 'B') : ((absV >= 1.0e6) ? (A2($author$project$View$formatFixed, 1, v / 1.0e6) + 'M') : ((absV >= 1.0e3) ? (A2($author$project$View$formatFixed, 0, v / 1.0e3) + 'K') : A2($author$project$View$formatFixed, 0, v))));
+};
+var $author$project$View$formatPcValue = F3(
+	function (useRelative, axisId, v) {
+		if (useRelative) {
+			return A2($author$project$View$formatRelativeValue, axisId, v);
+		} else {
+			switch (axisId) {
+				case 'pop':
+					return $author$project$View$formatWithSuffix(v);
+				case 'gdp':
+					return $author$project$View$formatWithSuffix(v);
+				case 'age':
+					return A2($author$project$View$formatFixed, 0, v);
+				default:
+					return A2($author$project$View$formatFixed, 0, v);
+			}
+		}
+	});
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $author$project$View$nextLink = function (target) {
 	return A2(
 		$elm$html$Html$a,
@@ -9457,6 +9607,39 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
 var $elm$html$Html$Events$onMouseEnter = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
@@ -9469,19 +9652,255 @@ var $elm$html$Html$Events$onMouseLeave = function (msg) {
 		'mouseleave',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$html$Html$select = _VirtualDom_node('select');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$html$Html$table = _VirtualDom_node('table');
 var $elm$html$Html$tbody = _VirtualDom_node('tbody');
 var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$View$medaillenspiegelSection = function (model) {
-	var sortedRows = A2(
+	var selectedId = model.tableCriterion;
+	var relHeader = function () {
+		switch (selectedId) {
+			case 'pop':
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$th,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+								A2($elm$html$Html$Attributes$style, 'padding', '12px')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$author$project$Model$axisLabel('pop') + ' (Wert)')
+							])),
+						A2(
+						$elm$html$Html$th,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+								A2($elm$html$Html$Attributes$style, 'padding', '12px')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Med/Pop')
+							]))
+					]);
+			case 'gdp':
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$th,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+								A2($elm$html$Html$Attributes$style, 'padding', '12px')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$author$project$Model$axisLabel('gdp') + ' (Wert)')
+							])),
+						A2(
+						$elm$html$Html$th,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+								A2($elm$html$Html$Attributes$style, 'padding', '12px')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Med/GDP')
+							]))
+					]);
+			case 'age':
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$th,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+								A2($elm$html$Html$Attributes$style, 'padding', '12px')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$author$project$Model$axisLabel('age') + ' (Wert)')
+							])),
+						A2(
+						$elm$html$Html$th,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+								A2($elm$html$Html$Attributes$style, 'padding', '12px')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Med/Age')
+							]))
+					]);
+			default:
+				return _List_Nil;
+		}
+	}();
+	var popBy = A2(
+		$elm$core$Dict$map,
+		F2(
+			function (_v5, v) {
+				return v.population;
+			}),
+		model.populationByCountry);
+	var medalTotalBy = $elm$core$Dict$fromList(
+		A2(
+			$elm$core$List$map,
+			function (r) {
+				return _Utils_Tuple2(r.country, r.total);
+			},
+			model.medalTable));
+	var gdpBy = model.gdpByCountry;
+	var ageBy = A2(
+		$elm$core$Dict$map,
+		F2(
+			function (_v4, v) {
+				return v.medianAge;
+			}),
+		model.populationByCountry);
+	var relByCountry = function () {
+		switch (selectedId) {
+			case 'pop':
+				return A3(
+					$elm$core$Dict$foldl,
+					F3(
+						function (country, pop, acc) {
+							var m = A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2($elm$core$Dict$get, country, medalTotalBy));
+							return (pop <= 0) ? acc : A3($elm$core$Dict$insert, country, m / pop, acc);
+						}),
+					$elm$core$Dict$empty,
+					popBy);
+			case 'gdp':
+				return A3(
+					$elm$core$Dict$foldl,
+					F3(
+						function (country, gdp, acc) {
+							var m = A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2($elm$core$Dict$get, country, medalTotalBy));
+							return (gdp <= 0) ? acc : A3($elm$core$Dict$insert, country, m / gdp, acc);
+						}),
+					$elm$core$Dict$empty,
+					gdpBy);
+			case 'age':
+				return A3(
+					$elm$core$Dict$foldl,
+					F3(
+						function (country, age, acc) {
+							var m = A2(
+								$elm$core$Maybe$withDefault,
+								0,
+								A2($elm$core$Dict$get, country, medalTotalBy));
+							return (age <= 0) ? acc : A3($elm$core$Dict$insert, country, m / age, acc);
+						}),
+					$elm$core$Dict$empty,
+					ageBy);
+			default:
+				return $elm$core$Dict$empty;
+		}
+	}();
+	var rankByCountry = function () {
+		if (selectedId === 'medals') {
+			return $elm$core$Dict$fromList(
+				A2(
+					$elm$core$List$map,
+					function (r) {
+						return _Utils_Tuple2(r.country, r.placement);
+					},
+					model.medalTable));
+		} else {
+			var namesSorted = A2(
+				$elm$core$List$map,
+				function ($) {
+					return $.country;
+				},
+				A2(
+					$elm$core$List$sortWith,
+					F2(
+						function (a, b) {
+							return A2(
+								$elm$core$Basics$compare,
+								A2(
+									$elm$core$Maybe$withDefault,
+									0,
+									A2($elm$core$Dict$get, b.country, relByCountry)),
+								A2(
+									$elm$core$Maybe$withDefault,
+									0,
+									A2($elm$core$Dict$get, a.country, relByCountry)));
+						}),
+					model.medalTable));
+			return $elm$core$Dict$fromList(
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (i, name) {
+							return _Utils_Tuple2(name, i + 1);
+						}),
+					namesSorted));
+		}
+	}();
+	var sortedRows = (selectedId === 'medals') ? A2(
 		$elm$core$List$sortBy,
 		function ($) {
 			return $.placement;
 		},
+		model.medalTable) : A2(
+		$elm$core$List$sortWith,
+		F2(
+			function (a, b) {
+				return A2(
+					$elm$core$Basics$compare,
+					A2(
+						$elm$core$Maybe$withDefault,
+						0,
+						A2($elm$core$Dict$get, b.country, relByCountry)),
+					A2(
+						$elm$core$Maybe$withDefault,
+						0,
+						A2($elm$core$Dict$get, a.country, relByCountry)));
+			}),
 		model.medalTable);
+	var absByCountry = function () {
+		switch (selectedId) {
+			case 'pop':
+				return popBy;
+			case 'gdp':
+				return gdpBy;
+			case 'age':
+				return ageBy;
+			default:
+				return $elm$core$Dict$empty;
+		}
+	}();
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -9512,6 +9931,105 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 						_List_fromArray(
 							[
 								$elm$html$Html$text('1. Medaillenspiegel')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'max-width', '950px'),
+								A2($elm$html$Html$Attributes$style, 'margin', '8px auto 0'),
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+								A2($elm$html$Html$Attributes$style, 'color', '#555'),
+								A2($elm$html$Html$Attributes$style, 'font-size', '12px')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Tip: Click any table row to select the country and jump to its medal distribution below.')
+									]))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'margin', '8px 0 16px 0'),
+								A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+								A2($elm$html$Html$Attributes$style, 'align-items', 'center'),
+								A2($elm$html$Html$Attributes$style, 'justify-content', 'space-between')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+										A2($elm$html$Html$Attributes$style, 'gap', '8px'),
+										A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$span,
+										_List_Nil,
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Kriterium für Ranking:')
+											])),
+										A2(
+										$elm$html$Html$select,
+										_List_fromArray(
+											[
+												$elm$html$Html$Events$onInput($author$project$Model$SetTableCriterion)
+											]),
+										A2(
+											$elm$core$List$map,
+											function (ax) {
+												return _Utils_eq(ax.id, selectedId) ? A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$selected(true),
+															$elm$html$Html$Attributes$value(ax.id)
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															$author$project$Model$axisLabel(ax.id))
+														])) : A2(
+													$elm$html$Html$option,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$value(ax.id)
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															$author$project$Model$axisLabel(ax.id))
+														]));
+											},
+											model.pcmodel.axes))
+									])),
+								A2(
+								$elm$html$Html$a,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$href('#parallele-koordinaten'),
+										A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
+										A2($elm$html$Html$Attributes$style, 'padding', '8px 12px'),
+										A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
+										A2($elm$html$Html$Attributes$style, 'color', '#fff'),
+										A2($elm$html$Html$Attributes$style, 'border-radius', '4px'),
+										A2($elm$html$Html$Attributes$style, 'text-decoration', 'none')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Vergleiche Kriterien')
+									]))
 							])),
 						function () {
 						if (model.loading) {
@@ -9562,75 +10080,77 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 												A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
 												A2($elm$html$Html$Attributes$style, 'color', 'white')
 											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$th,
-												_List_fromArray(
-													[
-														A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
-														A2($elm$html$Html$Attributes$style, 'padding', '12px')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('Rank')
-													])),
-												A2(
-												$elm$html$Html$th,
-												_List_fromArray(
-													[
-														A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
-														A2($elm$html$Html$Attributes$style, 'padding', '12px')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('Land')
-													])),
-												A2(
-												$elm$html$Html$th,
-												_List_fromArray(
-													[
-														A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-														A2($elm$html$Html$Attributes$style, 'padding', '12px')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('Gold')
-													])),
-												A2(
-												$elm$html$Html$th,
-												_List_fromArray(
-													[
-														A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-														A2($elm$html$Html$Attributes$style, 'padding', '12px')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('Silber')
-													])),
-												A2(
-												$elm$html$Html$th,
-												_List_fromArray(
-													[
-														A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-														A2($elm$html$Html$Attributes$style, 'padding', '12px')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('Bronze')
-													])),
-												A2(
-												$elm$html$Html$th,
-												_List_fromArray(
-													[
-														A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-														A2($elm$html$Html$Attributes$style, 'padding', '12px')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('Gesamt')
-													]))
-											]))
+										_Utils_ap(
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$th,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
+															A2($elm$html$Html$Attributes$style, 'padding', '12px')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Platz')
+														])),
+													A2(
+													$elm$html$Html$th,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
+															A2($elm$html$Html$Attributes$style, 'padding', '12px')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Land')
+														])),
+													A2(
+													$elm$html$Html$th,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+															A2($elm$html$Html$Attributes$style, 'padding', '12px')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Gold')
+														])),
+													A2(
+													$elm$html$Html$th,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+															A2($elm$html$Html$Attributes$style, 'padding', '12px')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Silber')
+														])),
+													A2(
+													$elm$html$Html$th,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+															A2($elm$html$Html$Attributes$style, 'padding', '12px')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Bronze')
+														])),
+													A2(
+													$elm$html$Html$th,
+													_List_fromArray(
+														[
+															A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+															A2($elm$html$Html$Attributes$style, 'padding', '12px')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Gesamt')
+														]))
+												]),
+											relHeader))
 									])),
 								A2(
 								$elm$html$Html$tbody,
@@ -9639,10 +10159,16 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 									$elm$core$List$map,
 									function (r) {
 										var rowCursor = 'pointer';
+										var relVal = A2($elm$core$Dict$get, r.country, relByCountry);
+										var rankVal = A2(
+											$elm$core$Maybe$withDefault,
+											r.placement,
+											A2($elm$core$Dict$get, r.country, rankByCountry));
 										var isHovered = _Utils_eq(
 											model.hoverTable,
 											$elm$core$Maybe$Just(r.country));
 										var rowBg = isHovered ? '#e6f5ff' : 'transparent';
+										var absVal = A2($elm$core$Dict$get, r.country, absByCountry);
 										return A2(
 											$elm$html$Html$tr,
 											_List_fromArray(
@@ -9658,158 +10184,370 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 													$elm$html$Html$Events$onClick(
 													$author$project$Model$SelectCountryFromTable(r.country))
 												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$td,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'padding', '0')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$a,
-															_List_fromArray(
+											_Utils_ap(
+												_List_fromArray(
+													[
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '0')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$a,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																		A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																		A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																		A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																		A2($elm$html$Html$Attributes$style, 'text-decoration', 'none')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(
+																		$elm$core$String$fromInt(rankVal))
+																	]))
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '0')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$a,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																		A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																		A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																		A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																		A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																		A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(r.country)
+																	]))
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '0')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$a,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																		A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																		A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																		A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																		A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																		A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(
+																		$elm$core$String$fromInt(r.gold))
+																	]))
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '0')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$a,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																		A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																		A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																		A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																		A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																		A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(
+																		$elm$core$String$fromInt(r.silver))
+																	]))
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '0')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$a,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																		A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																		A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																		A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																		A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																		A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(
+																		$elm$core$String$fromInt(r.bronze))
+																	]))
+															])),
+														A2(
+														$elm$html$Html$td,
+														_List_fromArray(
+															[
+																A2($elm$html$Html$Attributes$style, 'padding', '0')
+															]),
+														_List_fromArray(
+															[
+																A2(
+																$elm$html$Html$a,
+																_Utils_ap(
+																	_List_fromArray(
+																		[
+																			$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																			A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																			A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																			A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																			A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																			A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																		]),
+																	(selectedId === 'medals') ? _List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																		]) : _List_Nil),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text(
+																		$elm$core$String$fromInt(r.total))
+																	]))
+															]))
+													]),
+												function () {
+													switch (selectedId) {
+														case 'pop':
+															return _List_fromArray(
 																[
-																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
-																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
-																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
-																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none')
-																]),
-															_List_fromArray(
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'padding', '0')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$a,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																					A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																					A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																					A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																					A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																					A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																				]),
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$text(
+																					A2(
+																						$elm$core$Maybe$withDefault,
+																						'-',
+																						A2(
+																							$elm$core$Maybe$map,
+																							A2($author$project$View$formatPcValue, false, 'pop'),
+																							absVal)))
+																				]))
+																		])),
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'padding', '0')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$a,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																					A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																					A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																					A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																					A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																					A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+																					A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																				]),
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$text(
+																					A2(
+																						$elm$core$Maybe$withDefault,
+																						'-',
+																						A2(
+																							$elm$core$Maybe$map,
+																							$author$project$View$formatRelativeValue('pop'),
+																							relVal)))
+																				]))
+																		]))
+																]);
+														case 'gdp':
+															return _List_fromArray(
 																[
-																	$elm$html$Html$text(
-																	$elm$core$String$fromInt(r.placement))
-																]))
-														])),
-													A2(
-													$elm$html$Html$td,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'padding', '0')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$a,
-															_List_fromArray(
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'padding', '0')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$a,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																					A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																					A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																					A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																					A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																					A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																				]),
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$text(
+																					A2(
+																						$elm$core$Maybe$withDefault,
+																						'-',
+																						A2(
+																							$elm$core$Maybe$map,
+																							A2($author$project$View$formatPcValue, false, 'gdp'),
+																							absVal)))
+																				]))
+																		])),
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'padding', '0')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$a,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																					A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																					A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																					A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																					A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																					A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+																					A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																				]),
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$text(
+																					A2(
+																						$elm$core$Maybe$withDefault,
+																						'-',
+																						A2(
+																							$elm$core$Maybe$map,
+																							$author$project$View$formatRelativeValue('gdp'),
+																							relVal)))
+																				]))
+																		]))
+																]);
+														case 'age':
+															return _List_fromArray(
 																[
-																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
-																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
-																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
-																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(r.country)
-																]))
-														])),
-													A2(
-													$elm$html$Html$td,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'padding', '0')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$a,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
-																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
-																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
-																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'center')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(
-																	$elm$core$String$fromInt(r.gold))
-																]))
-														])),
-													A2(
-													$elm$html$Html$td,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'padding', '0')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$a,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
-																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
-																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
-																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'center')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(
-																	$elm$core$String$fromInt(r.silver))
-																]))
-														])),
-													A2(
-													$elm$html$Html$td,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'padding', '0')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$a,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
-																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
-																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
-																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'center')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(
-																	$elm$core$String$fromInt(r.bronze))
-																]))
-														])),
-													A2(
-													$elm$html$Html$td,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$Attributes$style, 'padding', '0')
-														]),
-													_List_fromArray(
-														[
-															A2(
-															$elm$html$Html$a,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$href('#medaillenverteilung'),
-																	A2($elm$html$Html$Attributes$style, 'display', 'block'),
-																	A2($elm$html$Html$Attributes$style, 'padding', '10px'),
-																	A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
-																	A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
-																	A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-																	A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(
-																	$elm$core$String$fromInt(r.total))
-																]))
-														]))
-												]));
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'padding', '0')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$a,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																					A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																					A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																					A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																					A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																					A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+																				]),
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$text(
+																					A2(
+																						$elm$core$Maybe$withDefault,
+																						'-',
+																						A2(
+																							$elm$core$Maybe$map,
+																							A2($author$project$View$formatPcValue, false, 'age'),
+																							absVal)))
+																				]))
+																		])),
+																	A2(
+																	$elm$html$Html$td,
+																	_List_fromArray(
+																		[
+																			A2($elm$html$Html$Attributes$style, 'padding', '0')
+																		]),
+																	_List_fromArray(
+																		[
+																			A2(
+																			$elm$html$Html$a,
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$Attributes$href('#medaillenverteilung'),
+																					A2($elm$html$Html$Attributes$style, 'display', 'block'),
+																					A2($elm$html$Html$Attributes$style, 'padding', '10px'),
+																					A2($elm$html$Html$Attributes$style, 'color', 'inherit'),
+																					A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+																					A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+																					A2($elm$html$Html$Attributes$style, 'font-weight', 'bold')
+																				]),
+																			_List_fromArray(
+																				[
+																					$elm$html$Html$text(
+																					A2(
+																						$elm$core$Maybe$withDefault,
+																						'-',
+																						A2(
+																							$elm$core$Maybe$map,
+																							$author$project$View$formatRelativeValue('age'),
+																							relVal)))
+																				]))
+																		]))
+																]);
+														default:
+															return _List_Nil;
+													}
+												}()));
 									},
 									sortedRows))
 							]))
@@ -9835,50 +10573,6 @@ var $elm$core$Set$fromList = function (list) {
 	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
 };
 var $elm$html$Html$h3 = _VirtualDom_node('h3');
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
-var $elm$html$Html$option = _VirtualDom_node('option');
-var $elm$html$Html$select = _VirtualDom_node('select');
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm_community$typed_svg$TypedSvg$Types$AnchorMiddle = {$: 'AnchorMiddle'};
 var $elm_community$typed_svg$TypedSvg$Types$Paint = function (a) {
 	return {$: 'Paint', a: a};
@@ -9887,12 +10581,6 @@ var $elm_community$typed_svg$TypedSvg$Types$Translate = F2(
 	function (a, b) {
 		return {$: 'Translate', a: a, b: b};
 	});
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$core$Basics$abs = function (n) {
-	return (n < 0) ? (-n) : n;
-};
 var $elm$core$Basics$acos = _Basics_acos;
 var $folkertdev$one_true_path_experiment$LowLevel$Command$EllipticalArc = function (a) {
 	return {$: 'EllipticalArc', a: a};
@@ -10236,7 +10924,6 @@ var $folkertdev$one_true_path_experiment$SubPath$connect = function () {
 		});
 	return $folkertdev$one_true_path_experiment$SubPath$map2(helper);
 }();
-var $elm$core$Basics$pow = _Basics_pow;
 var $elm$core$Basics$sqrt = _Basics_sqrt;
 var $gampleman$elm_visualization$Shape$Pie$cornerTangents = F7(
 	function (x0, y0, x1, y1, r1, rc, cw) {
@@ -10299,16 +10986,6 @@ var $folkertdev$elm_deque$Deque$foldl = F2(
 			$elm$core$Basics$composeL,
 			A2($folkertdev$elm_deque$Internal$foldl, f, initial),
 			$folkertdev$elm_deque$Deque$unwrap);
-	});
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
 	});
 var $folkertdev$one_true_path_experiment$LowLevel$Command$updateCursorState = F2(
 	function (drawto, state) {
@@ -11177,9 +11854,7 @@ var $folkertdev$one_true_path_experiment$SubPath$toLowLevel = function (subpath)
 			});
 	}
 };
-var $elm$core$String$fromFloat = _String_fromNumber;
 var $folkertdev$svg_path_lowlevel$Path$LowLevel$defaultConfig = {floatFormatter: $elm$core$String$fromFloat};
-var $elm$core$Basics$round = _Basics_round;
 var $folkertdev$svg_path_lowlevel$Path$LowLevel$roundTo = F2(
 	function (n, value) {
 		if (!n) {
@@ -11962,7 +12637,6 @@ var $author$project$Components$Sunburst$sunburst = function (sbmodel) {
 					]))
 			]));
 };
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$View$medaillenverteilungSection = function (model) {
 	var countries = $elm$core$Set$toList(
 		$elm$core$Set$fromList(
@@ -12137,127 +12811,6 @@ var $elm$core$List$concatMap = F2(
 			A2($elm$core$List$map, f, list));
 	});
 var $elm$html$Html$Attributes$draggable = _VirtualDom_attribute('draggable');
-var $author$project$View$roundTo = F2(
-	function (n, v) {
-		var factor = A2($elm$core$Basics$pow, 10, n);
-		return $elm$core$Basics$round(v * factor) / factor;
-	});
-var $elm_community$list_extra$List$Extra$dropWhile = F2(
-	function (predicate, list) {
-		dropWhile:
-		while (true) {
-			if (!list.b) {
-				return _List_Nil;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (predicate(x)) {
-					var $temp$predicate = predicate,
-						$temp$list = xs;
-					predicate = $temp$predicate;
-					list = $temp$list;
-					continue dropWhile;
-				} else {
-					return list;
-				}
-			}
-		}
-	});
-var $elm$core$String$fromList = _String_fromList;
-var $elm$core$String$foldr = _String_foldr;
-var $elm$core$String$toList = function (string) {
-	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
-};
-var $author$project$View$trimFloat = function (s) {
-	if (A2($elm$core$String$contains, '.', s)) {
-		var noZeros = $elm$core$String$fromList(
-			$elm$core$List$reverse(
-				function (cs) {
-					if (cs.b && ('.' === cs.a.valueOf())) {
-						var rest = cs.b;
-						return rest;
-					} else {
-						return cs;
-					}
-				}(
-					A2(
-						$elm_community$list_extra$List$Extra$dropWhile,
-						function (c) {
-							return _Utils_eq(
-								c,
-								_Utils_chr('0'));
-						},
-						$elm$core$List$reverse(
-							$elm$core$String$toList(s))))));
-		return (noZeros === '-0') ? '0' : noZeros;
-	} else {
-		return s;
-	}
-};
-var $author$project$View$formatFixed = F2(
-	function (n, v) {
-		return $author$project$View$trimFloat(
-			$elm$core$String$fromFloat(
-				A2($author$project$View$roundTo, n, v)));
-	});
-var $author$project$View$formatRelativeValue = F2(
-	function (axisId, v) {
-		switch (axisId) {
-			case 'pop':
-				var threshold = 0.001;
-				var per1M = v * 1.0e6;
-				var a = $elm$core$Basics$abs(per1M);
-				if (!per1M) {
-					return '0';
-				} else {
-					if (_Utils_cmp(a, threshold) < 0) {
-						return '<0.001';
-					} else {
-						var decs = (a >= 100) ? 0 : ((a >= 10) ? 1 : ((a >= 1) ? 2 : ((a >= 0.1) ? 3 : 4)));
-						return A2($author$project$View$formatFixed, decs, per1M);
-					}
-				}
-			case 'gdp':
-				var threshold = 0.001;
-				var per1B = v * 1.0e9;
-				var a = $elm$core$Basics$abs(per1B);
-				if (!per1B) {
-					return '0';
-				} else {
-					if (_Utils_cmp(a, threshold) < 0) {
-						return '<0.001';
-					} else {
-						var decs = (a >= 100) ? 0 : ((a >= 10) ? 1 : ((a >= 1) ? 2 : ((a >= 0.1) ? 3 : 4)));
-						return A2($author$project$View$formatFixed, decs, per1B);
-					}
-				}
-			case 'age':
-				return A2($author$project$View$formatFixed, 3, v);
-			default:
-				return A2($author$project$View$formatFixed, 3, v);
-		}
-	});
-var $author$project$View$formatWithSuffix = function (v) {
-	var absV = $elm$core$Basics$abs(v);
-	return (absV >= 1.0e12) ? (A2($author$project$View$formatFixed, 1, v / 1.0e12) + 'T') : ((absV >= 1.0e9) ? (A2($author$project$View$formatFixed, 1, v / 1.0e9) + 'B') : ((absV >= 1.0e6) ? (A2($author$project$View$formatFixed, 1, v / 1.0e6) + 'M') : ((absV >= 1.0e3) ? (A2($author$project$View$formatFixed, 0, v / 1.0e3) + 'K') : A2($author$project$View$formatFixed, 0, v))));
-};
-var $author$project$View$formatPcValue = F3(
-	function (useRelative, axisId, v) {
-		if (useRelative) {
-			return A2($author$project$View$formatRelativeValue, axisId, v);
-		} else {
-			switch (axisId) {
-				case 'pop':
-					return $author$project$View$formatWithSuffix(v);
-				case 'gdp':
-					return $author$project$View$formatWithSuffix(v);
-				case 'age':
-					return A2($author$project$View$formatFixed, 0, v);
-				default:
-					return A2($author$project$View$formatFixed, 0, v);
-			}
-		}
-	});
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$html$Html$Events$targetChecked = A2(
@@ -12284,7 +12837,6 @@ var $elm$html$Html$Events$preventDefaultOn = F2(
 var $elm$core$List$sort = function (xs) {
 	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
 };
-var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm_community$list_extra$List$Extra$unique = function (list) {
 	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, _List_Nil, list, _List_Nil);
@@ -13678,7 +14230,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 														'border',
 														_Utils_eq(
 															model.dropTargetAxis,
-															$elm$core$Maybe$Just('__start__')) ? '2px dashed #007cba' : '1px dashed #ccc'),
+															$elm$core$Maybe$Just('__start__')) ? '2px dashed #007cba' : '1px solid #ccc'),
 														A2($elm$html$Html$Attributes$style, 'border-radius', '4px'),
 														A2($elm$html$Html$Attributes$style, 'color', '#777'),
 														A2(
@@ -13769,7 +14321,23 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 														]) : _List_Nil),
 												_List_fromArray(
 													[
-														$elm$html$Html$text(a.label)
+														A2(
+														$elm$html$Html$a,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$href('#medaillenspiegel'),
+																$elm$html$Html$Events$onClick(
+																$author$project$Model$SetTableCriterion(a.id)),
+																A2($elm$html$Html$Attributes$style, 'color', '#007cba'),
+																A2(
+																$elm$html$Html$Attributes$style,
+																'text-decoration',
+																_Utils_eq(model.tableCriterion, a.id) ? 'underline' : 'none')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text(a.label)
+															]))
 													]));
 										},
 										axes),
@@ -13842,6 +14410,13 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 									_List_fromArray(
 										[
 											$elm$html$Html$text('Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop).')
+										])),
+									A2(
+									$elm$html$Html$p,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Tip: Click any axis label above to jump to the medal table and set that criterion.')
 										]))
 								])),
 							A2(

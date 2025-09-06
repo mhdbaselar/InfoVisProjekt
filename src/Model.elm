@@ -81,6 +81,7 @@ type alias Model =
     , sbmodel : SBModel
     , sbcountry : String
     , hoverTable : Maybe String
+    , tableCriterion : String
     , axisOrder : List String
     , draggingAxis : Maybe String
     , dropTargetAxis : Maybe String
@@ -102,6 +103,7 @@ type Msg
     | HoverMedalTable (Maybe String)
     | SelectCountryFromTable String
     | NoOp
+    | SetTableCriterion String
     | StartDragAxis String
     | DragOverAxis String
     | DropAxis String
@@ -119,6 +121,7 @@ init =
       , sbmodel = { layout = [], total = 0, hovered = Nothing }
     , sbcountry = ""
     , hoverTable = Nothing
+    , tableCriterion = "medals"
       , axisOrder = [ "medals", "pop", "gdp", "age" ]
       , draggingAxis = Nothing
       , dropTargetAxis = Nothing
