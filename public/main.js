@@ -10659,7 +10659,7 @@ var $author$project$Components$HeatMap$drawCells = F2(
 			_List_fromArray(
 				[
 					A2($elm$html$Html$Attributes$style, 'width', '100%'),
-					A2($elm$html$Html$Attributes$style, 'height', '100%'),
+					A2($elm$html$Html$Attributes$style, 'height', 'auto'),
 					A2($elm$html$Html$Attributes$style, 'border-collapse', 'collapse')
 				]),
 			_List_fromArray(
@@ -10691,7 +10691,7 @@ var $author$project$Components$HeatMap$drawCells = F2(
 					_List_fromArray(
 						[
 							A2($elm$html$Html$Attributes$style, 'width', '100%'),
-							A2($elm$html$Html$Attributes$style, 'height', '100%')
+							A2($elm$html$Html$Attributes$style, 'height', 'auto')
 						]),
 					rows)
 				]));
@@ -10808,24 +10808,17 @@ var $author$project$Components$HeatMap$heatmap = function (hmmodel) {
 		_List_fromArray(
 			[
 				A2($elm$html$Html$Attributes$style, 'width', '500px'),
-				A2($elm$html$Html$Attributes$style, 'height', '540px'),
 				A2($elm$html$Html$Attributes$style, 'border', 'solid 1px black'),
 				A2($elm$html$Html$Attributes$style, 'padding', '8px'),
-				A2($elm$html$Html$Attributes$style, 'box-sizing', 'border-box')
+				A2($elm$html$Html$Attributes$style, 'box-sizing', 'border-box'),
+				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
+				A2($elm$html$Html$Attributes$style, 'gap', '8px')
 			]),
 		_List_fromArray(
 			[
 				A2($author$project$Components$HeatMap$drawCells, quadHeatMapCells, hmmodel),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'margin-top', '8px')
-					]),
-				_List_fromArray(
-					[
-						$author$project$Components$HeatMap$legend(hmmodel)
-					]))
+				$author$project$Components$HeatMap$legend(hmmodel)
 			]));
 };
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');

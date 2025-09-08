@@ -67,15 +67,17 @@ heatmap hmmodel =
                     )
     in
     Html.div
-        [ Html.Attributes.style "width" "500px"
-        , Html.Attributes.style "height" "540px"
-        , Html.Attributes.style "border" "solid 1px black"
-        , Html.Attributes.style "padding" "8px"
-        , Html.Attributes.style "box-sizing" "border-box"
-        ]
-        [ drawCells quadHeatMapCells hmmodel
-        , Html.div [ Html.Attributes.style "margin-top" "8px" ] [ legend hmmodel ]
-        ]
+    [ Html.Attributes.style "width" "500px"
+    , Html.Attributes.style "border" "solid 1px black"
+    , Html.Attributes.style "padding" "8px"
+    , Html.Attributes.style "box-sizing" "border-box"
+    , Html.Attributes.style "display" "flex"
+    , Html.Attributes.style "flex-direction" "column"
+    , Html.Attributes.style "gap" "8px"
+    ]
+    [ drawCells quadHeatMapCells hmmodel
+    , legend hmmodel
+    ]
 
 
 legend : HMModel -> Html.Html Msg
@@ -213,14 +215,14 @@ drawCells quadHeatMapCells hmmodel =
     in
     Html.table
         [ Html.Attributes.style "width" "100%"
-        , Html.Attributes.style "height" "100%"
+        , Html.Attributes.style "height" "auto"
         , Html.Attributes.style "border-collapse" "collapse"
         ]
         [ Html.colgroup []
             ((Html.col [Html.Attributes.style "width" "15%"] []) :: (List.repeat maxRowLength (Html.col [Html.Attributes.style "width" cellWidth] [])))
         , Html.tbody
             [ Html.Attributes.style "width" "100%"
-            , Html.Attributes.style "height" "100%"
+            , Html.Attributes.style "height" "auto"
             ]
             rows
         ]
