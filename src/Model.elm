@@ -7,8 +7,7 @@ import Hierarchy
 import Http
 import List.Extra
 import Tree
-
-
+import String exposing (fromInt)
 
 
 -- Datenmodell
@@ -25,9 +24,6 @@ type alias Participation =
     , event : String
     , medal : String
     }
-
-
-
 
 -- Medaillentabelle (Platzierungen + Gesamt)
 
@@ -70,6 +66,20 @@ type alias SBModel =
     , total : Float
     }
 
+type alias Cell =
+    { value : Float
+    , message : String
+    , row : Int
+    , column : Int
+    }
+
+type alias HMModel =
+    { data : List (List Float)
+    , columnLabels : List String
+    , rowLabels : List String
+    , selected : Maybe Cell
+    }
+
 
 -- App Model
 
@@ -90,6 +100,7 @@ type alias Model =
     , showPcDebug : Bool
     , pcHover : Maybe String
     , pcmodel : PCModel
+    , heatmapmodel : HMModel
     , loading : Bool
     , error : Maybe String
     }
@@ -111,6 +122,8 @@ type Msg
     | TogglePcMode Bool
     | TogglePcDebug Bool
     | SetPcHover (Maybe String)
+    | OnHoverHeatMap Cell
+    | OnLeaveHeatMap
 
 init : ( Model, Cmd Msg )
 init =
@@ -119,9 +132,9 @@ init =
       , populationByCountry = Dict.empty
       , gdpByCountry = Dict.empty
       , sbmodel = { layout = [], total = 0, hovered = Nothing }
-    , sbcountry = ""
-    , hoverTable = Nothing
-    , tableCriterion = "medals"
+      , sbcountry = ""
+      , hoverTable = Nothing
+      , tableCriterion = "medals"
       , axisOrder = [ "medals", "pop", "gdp", "age" ]
       , draggingAxis = Nothing
       , dropTargetAxis = Nothing
@@ -130,6 +143,7 @@ init =
       , showPcDebug = False
       , pcHover = Nothing
       , pcmodel = { axes = [], series = [], hovered = Nothing, ranking = False }
+      , heatmapmodel = { data = [], columnLabels = [], rowLabels = [], selected = Nothing}
       , loading = True
       , error = Nothing
       }
@@ -551,3 +565,41 @@ toPCModel model =
 recomputePcModel : Model -> Model
 recomputePcModel m =
     { m | pcmodel = toPCModel m }
+
+toHMModel : List Participation -> HMModel
+toHMModel parts = 
+    let
+        years =
+            parts
+            |> List.filter (\p -> p.year >= 2000)
+            |> List.map .year
+            |> List.Extra.unique
+            |> List.sort
+        
+        _ = Debug.log "" years
+        _ = Debug.log "" teams
+
+        teams =
+            parts
+            |> List.filter (\p -> p.year >= 2000 && (String.length p.team) == 6)
+            |> List.map .team
+            |> List.Extra.unique
+            |> List.sort
+
+        dataMatrix =
+            List.map
+            (\team ->
+                List.map
+                (\year ->
+                    parts
+                    |> filterSportsEventMedal
+                    |> List.filter (\p -> p.team == team && p.year == year)
+                    |> List.map (\p -> if(p.medal /= "No medal") then 1 else 0)
+                    |> List.sum
+                    --|> fromInt
+                )
+                years
+            )
+            teams
+    in
+    { data = dataMatrix, columnLabels = (List.map fromInt years), rowLabels = teams, selected = Nothing }

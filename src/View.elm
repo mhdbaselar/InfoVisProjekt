@@ -9,6 +9,7 @@ import Json.Decode as Decode
 import Set
 import Components.Sunburst exposing (sunburst)
 import Components.ParallelCoordinates as PC
+import Components.HeatMap exposing (heatmap)
 import Model exposing (..)
 
 
@@ -143,7 +144,7 @@ view model =
             [ medaillenspiegelSection model
             , medaillenverteilungSection model
             , parallelekoordinatensection model
-            , visualisierung4
+            , heatmapSection model
             ]
         ]
 
@@ -158,11 +159,12 @@ headerSection =
             , text " | "
             , a [ href "#medaillenverteilung", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
                 [ text "Medaillenverteilung" ]
+            , text " | "
             , a [ href "#parallele-koordinaten", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
                 [ text "Parallele Koordinaten" ]
             , text " | "
-            , a [ href "#visualisierung4", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
-                [ text "Visualisierung 4" ]
+            , a [ href "#heatmap", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
+                [ text "Medaillen Entwicklung" ]
             ]
         , -- Olympische Ringe
           div [ style "margin" "30px 0" ]
@@ -684,12 +686,27 @@ parallelekoordinatensection model =
         , div [ style "text-align" "right" ] [ nextLink "#visualisierung4" ]
         ]
 
--- Sektion 4: Visualisierung 4
-visualisierung4 : Html Msg
-visualisierung4 =
-    div [ id "visualisierung4", style "margin" "60px 0", style "padding" "20px", style "background-color" "#f8f9fa" ]
-        [ h2 [ style "margin" "0 0 16px 0" ] [ text "4. Visualisierung" ]
-        , div [ style "text-align" "right" ] [ nextLink "#medaillenspiegel" ]
+-- Sektion 4: HeatMap
+heatmapSection : Model -> Html Msg
+heatmapSection model =
+    div [ id "heatmap", style "margin" "60px 0", style "padding" "20px"]
+        [ div [ style "max-width" "900px", style "margin" "0 auto" ]
+            [ h2 [ style "text-align" "left", style "margin-bottom" "20px", style "color" "#333" ]
+                [ text "4. Medaillen Entwicklung" ]
+            , if model.loading then
+                p [] [ text "Lade Daten..." ]
+            else
+                case model.error of
+                    Just err ->
+                        p [ style "color" "#b00020" ] [ text ("Fehler beim Laden: " ++ err) ]
+                    Nothing ->
+                        text ""
+            , div [style "display" "flex", style "flex-direction" "column", style "align-items" "center"] [
+                    heatmap model.heatmapmodel
+                ]
+            ]
+        , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
+            [ nextLink "#medaillenspiegel" ]
         ]
 
 

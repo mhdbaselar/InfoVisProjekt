@@ -23,6 +23,7 @@ update msg model =
                                         , medalTable = mt
                                         , sbcountry = if model.sbcountry == "" then "Germany" else model.sbcountry
                                         , sbmodel = toSBModel filteredParts (if model.sbcountry == "" then "Germany" else model.sbcountry)
+                                        , heatmapmodel = toHMModel parts
                                         , loading = False
                                         , error = Nothing
                                     }
@@ -140,6 +141,19 @@ update msg model =
             ( { model | showPcDebug = on }, Cmd.none )
         SetPcHover name ->
             ( { model | pcHover = name }, Cmd.none )
+        OnHoverHeatMap value ->
+            let
+                state = model.heatmapmodel
+                newHeatMapModel = ( { state | selected = Just value })
+            in
+            ( { model | heatmapmodel = newHeatMapModel }, Cmd.none )
+        OnLeaveHeatMap ->
+             let
+                state = model.heatmapmodel
+                newHeatMapModel = ( { state | selected = Nothing })
+            in
+            ( { model | heatmapmodel = newHeatMapModel }, Cmd.none )
+
 
 httpErrorToString : Http.Error -> String
 httpErrorToString err =
