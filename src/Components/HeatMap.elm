@@ -58,10 +58,44 @@ heatmap hmmodel =
                             row
                     )
     in
-    Html.div[ Html.Attributes.style "width" "500px", Html.Attributes.style "height" "500px", Html.Attributes.style "border" "solid 1px black"] [
-        drawCells quadHeatMapCells hmmodel
-    ] 
-    
+    Html.div
+        [ Html.Attributes.style "width" "500px"
+        , Html.Attributes.style "height" "540px"
+        , Html.Attributes.style "border" "solid 1px black"
+        , Html.Attributes.style "padding" "8px"
+        , Html.Attributes.style "box-sizing" "border-box"
+        ]
+        [ drawCells quadHeatMapCells hmmodel
+        , Html.div [ Html.Attributes.style "margin-top" "8px" ] [ legend hmmodel ]
+        ]
+
+
+legend : HMModel -> Html.Html Msg
+legend _ =
+    let
+        -- We use the same 0..50 normalization window as in colorSchemeGet
+        ticks : List Float
+        ticks = List.range 0 10 |> List.map (\i -> toFloat (i * 5))
+
+        swatch v =
+            Html.div
+                [ Html.Attributes.style "width" "24px"
+                , Html.Attributes.style "height" "12px"
+                , Html.Attributes.style "display" "inline-block"
+                , Html.Attributes.style "background-color" (Color.toCssString (colorSchemeGet v))
+                ]
+                []
+    in
+    Html.div []
+        [ Html.div [ Html.Attributes.style "font-size" "12px", Html.Attributes.style "color" "#555", Html.Attributes.style "margin-bottom" "4px" ]
+            [ Html.text "Legend (medals per cell, 0 … 50+)" ]
+        , Html.div [ Html.Attributes.style "display" "flex", Html.Attributes.style "align-items" "center", Html.Attributes.style "gap" "6px" ]
+            (Html.span [ Html.Attributes.style "font-size" "11px", Html.Attributes.style "color" "#555" ] [ Html.text "0" ]
+                :: (List.map swatch ticks
+                ++ [ Html.span [ Html.Attributes.style "font-size" "11px", Html.Attributes.style "color" "#555" ] [ Html.text "50+" ] ])
+            )
+        ]
+
 emptyCellContent : Html.Html Msg
 emptyCellContent =
     Html.div [ Html.Attributes.style "height" "1px" ] [
@@ -159,13 +193,13 @@ drawCells quadHeatMapCells hmmodel =
             , Html.Events.onMouseOver (OnHoverHeatMap {value=cell.value, row=row, column=col, message=cell.message})
             , Html.Events.onMouseLeave OnLeaveHeatMap
             ]
-            
+
 
         rows =
             quadHeatMapCells
                 |> List.indexedMap toTableRow
                 |> (\tableRows -> firstRowLabels hmmodel.columnLabels :: tableRows)
-        
+
         cellWidth =
             fromFloat (75 / toFloat maxRowLength) ++ "%"
     in
