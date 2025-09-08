@@ -174,6 +174,27 @@ normalizeCountry name =
         _ -> name
 
 
+-- HeatMap-Team-Normalisierung: entfernt numerisches Suffix wie "-1"/"-2" am Ende
+stripTrailingDashDigits : String -> String
+stripTrailingDashDigits s =
+    let
+        parts = String.split "-" s
+    in
+    case List.reverse parts of
+        lastPart :: restRev ->
+            if String.all Char.isDigit lastPart && (List.length parts >= 2) then
+                restRev |> List.reverse |> String.join "-"
+            else
+                s
+
+        _ ->
+            s
+
+
+normalizeTeamHM : String -> String
+normalizeTeamHM team =
+    stripTrailingDashDigits team
+
 -- Manuelle BIP-Overrides (Keys müssen bereits normalisierte Ländernamen sein)
 manualGdpOverrides : Dict String Float
 manualGdpOverrides =
@@ -567,39 +588,55 @@ recomputePcModel m =
     { m | pcmodel = toPCModel m }
 
 toHMModel : List Participation -> HMModel
-toHMModel parts = 
+toHMModel parts =
     let
-        years =
+        -- Nur Datensätze mit Medaille zählen
+        medalEntries =
             parts
-            |> List.filter (\p -> p.year >= 2000)
-            |> List.map .year
-            |> List.Extra.unique
-            |> List.sort
-        
-        _ = Debug.log "" years
-        _ = Debug.log "" teams
+                |> filterSportsEventMedal
+                |> List.filter (\p -> p.medal /= "No medal" && p.medal /= "NA")
+
+        -- Jahre ermitteln und auf die letzten 7 begrenzen
+        allYears = medalEntries |> List.map .year |> List.sort |> List.Extra.unique
+        last7Years =
+            let
+                n = List.length allYears
+                k = if n > 7 then n - 7 else 0
+            in
+            allYears |> List.drop k
+
+        -- (team, year) -> count voraggregieren, inkl. Team-Normalisierung und Filter auf Teamnamen <= 6
+        addCount p dict =
+            let
+                rawTeam = if p.team /= "" then p.team else p.noc
+                team = normalizeTeamHM (normalizeCountry rawTeam)
+            in
+            if (String.length team <= 6) && (List.member p.year last7Years) && (team /= "EOR") && (team /= "AIN") then
+                let key = ( team, p.year ) in
+                Dict.update key (\m -> Just (Maybe.withDefault 0 m + 1)) dict
+            else
+                dict
+
+        countsBy : Dict ( String, Int ) Int
+        countsBy = List.foldl addCount Dict.empty medalEntries
 
         teams =
-            parts
-            |> List.filter (\p -> p.year >= 2000 && (String.length p.team) == 6)
-            |> List.map .team
-            |> List.Extra.unique
-            |> List.sort
+            countsBy
+                |> Dict.keys
+                |> List.map Tuple.first
+                |> List.Extra.unique
+                |> List.sort
 
+        dataMatrix : List (List Float)
         dataMatrix =
-            List.map
-            (\team ->
-                List.map
-                (\year ->
-                    parts
-                    |> filterSportsEventMedal
-                    |> List.filter (\p -> p.team == team && p.year == year)
-                    |> List.map (\p -> if(p.medal /= "No medal") then 1 else 0)
-                    |> List.sum
-                    --|> fromInt
-                )
-                years
-            )
             teams
+                |> List.map (\team ->
+                    last7Years
+                        |> List.map (\y -> countsBy |> Dict.get ( team, y ) |> Maybe.withDefault 0 |> toFloat)
+                   )
     in
-    { data = dataMatrix, columnLabels = (List.map fromInt years), rowLabels = teams, selected = Nothing }
+    { data = dataMatrix
+    , columnLabels = (List.map fromInt last7Years)
+    , rowLabels = teams
+    , selected = Nothing
+    }

@@ -13,6 +13,14 @@ import String exposing (fromFloat)
 import Model exposing (Msg(..), HMModel)
 
 
+-- Precompute normalization scale for 0..50 once
+scale0to50 : ContinuousScale Float
+scale0to50 =
+    List.range 0 50
+        |> List.map toFloat
+        |> normalize
+
+
 normalize : List ( Float ) -> ContinuousScale Float
 normalize data =
     data
@@ -29,7 +37,7 @@ colorSchemeGet cellValue =
             Scale.Color.lightMultiInterpolator 1.0
         else
             cellValue
-                |> Scale.convert (normalize (List.range 0 50 |> List.map toFloat))
+                |> Scale.convert scale0to50
                 |> Scale.Color.lightMultiInterpolator
 
 heatmap : HMModel -> Html.Html Msg

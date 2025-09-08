@@ -7788,14 +7788,6 @@ var $elm_community$list_extra$List$Extra$splitAt = F2(
 			A2($elm$core$List$take, n, xs),
 			A2($elm$core$List$drop, n, xs));
 	});
-var $elm$core$Debug$log = _Debug_log;
-var $elm$core$List$sortBy = _List_sortBy;
-var $elm$core$List$sort = function (xs) {
-	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
-};
-var $elm$core$List$sum = function (numbers) {
-	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
-};
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -7826,6 +7818,27 @@ var $elm$core$List$member = F2(
 			},
 			xs);
 	});
+var $author$project$Model$stripTrailingDashDigits = function (s) {
+	var parts = A2($elm$core$String$split, '-', s);
+	var _v0 = $elm$core$List$reverse(parts);
+	if (_v0.b) {
+		var lastPart = _v0.a;
+		var restRev = _v0.b;
+		return (A2($elm$core$String$all, $elm$core$Char$isDigit, lastPart) && ($elm$core$List$length(parts) >= 2)) ? A2(
+			$elm$core$String$join,
+			'-',
+			$elm$core$List$reverse(restRev)) : s;
+	} else {
+		return s;
+	}
+};
+var $author$project$Model$normalizeTeamHM = function (team) {
+	return $author$project$Model$stripTrailingDashDigits(team);
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $elm$core$List$sort = function (xs) {
+	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
+};
 var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
 	function (f, existing, remaining, accumulator) {
 		uniqueHelp:
@@ -7864,58 +7877,70 @@ var $elm_community$list_extra$List$Extra$unique = function (list) {
 	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, _List_Nil, list, _List_Nil);
 };
 var $author$project$Model$toHMModel = function (parts) {
-	var years = $elm$core$List$sort(
-		$elm_community$list_extra$List$Extra$unique(
+	var medalEntries = A2(
+		$elm$core$List$filter,
+		function (p) {
+			return (p.medal !== 'No medal') && (p.medal !== 'NA');
+		},
+		$author$project$Model$filterSportsEventMedal(parts));
+	var allYears = $elm_community$list_extra$List$Extra$unique(
+		$elm$core$List$sort(
 			A2(
 				$elm$core$List$map,
 				function ($) {
 					return $.year;
 				},
-				A2(
-					$elm$core$List$filter,
-					function (p) {
-						return p.year >= 2000;
+				medalEntries)));
+	var last7Years = function () {
+		var n = $elm$core$List$length(allYears);
+		var k = (n > 7) ? (n - 7) : 0;
+		return A2($elm$core$List$drop, k, allYears);
+	}();
+	var addCount = F2(
+		function (p, dict) {
+			var rawTeam = (p.team !== '') ? p.team : p.noc;
+			var team = $author$project$Model$normalizeTeamHM(
+				$author$project$Model$normalizeCountry(rawTeam));
+			if (($elm$core$String$length(team) <= 6) && (A2($elm$core$List$member, p.year, last7Years) && ((team !== 'EOR') && (team !== 'AIN')))) {
+				var key = _Utils_Tuple2(team, p.year);
+				return A3(
+					$elm$core$Dict$update,
+					key,
+					function (m) {
+						return $elm$core$Maybe$Just(
+							A2($elm$core$Maybe$withDefault, 0, m) + 1);
 					},
-					parts))));
+					dict);
+			} else {
+				return dict;
+			}
+		});
+	var countsBy = A3($elm$core$List$foldl, addCount, $elm$core$Dict$empty, medalEntries);
 	var teams = $elm$core$List$sort(
 		$elm_community$list_extra$List$Extra$unique(
 			A2(
 				$elm$core$List$map,
-				function ($) {
-					return $.team;
-				},
-				A2(
-					$elm$core$List$filter,
-					function (p) {
-						return (p.year >= 2000) && ($elm$core$String$length(p.team) === 6);
-					},
-					parts))));
+				$elm$core$Tuple$first,
+				$elm$core$Dict$keys(countsBy))));
 	var dataMatrix = A2(
 		$elm$core$List$map,
 		function (team) {
 			return A2(
 				$elm$core$List$map,
-				function (year) {
-					return $elm$core$List$sum(
+				function (y) {
+					return A2(
+						$elm$core$Maybe$withDefault,
+						0,
 						A2(
-							$elm$core$List$map,
-							function (p) {
-								return (p.medal !== 'No medal') ? 1 : 0;
-							},
-							A2(
-								$elm$core$List$filter,
-								function (p) {
-									return _Utils_eq(p.team, team) && _Utils_eq(p.year, year);
-								},
-								$author$project$Model$filterSportsEventMedal(parts))));
+							$elm$core$Dict$get,
+							_Utils_Tuple2(team, y),
+							countsBy));
 				},
-				years);
+				last7Years);
 		},
 		teams);
-	var _v0 = A2($elm$core$Debug$log, '', years);
-	var _v1 = A2($elm$core$Debug$log, '', teams);
 	return {
-		columnLabels: A2($elm$core$List$map, $elm$core$String$fromInt, years),
+		columnLabels: A2($elm$core$List$map, $elm$core$String$fromInt, last7Years),
 		data: dataMatrix,
 		rowLabels: teams,
 		selected: $elm$core$Maybe$Nothing
@@ -8831,6 +8856,9 @@ var $gampleman$elm_rosetree$Tree$stratifyWithPath = F2(
 											},
 											nodes))).b))))));
 	});
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
 var $gampleman$elm_rosetree$Tree$sumUp = F3(
 	function (leaf, branch, t) {
 		return A4(
@@ -10361,16 +10389,14 @@ var $author$project$Components$HeatMap$normalize = function (data) {
 			_Utils_Tuple2(0, 1),
 			$gampleman$elm_visualization$Statistics$extent(data)));
 };
+var $author$project$Components$HeatMap$scale0to50 = $author$project$Components$HeatMap$normalize(
+	A2(
+		$elm$core$List$map,
+		$elm$core$Basics$toFloat,
+		A2($elm$core$List$range, 0, 50)));
 var $author$project$Components$HeatMap$colorSchemeGet = function (cellValue) {
 	return $elm$core$Basics$isNaN(cellValue) ? $avh4$elm_color$Color$blue : ((cellValue > 50) ? $gampleman$elm_visualization$Scale$Color$lightMultiInterpolator(1.0) : $gampleman$elm_visualization$Scale$Color$lightMultiInterpolator(
-		A2(
-			$gampleman$elm_visualization$Scale$convert,
-			$author$project$Components$HeatMap$normalize(
-				A2(
-					$elm$core$List$map,
-					$elm$core$Basics$toFloat,
-					A2($elm$core$List$range, 0, 50))),
-			cellValue)));
+		A2($gampleman$elm_visualization$Scale$convert, $author$project$Components$HeatMap$scale0to50, cellValue)));
 };
 var $elm$virtual_dom$VirtualDom$property = F2(
 	function (key, value) {
