@@ -611,7 +611,7 @@ toHMModel parts =
                 rawTeam = if p.team /= "" then p.team else p.noc
                 team = normalizeTeamHM (normalizeCountry rawTeam)
             in
-            if (String.length team <= 6) && (List.member p.year last7Years) && (team /= "EOR") && (team /= "AIN") then
+            if (String.length team <= 600) && (List.member p.year allYears) && (team /= "EOR") && (team /= "AIN") then
                 let key = ( team, p.year ) in
                 Dict.update key (\m -> Just (Maybe.withDefault 0 m + 1)) dict
             else
@@ -631,12 +631,12 @@ toHMModel parts =
         dataMatrix =
             teams
                 |> List.map (\team ->
-                    last7Years
+                    allYears
                         |> List.map (\y -> countsBy |> Dict.get ( team, y ) |> Maybe.withDefault 0 |> toFloat)
                    )
     in
     { data = dataMatrix
-    , columnLabels = (List.map fromInt last7Years)
+    , columnLabels = (List.map fromInt allYears)
     , rowLabels = teams
     , selected = Nothing
     }

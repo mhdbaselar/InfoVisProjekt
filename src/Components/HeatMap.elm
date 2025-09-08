@@ -67,16 +67,18 @@ heatmap hmmodel =
                     )
     in
     Html.div
-    [ Html.Attributes.style "width" "500px"
+    [ Html.Attributes.style "width" "100%"
+    , Html.Attributes.style "max-width" "100%"
     , Html.Attributes.style "border" "solid 1px black"
     , Html.Attributes.style "padding" "8px"
     , Html.Attributes.style "box-sizing" "border-box"
     , Html.Attributes.style "display" "flex"
     , Html.Attributes.style "flex-direction" "column"
     , Html.Attributes.style "gap" "8px"
+    , Html.Attributes.style "overflow-x" "auto"
     ]
-    [ drawCells quadHeatMapCells hmmodel
-    , legend hmmodel
+    [ legend hmmodel
+    , drawCells quadHeatMapCells hmmodel
     ]
 
 
@@ -98,7 +100,7 @@ legend _ =
     in
     Html.div []
         [ Html.div [ Html.Attributes.style "font-size" "12px", Html.Attributes.style "color" "#555", Html.Attributes.style "margin-bottom" "4px" ]
-            [ Html.text "Legend (medals per cell, 0 … 50+)" ]
+            [ Html.text "Legend (medals per cell)" ]
         , Html.div [ Html.Attributes.style "display" "flex", Html.Attributes.style "align-items" "center", Html.Attributes.style "gap" "6px" ]
             (Html.span [ Html.Attributes.style "font-size" "11px", Html.Attributes.style "color" "#555" ] [ Html.text "0" ]
                 :: (List.map swatch ticks

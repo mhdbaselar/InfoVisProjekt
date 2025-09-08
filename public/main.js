@@ -7901,7 +7901,7 @@ var $author$project$Model$toHMModel = function (parts) {
 			var rawTeam = (p.team !== '') ? p.team : p.noc;
 			var team = $author$project$Model$normalizeTeamHM(
 				$author$project$Model$normalizeCountry(rawTeam));
-			if (($elm$core$String$length(team) <= 6) && (A2($elm$core$List$member, p.year, last7Years) && ((team !== 'EOR') && (team !== 'AIN')))) {
+			if (($elm$core$String$length(team) <= 600) && (A2($elm$core$List$member, p.year, allYears) && ((team !== 'EOR') && (team !== 'AIN')))) {
 				var key = _Utils_Tuple2(team, p.year);
 				return A3(
 					$elm$core$Dict$update,
@@ -7936,11 +7936,11 @@ var $author$project$Model$toHMModel = function (parts) {
 							_Utils_Tuple2(team, y),
 							countsBy));
 				},
-				last7Years);
+				allYears);
 		},
 		teams);
 	return {
-		columnLabels: A2($elm$core$List$map, $elm$core$String$fromInt, last7Years),
+		columnLabels: A2($elm$core$List$map, $elm$core$String$fromInt, allYears),
 		data: dataMatrix,
 		rowLabels: teams,
 		selected: $elm$core$Maybe$Nothing
@@ -10734,7 +10734,7 @@ var $author$project$Components$HeatMap$legend = function (_v0) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Legend (medals per cell, 0 … 50+)')
+						$elm$html$Html$text('Legend (medals per cell)')
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -10807,18 +10807,20 @@ var $author$project$Components$HeatMap$heatmap = function (hmmodel) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				A2($elm$html$Html$Attributes$style, 'width', '500px'),
+				A2($elm$html$Html$Attributes$style, 'width', '100%'),
+				A2($elm$html$Html$Attributes$style, 'max-width', '100%'),
 				A2($elm$html$Html$Attributes$style, 'border', 'solid 1px black'),
 				A2($elm$html$Html$Attributes$style, 'padding', '8px'),
 				A2($elm$html$Html$Attributes$style, 'box-sizing', 'border-box'),
 				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
 				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
-				A2($elm$html$Html$Attributes$style, 'gap', '8px')
+				A2($elm$html$Html$Attributes$style, 'gap', '8px'),
+				A2($elm$html$Html$Attributes$style, 'overflow-x', 'auto')
 			]),
 		_List_fromArray(
 			[
-				A2($author$project$Components$HeatMap$drawCells, quadHeatMapCells, hmmodel),
-				$author$project$Components$HeatMap$legend(hmmodel)
+				$author$project$Components$HeatMap$legend(hmmodel),
+				A2($author$project$Components$HeatMap$drawCells, quadHeatMapCells, hmmodel)
 			]));
 };
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
