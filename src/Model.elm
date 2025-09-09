@@ -587,8 +587,8 @@ recomputePcModel : Model -> Model
 recomputePcModel m =
     { m | pcmodel = toPCModel m }
 
-toHMModel : List Participation -> HMModel
-toHMModel parts =
+toHMModel : List Participation -> List String -> HMModel
+toHMModel parts teams =
     let
         -- Nur Datensätze mit Medaille zählen
         medalEntries =
@@ -596,14 +596,8 @@ toHMModel parts =
                 |> filterSportsEventMedal
                 |> List.filter (\p -> p.medal /= "No medal" && p.medal /= "NA")
 
-        -- Jahre ermitteln und auf die letzten 7 begrenzen
+        -- Jahre ermitteln
         allYears = medalEntries |> List.map .year |> List.sort |> List.Extra.unique
-        last7Years =
-            let
-                n = List.length allYears
-                k = if n > 7 then n - 7 else 0
-            in
-            allYears |> List.drop k
 
         -- (team, year) -> count voraggregieren, inkl. Team-Normalisierung und Filter auf Teamnamen <= 6
         addCount p dict =
@@ -620,12 +614,12 @@ toHMModel parts =
         countsBy : Dict ( String, Int ) Int
         countsBy = List.foldl addCount Dict.empty medalEntries
 
-        teams =
+        {-teams =
             countsBy
                 |> Dict.keys
                 |> List.map Tuple.first
                 |> List.Extra.unique
-                |> List.sort
+                |> List.sort-}
 
         dataMatrix : List (List Float)
         dataMatrix =

@@ -17,13 +17,20 @@ update msg model =
                                 filteredParts =
                                     parts |> filterByYear 2024 |> filterSportsEventMedal
                                 mt = toMedalTable filteredParts
+
+                                -- take teams of medaltable (sorted) and add all other
+                                teams2024 =
+                                    (mt |> List.map .country) ++ (parts |> filterByYear 2024 |> List.map (\p -> p.team) |> ListExtra.unique)
+                                    |> ListExtra.unique
+                                    |> List.filter (\team -> team /= "EOR" && team /= "AIN")
+
                                 base =
                                     { model
                                         | participations = filteredParts
                                         , medalTable = mt
                                         , sbcountry = if model.sbcountry == "" then "Germany" else model.sbcountry
                                         , sbmodel = toSBModel filteredParts (if model.sbcountry == "" then "Germany" else model.sbcountry)
-                                        , heatmapmodel = toHMModel parts
+                                        , heatmapmodel = toHMModel parts teams2024
                                         , loading = False
                                         , error = Nothing
                                     }
