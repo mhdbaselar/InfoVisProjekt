@@ -307,7 +307,8 @@ filterSportsEventMedal participations =
         updateDict : Participation -> Dict String Participation -> Dict String Participation
         updateDict p dict =
             let
-                sKey = String.concat [ p.event, p.sport, p.team, p.medal ] |> String.words |> String.concat
+                -- Verwende NOC statt Team für eindeutige Länder-Kombination
+                sKey = String.concat [ p.event, p.sport, p.noc, p.medal ] |> String.words |> String.concat
             in
             case Dict.get sKey dict of
                 Just _ ->
@@ -328,7 +329,8 @@ filterSportsEventMedal participations =
 toMedalTable : List Participation -> List MedalTableRow
 toMedalTable participations =
     let
-        getLand p = if p.team /= "" then p.team else p.noc
+        -- Land ausschließlich über NOC bestimmen (Team kann mehrfach pro Land vorkommen)
+        getLand p = p.noc
 
         addMedal medal ( g, s, b ) =
             case medal of
@@ -473,7 +475,7 @@ toSBModel parts country =
         -- Convert Participation to List of records
         recordData =
             parts
-            |> List.filter (\c -> c.team == country && c.medal /= "No medal" )
+            |> List.filter (\c -> c.noc == country && c.medal /= "No medal" )
             |> List.map (\p -> { sequence = List.append [ p.sport ] [ p.event ], medalCount = 1 })
             -- TODO: uniqueBy is a temporary solution!!!
             --       If one country won 2 medals in the same event medalCount must be 2 (or 3)
@@ -602,11 +604,10 @@ toHMModel parts teams =
         -- (team, year) -> count voraggregieren, inkl. Team-Normalisierung und Filter auf Teamnamen <= 6
         addCount p dict =
             let
-                rawTeam = if p.team /= "" then p.team else p.noc
-                team = normalizeTeamHM (normalizeCountry rawTeam)
+                noc = p.noc |> normalizeCountry |> normalizeTeamHM
             in
-            if (String.length team <= 600) && (List.member p.year allYears) && (team /= "EOR") && (team /= "AIN") then
-                let key = ( team, p.year ) in
+            if (String.length noc <= 600) && (List.member p.year allYears) && (noc /= "EOR") && (noc /= "AIN") then
+                let key = ( noc, p.year ) in
                 Dict.update key (\m -> Just (Maybe.withDefault 0 m + 1)) dict
             else
                 dict

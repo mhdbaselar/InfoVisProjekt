@@ -7422,7 +7422,7 @@ var $author$project$Model$filterSportsEventMedal = function (participations) {
 				$elm$core$String$words(
 					$elm$core$String$concat(
 						_List_fromArray(
-							[p.event, p.sport, p.team, p.medal]))));
+							[p.event, p.sport, p.noc, p.medal]))));
 			var _v0 = A2($elm$core$Dict$get, sKey, dict);
 			if (_v0.$ === 'Just') {
 				return dict;
@@ -7894,11 +7894,10 @@ var $author$project$Model$toHMModel = F2(
 					medalEntries)));
 		var addCount = F2(
 			function (p, dict) {
-				var rawTeam = (p.team !== '') ? p.team : p.noc;
-				var team = $author$project$Model$normalizeTeamHM(
-					$author$project$Model$normalizeCountry(rawTeam));
-				if (($elm$core$String$length(team) <= 600) && (A2($elm$core$List$member, p.year, allYears) && ((team !== 'EOR') && (team !== 'AIN')))) {
-					var key = _Utils_Tuple2(team, p.year);
+				var noc = $author$project$Model$normalizeTeamHM(
+					$author$project$Model$normalizeCountry(p.noc));
+				if (($elm$core$String$length(noc) <= 600) && (A2($elm$core$List$member, p.year, allYears) && ((noc !== 'EOR') && (noc !== 'AIN')))) {
+					var key = _Utils_Tuple2(noc, p.year);
 					return A3(
 						$elm$core$Dict$update,
 						key,
@@ -7965,7 +7964,7 @@ var $author$project$Model$toMedalTable = function (participations) {
 				A2($elm$core$List$cons, row, acc));
 		});
 	var getLand = function (p) {
-		return (p.team !== '') ? p.team : p.noc;
+		return p.noc;
 	};
 	var addMedal = F2(
 		function (medal, _v6) {
@@ -8932,7 +8931,7 @@ var $author$project$Model$toSBModel = F2(
 				A2(
 					$elm$core$List$filter,
 					function (c) {
-						return _Utils_eq(c.team, country) && (c.medal !== 'No medal');
+						return _Utils_eq(c.noc, country) && (c.medal !== 'No medal');
 					},
 					parts)));
 		var treeData = A2(
@@ -9069,10 +9068,10 @@ var $author$project$Update$update = F2(
 						var filteredParts = $author$project$Model$filterSportsEventMedal(
 							A2($author$project$Model$filterByYear, 2024, parts));
 						var mt = $author$project$Model$toMedalTable(filteredParts);
-						var teams2024 = A2(
+						var nocs2024 = A2(
 							$elm$core$List$filter,
-							function (team) {
-								return (team !== 'EOR') && (team !== 'AIN');
+							function (noc) {
+								return (noc !== 'EOR') && (noc !== 'AIN');
 							},
 							$elm_community$list_extra$List$Extra$unique(
 								_Utils_ap(
@@ -9085,15 +9084,15 @@ var $author$project$Update$update = F2(
 									$elm_community$list_extra$List$Extra$unique(
 										A2(
 											$elm$core$List$map,
-											function (p) {
-												return p.team;
+											function ($) {
+												return $.noc;
 											},
 											A2($author$project$Model$filterByYear, 2024, parts))))));
 						var base = _Utils_update(
 							model,
 							{
 								error: $elm$core$Maybe$Nothing,
-								heatmapmodel: A2($author$project$Model$toHMModel, parts, teams2024),
+								heatmapmodel: A2($author$project$Model$toHMModel, parts, nocs2024),
 								loading: false,
 								medalTable: mt,
 								participations: filteredParts,
@@ -13306,8 +13305,8 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 		$elm$core$Set$fromList(
 			A2(
 				$elm$core$List$map,
-				function (p) {
-					return (p.team !== '') ? p.team : p.noc;
+				function ($) {
+					return $.noc;
 				},
 				model.participations)));
 	return A2(

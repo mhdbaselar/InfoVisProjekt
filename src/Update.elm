@@ -18,11 +18,12 @@ update msg model =
                                     parts |> filterByYear 2024 |> filterSportsEventMedal
                                 mt = toMedalTable filteredParts
 
-                                -- take teams of medaltable (sorted) and add all other
-                                teams2024 =
-                                    (mt |> List.map .country) ++ (parts |> filterByYear 2024 |> List.map (\p -> p.team) |> ListExtra.unique)
-                                    |> ListExtra.unique
-                                    |> List.filter (\team -> team /= "EOR" && team /= "AIN")
+                                -- Verwende NOC (eindeutig pro Land) statt Team für HeatMap-Zeilen
+                                nocs2024 =
+                                    (mt |> List.map .country)
+                                        ++ (parts |> filterByYear 2024 |> List.map (.noc) |> ListExtra.unique)
+                                        |> ListExtra.unique
+                                        |> List.filter (\noc -> noc /= "EOR" && noc /= "AIN")
 
                                 base =
                                     { model
@@ -30,7 +31,7 @@ update msg model =
                                         , medalTable = mt
                                         , sbcountry = if model.sbcountry == "" then "Germany" else model.sbcountry
                                         , sbmodel = toSBModel filteredParts (if model.sbcountry == "" then "Germany" else model.sbcountry)
-                                        , heatmapmodel = toHMModel parts teams2024
+                                        , heatmapmodel = toHMModel parts nocs2024
                                         , loading = False
                                         , error = Nothing
                                     }

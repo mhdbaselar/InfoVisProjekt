@@ -416,7 +416,7 @@ medaillenverteilungSection model =
         countries : List String
         countries =
             model.participations
-            |> List.map (\p -> if p.team /= "" then p.team else p.noc)
+            |> List.map (.noc)
             |> Set.fromList
             |> Set.toList
 
