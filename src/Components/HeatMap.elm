@@ -1,9 +1,6 @@
 module Components.HeatMap exposing (heatmap)
 
 import Color exposing (..)
-import Scale exposing (ContinuousScale)
-import Statistics
-import Scale.Color
 import Html
 import Html.Attributes
 import Html.Events
@@ -13,32 +10,36 @@ import String exposing (fromFloat)
 import Model exposing (Msg(..), HMModel)
 
 
--- Precompute normalization scale for 0..50 once
-scale0to50 : ContinuousScale Float
-scale0to50 =
-    List.range 0 50
-        |> List.map toFloat
-        |> normalize
 
-
-normalize : List ( Float ) -> ContinuousScale Float
-normalize data =
-    data
-        |> Statistics.extent
-        |> Maybe.withDefault ( 0, 1 )
-        |> Scale.linear ( 0, 1 )
+-- Diskrete Farbskala
+-- Schwellen: 0,1,2,5,10,20,30,40,50+
+colorSteps : List ( Float, Color )
+colorSteps =
+    [ ( 0,  Color.rgb255 250 250 250 ) -- 0 (weiß)
+    , ( 1,  Color.rgb255 255 220 200 ) -- 1 (dunkler)
+    , ( 2,  Color.rgb255 255 200 170 )
+    , ( 5,  Color.rgb255 255 170 120 )
+    , ( 10, Color.rgb255 255 120 70 )
+    , ( 20, Color.rgb255 240 70 30 )
+    , ( 30, Color.rgb255 200 40 20 )
+    , ( 40, Color.rgb255 170 20 10 )
+    , ( 50, Color.rgb255 140 0 0 ) -- 50+
+    ]
 
 colorSchemeGet : Float -> Color
-colorSchemeGet cellValue =
-    if isNaN cellValue then
-        Color.blue
+colorSchemeGet v =
+    if isNaN v then
+        Color.rgb255 200 200 200
     else
-        if cellValue > 50 then
-            Scale.Color.lightMultiInterpolator 1.0
-        else
-            cellValue
-                |> Scale.convert scale0to50
-                |> Scale.Color.lightMultiInterpolator
+        let
+            pick =
+                colorSteps
+                    |> List.filter (\(t, _) -> v >= t)
+                    |> List.reverse
+                    |> List.head
+                    |> Maybe.map Tuple.second
+        in
+        Maybe.withDefault (Color.rgb255 140 0 0) pick
 
 heatmap : HMModel -> Html.Html Msg
 heatmap hmmodel =
@@ -85,27 +86,32 @@ heatmap hmmodel =
 legend : HMModel -> Html.Html Msg
 legend _ =
     let
-        -- We use the same 0..50 normalization window as in colorSchemeGet
-        ticks : List Float
-        ticks = List.range 0 10 |> List.map (\i -> toFloat (i * 5))
-
-        swatch v =
+        swatch ( v, c ) =
+            let
+                labelText = if v == 50 then "50+" else String.fromFloat v |> String.split "." |> List.head |> Maybe.withDefault (String.fromFloat v)
+            in
             Html.div
-                [ Html.Attributes.style "width" "24px"
-                , Html.Attributes.style "height" "12px"
-                , Html.Attributes.style "display" "inline-block"
-                , Html.Attributes.style "background-color" (Color.toCssString (colorSchemeGet v))
+                [ Html.Attributes.style "display" "flex"
+                , Html.Attributes.style "flex-direction" "column"
+                , Html.Attributes.style "align-items" "center"
+                , Html.Attributes.style "gap" "2px"
+                , Html.Attributes.style "min-width" "32px"
                 ]
-                []
+                [ Html.div
+                    [ Html.Attributes.style "width" "28px"
+                    , Html.Attributes.style "height" "14px"
+                    , Html.Attributes.style "border" "1px solid #ccc"
+                    , Html.Attributes.style "background-color" (Color.toCssString c)
+                    ]
+                    []
+                , Html.span [ Html.Attributes.style "font-size" "10px", Html.Attributes.style "color" "#555" ] [ Html.text labelText ]
+                ]
     in
     Html.div []
         [ Html.div [ Html.Attributes.style "font-size" "12px", Html.Attributes.style "color" "#555", Html.Attributes.style "margin-bottom" "4px" ]
-            [ Html.text "Legend (medals per cell)" ]
-        , Html.div [ Html.Attributes.style "display" "flex", Html.Attributes.style "align-items" "center", Html.Attributes.style "gap" "6px" ]
-            (Html.span [ Html.Attributes.style "font-size" "11px", Html.Attributes.style "color" "#555" ] [ Html.text "0" ]
-                :: (List.map swatch ticks
-                ++ [ Html.span [ Html.Attributes.style "font-size" "11px", Html.Attributes.style "color" "#555" ] [ Html.text "50+" ] ])
-            )
+            [ Html.text "Legende: Medaillen (diskrete Stufen)" ]
+        , Html.div [ Html.Attributes.style "display" "flex", Html.Attributes.style "align-items" "flex-end", Html.Attributes.style "gap" "4px", Html.Attributes.style "flex-wrap" "wrap" ]
+            (List.map swatch colorSteps)
         ]
 
 emptyCellContent : Html.Html Msg
