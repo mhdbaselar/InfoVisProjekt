@@ -6192,6 +6192,7 @@ var $author$project$Model$init = _Utils_Tuple2(
 		dropTargetAxis: $elm$core$Maybe$Nothing,
 		error: $elm$core$Maybe$Nothing,
 		gdpByCountry: $elm$core$Dict$empty,
+		heatmapmodel: {columnLabels: _List_Nil, data: _List_Nil, rowLabels: _List_Nil, selected: $elm$core$Maybe$Nothing},
 		hoverTable: $elm$core$Maybe$Nothing,
 		loading: true,
 		medalTable: _List_Nil,
@@ -7787,6 +7788,154 @@ var $elm_community$list_extra$List$Extra$splitAt = F2(
 			A2($elm$core$List$take, n, xs),
 			A2($elm$core$List$drop, n, xs));
 	});
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $author$project$Model$stripTrailingDashDigits = function (s) {
+	var parts = A2($elm$core$String$split, '-', s);
+	var _v0 = $elm$core$List$reverse(parts);
+	if (_v0.b) {
+		var lastPart = _v0.a;
+		var restRev = _v0.b;
+		return (A2($elm$core$String$all, $elm$core$Char$isDigit, lastPart) && ($elm$core$List$length(parts) >= 2)) ? A2(
+			$elm$core$String$join,
+			'-',
+			$elm$core$List$reverse(restRev)) : s;
+	} else {
+		return s;
+	}
+};
+var $author$project$Model$normalizeTeamHM = function (team) {
+	return $author$project$Model$stripTrailingDashDigits(team);
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $elm$core$List$sort = function (xs) {
+	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
+};
+var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
+	function (f, existing, remaining, accumulator) {
+		uniqueHelp:
+		while (true) {
+			if (!remaining.b) {
+				return $elm$core$List$reverse(accumulator);
+			} else {
+				var first = remaining.a;
+				var rest = remaining.b;
+				var computedFirst = f(first);
+				if (A2($elm$core$List$member, computedFirst, existing)) {
+					var $temp$f = f,
+						$temp$existing = existing,
+						$temp$remaining = rest,
+						$temp$accumulator = accumulator;
+					f = $temp$f;
+					existing = $temp$existing;
+					remaining = $temp$remaining;
+					accumulator = $temp$accumulator;
+					continue uniqueHelp;
+				} else {
+					var $temp$f = f,
+						$temp$existing = A2($elm$core$List$cons, computedFirst, existing),
+						$temp$remaining = rest,
+						$temp$accumulator = A2($elm$core$List$cons, first, accumulator);
+					f = $temp$f;
+					existing = $temp$existing;
+					remaining = $temp$remaining;
+					accumulator = $temp$accumulator;
+					continue uniqueHelp;
+				}
+			}
+		}
+	});
+var $elm_community$list_extra$List$Extra$unique = function (list) {
+	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, _List_Nil, list, _List_Nil);
+};
+var $author$project$Model$toHMModel = F2(
+	function (parts, teams) {
+		var medalEntries = A2(
+			$elm$core$List$filter,
+			function (p) {
+				return (p.medal !== 'No medal') && (p.medal !== 'NA');
+			},
+			$author$project$Model$filterSportsEventMedal(parts));
+		var allYears = $elm_community$list_extra$List$Extra$unique(
+			$elm$core$List$sort(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.year;
+					},
+					medalEntries)));
+		var addCount = F2(
+			function (p, dict) {
+				var rawTeam = (p.team !== '') ? p.team : p.noc;
+				var team = $author$project$Model$normalizeTeamHM(
+					$author$project$Model$normalizeCountry(rawTeam));
+				if (($elm$core$String$length(team) <= 600) && (A2($elm$core$List$member, p.year, allYears) && ((team !== 'EOR') && (team !== 'AIN')))) {
+					var key = _Utils_Tuple2(team, p.year);
+					return A3(
+						$elm$core$Dict$update,
+						key,
+						function (m) {
+							return $elm$core$Maybe$Just(
+								A2($elm$core$Maybe$withDefault, 0, m) + 1);
+						},
+						dict);
+				} else {
+					return dict;
+				}
+			});
+		var countsBy = A3($elm$core$List$foldl, addCount, $elm$core$Dict$empty, medalEntries);
+		var dataMatrix = A2(
+			$elm$core$List$map,
+			function (team) {
+				return A2(
+					$elm$core$List$map,
+					function (y) {
+						return A2(
+							$elm$core$Maybe$withDefault,
+							0,
+							A2(
+								$elm$core$Dict$get,
+								_Utils_Tuple2(team, y),
+								countsBy));
+					},
+					allYears);
+			},
+			teams);
+		return {
+			columnLabels: A2($elm$core$List$map, $elm$core$String$fromInt, allYears),
+			data: dataMatrix,
+			rowLabels: teams,
+			selected: $elm$core$Maybe$Nothing
+		};
+	});
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
@@ -8409,7 +8558,6 @@ var $elm$core$Set$member = F2(
 		var dict = _v0.a;
 		return A2($elm$core$Dict$member, key, dict);
 	});
-var $elm$core$List$sortBy = _List_sortBy;
 var $gampleman$elm_rosetree$Tree$DisconnectedNodes = function (a) {
 	return {$: 'DisconnectedNodes', a: a};
 };
@@ -8748,70 +8896,6 @@ var $gampleman$elm_rosetree$Tree$foldr = F3(
 var $gampleman$elm_rosetree$Tree$toList = function (t) {
 	return A3($gampleman$elm_rosetree$Tree$foldr, $elm$core$List$cons, _List_Nil, t);
 };
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
-	});
-var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
-	function (f, existing, remaining, accumulator) {
-		uniqueHelp:
-		while (true) {
-			if (!remaining.b) {
-				return $elm$core$List$reverse(accumulator);
-			} else {
-				var first = remaining.a;
-				var rest = remaining.b;
-				var computedFirst = f(first);
-				if (A2($elm$core$List$member, computedFirst, existing)) {
-					var $temp$f = f,
-						$temp$existing = existing,
-						$temp$remaining = rest,
-						$temp$accumulator = accumulator;
-					f = $temp$f;
-					existing = $temp$existing;
-					remaining = $temp$remaining;
-					accumulator = $temp$accumulator;
-					continue uniqueHelp;
-				} else {
-					var $temp$f = f,
-						$temp$existing = A2($elm$core$List$cons, computedFirst, existing),
-						$temp$remaining = rest,
-						$temp$accumulator = A2($elm$core$List$cons, first, accumulator);
-					f = $temp$f;
-					existing = $temp$existing;
-					remaining = $temp$remaining;
-					accumulator = $temp$accumulator;
-					continue uniqueHelp;
-				}
-			}
-		}
-	});
 var $elm_community$list_extra$List$Extra$uniqueBy = F2(
 	function (f, list) {
 		return A4($elm_community$list_extra$List$Extra$uniqueHelp, f, _List_Nil, list, _List_Nil);
@@ -8985,10 +9069,31 @@ var $author$project$Update$update = F2(
 						var filteredParts = $author$project$Model$filterSportsEventMedal(
 							A2($author$project$Model$filterByYear, 2024, parts));
 						var mt = $author$project$Model$toMedalTable(filteredParts);
+						var teams2024 = A2(
+							$elm$core$List$filter,
+							function (team) {
+								return (team !== 'EOR') && (team !== 'AIN');
+							},
+							$elm_community$list_extra$List$Extra$unique(
+								_Utils_ap(
+									A2(
+										$elm$core$List$map,
+										function ($) {
+											return $.country;
+										},
+										mt),
+									$elm_community$list_extra$List$Extra$unique(
+										A2(
+											$elm$core$List$map,
+											function (p) {
+												return p.team;
+											},
+											A2($author$project$Model$filterByYear, 2024, parts))))));
 						var base = _Utils_update(
 							model,
 							{
 								error: $elm$core$Maybe$Nothing,
+								heatmapmodel: A2($author$project$Model$toHMModel, parts, teams2024),
 								loading: false,
 								medalTable: mt,
 								participations: filteredParts,
@@ -9252,12 +9357,35 @@ var $author$project$Update$update = F2(
 						model,
 						{showPcDebug: on}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'SetPcHover':
 				var name = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{pcHover: name}),
+					$elm$core$Platform$Cmd$none);
+			case 'OnHoverHeatMap':
+				var value = msg.a;
+				var state = model.heatmapmodel;
+				var newHeatMapModel = _Utils_update(
+					state,
+					{
+						selected: $elm$core$Maybe$Just(value)
+					});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{heatmapmodel: newHeatMapModel}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var state = model.heatmapmodel;
+				var newHeatMapModel = _Utils_update(
+					state,
+					{selected: $elm$core$Maybe$Nothing});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{heatmapmodel: newHeatMapModel}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -9338,6 +9466,7 @@ var $author$project$View$headerSection = A2(
 						[
 							$elm$html$Html$text('Medaillenverteilung')
 						])),
+					$elm$html$Html$text(' | '),
 					A2(
 					$elm$html$Html$a,
 					_List_fromArray(
@@ -9357,7 +9486,7 @@ var $author$project$View$headerSection = A2(
 					$elm$html$Html$a,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$href('#visualisierung4'),
+							$elm$html$Html$Attributes$href('#heatmap'),
 							A2($elm$html$Html$Attributes$style, 'margin', '0 15px'),
 							A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
 							A2($elm$html$Html$Attributes$style, 'color', '#007cba'),
@@ -9365,7 +9494,7 @@ var $author$project$View$headerSection = A2(
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Visualisierung 4')
+							$elm$html$Html$text('Medaillen Entwicklung')
 						]))
 				])),
 			A2(
@@ -9421,6 +9550,644 @@ var $author$project$View$headerSection = A2(
 						]))
 				]))
 		]));
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $author$project$Model$OnHoverHeatMap = function (a) {
+	return {$: 'OnHoverHeatMap', a: a};
+};
+var $author$project$Model$OnLeaveHeatMap = {$: 'OnLeaveHeatMap'};
+var $elm$html$Html$col = _VirtualDom_node('col');
+var $elm$html$Html$colgroup = _VirtualDom_node('colgroup');
+var $avh4$elm_color$Color$RgbaSpace = F4(
+	function (a, b, c, d) {
+		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
+	});
+var $avh4$elm_color$Color$scaleFrom255 = function (c) {
+	return c / 255;
+};
+var $avh4$elm_color$Color$rgb255 = F3(
+	function (r, g, b) {
+		return A4(
+			$avh4$elm_color$Color$RgbaSpace,
+			$avh4$elm_color$Color$scaleFrom255(r),
+			$avh4$elm_color$Color$scaleFrom255(g),
+			$avh4$elm_color$Color$scaleFrom255(b),
+			1.0);
+	});
+var $author$project$Components$HeatMap$colorSteps = _List_fromArray(
+	[
+		_Utils_Tuple2(
+		0,
+		A3($avh4$elm_color$Color$rgb255, 250, 250, 250)),
+		_Utils_Tuple2(
+		1,
+		A3($avh4$elm_color$Color$rgb255, 255, 220, 200)),
+		_Utils_Tuple2(
+		2,
+		A3($avh4$elm_color$Color$rgb255, 255, 200, 170)),
+		_Utils_Tuple2(
+		5,
+		A3($avh4$elm_color$Color$rgb255, 255, 170, 120)),
+		_Utils_Tuple2(
+		10,
+		A3($avh4$elm_color$Color$rgb255, 255, 120, 70)),
+		_Utils_Tuple2(
+		20,
+		A3($avh4$elm_color$Color$rgb255, 240, 70, 30)),
+		_Utils_Tuple2(
+		30,
+		A3($avh4$elm_color$Color$rgb255, 200, 40, 20)),
+		_Utils_Tuple2(
+		40,
+		A3($avh4$elm_color$Color$rgb255, 170, 20, 10)),
+		_Utils_Tuple2(
+		50,
+		A3($avh4$elm_color$Color$rgb255, 140, 0, 0))
+	]);
+var $elm$core$Basics$isNaN = _Basics_isNaN;
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$Components$HeatMap$colorSchemeGet = function (v) {
+	if ($elm$core$Basics$isNaN(v)) {
+		return A3($avh4$elm_color$Color$rgb255, 200, 200, 200);
+	} else {
+		var pick = A2(
+			$elm$core$Maybe$map,
+			$elm$core$Tuple$second,
+			$elm$core$List$head(
+				$elm$core$List$reverse(
+					A2(
+						$elm$core$List$filter,
+						function (_v0) {
+							var t = _v0.a;
+							return _Utils_cmp(v, t) > -1;
+						},
+						$author$project$Components$HeatMap$colorSteps))));
+		return A2(
+			$elm$core$Maybe$withDefault,
+			A3($avh4$elm_color$Color$rgb255, 140, 0, 0),
+			pick);
+	}
+};
+var $elm$virtual_dom$VirtualDom$property = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_property,
+			_VirtualDom_noInnerHtmlOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlJson(value));
+	});
+var $elm$html$Html$Attributes$property = $elm$virtual_dom$VirtualDom$property;
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $author$project$Components$HeatMap$emptyCellContent = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			A2($elm$html$Html$Attributes$style, 'height', '1px')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$span,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$Attributes$property,
+					'innerHTML',
+					$elm$json$Json$Encode$string('&nbsp;'))
+				]),
+			_List_Nil)
+		]));
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$onMouseLeave = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseleave',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$html$Html$Events$onMouseOver = function (msg) {
+	return A2(
+		$elm$html$Html$Events$on,
+		'mouseover',
+		$elm$json$Json$Decode$succeed(msg));
+};
+var $elm$core$List$repeatHelp = F3(
+	function (result, n, value) {
+		repeatHelp:
+		while (true) {
+			if (n <= 0) {
+				return result;
+			} else {
+				var $temp$result = A2($elm$core$List$cons, value, result),
+					$temp$n = n - 1,
+					$temp$value = value;
+				result = $temp$result;
+				n = $temp$n;
+				value = $temp$value;
+				continue repeatHelp;
+			}
+		}
+	});
+var $elm$core$List$repeat = F2(
+	function (n, value) {
+		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
+	});
+var $avh4$elm_color$Color$rgb = F3(
+	function (r, g, b) {
+		return A4($avh4$elm_color$Color$RgbaSpace, r, g, b, 1.0);
+	});
+var $elm$html$Html$table = _VirtualDom_node('table');
+var $elm$html$Html$tbody = _VirtualDom_node('tbody');
+var $elm$html$Html$td = _VirtualDom_node('td');
+var $elm$html$Html$Attributes$title = $elm$html$Html$Attributes$stringProperty('title');
+var $elm$core$Basics$round = _Basics_round;
+var $avh4$elm_color$Color$toCssString = function (_v0) {
+	var r = _v0.a;
+	var g = _v0.b;
+	var b = _v0.c;
+	var a = _v0.d;
+	var roundTo = function (x) {
+		return $elm$core$Basics$round(x * 1000) / 1000;
+	};
+	var pct = function (x) {
+		return $elm$core$Basics$round(x * 10000) / 100;
+	};
+	return $elm$core$String$concat(
+		_List_fromArray(
+			[
+				'rgba(',
+				$elm$core$String$fromFloat(
+				pct(r)),
+				'%,',
+				$elm$core$String$fromFloat(
+				pct(g)),
+				'%,',
+				$elm$core$String$fromFloat(
+				pct(b)),
+				'%,',
+				$elm$core$String$fromFloat(
+				roundTo(a)),
+				')'
+			]));
+};
+var $avh4$elm_color$Color$toRgba = function (_v0) {
+	var r = _v0.a;
+	var g = _v0.b;
+	var b = _v0.c;
+	var a = _v0.d;
+	return {alpha: a, blue: b, green: g, red: r};
+};
+var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $author$project$Components$HeatMap$drawCells = F2(
+	function (quadHeatMapCells, hmmodel) {
+		var maxRowLength = A2(
+			$elm$core$Maybe$withDefault,
+			1,
+			$elm$core$List$maximum(
+				A2($elm$core$List$map, $elm$core$List$length, quadHeatMapCells)));
+		var firstColumn = function (rowIndex) {
+			var labelText = A2(
+				$elm$core$Maybe$withDefault,
+				'',
+				$elm$core$List$head(
+					A2($elm$core$List$drop, rowIndex, hmmodel.rowLabels)));
+			return _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$td,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'font-size', '60%'),
+							A2($elm$html$Html$Attributes$style, 'text-align', 'right')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(labelText)
+						]))
+				]);
+		};
+		var fillColor = F3(
+			function (row, col, cellvalue) {
+				var color = $author$project$Components$HeatMap$colorSchemeGet(cellvalue);
+				return $avh4$elm_color$Color$toCssString(
+					function () {
+						var _v1 = hmmodel.selected;
+						if (_v1.$ === 'Just') {
+							var cellWithPosition = _v1.a;
+							if (_Utils_eq(row, cellWithPosition.row) && _Utils_eq(col, cellWithPosition.column)) {
+								var rgb = $avh4$elm_color$Color$toRgba(color);
+								var darkConst = 0.75;
+								return A3($avh4$elm_color$Color$rgb, rgb.red * darkConst, rgb.green * darkConst, rgb.blue * darkConst);
+							} else {
+								return color;
+							}
+						} else {
+							return color;
+						}
+					}());
+			});
+		var cellWidth = $elm$core$String$fromFloat(75 / maxRowLength) + '%';
+		var cellHeight = function (hei) {
+			return $elm$core$String$fromFloat(100 / hei) + '%';
+		}(
+			1 + $elm$core$List$length(quadHeatMapCells));
+		var firstRowLabels = function (labels) {
+			return A2(
+				$elm$html$Html$tr,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'height', cellHeight)
+					]),
+				A2(
+					$elm$core$List$map,
+					function (text) {
+						return A2(
+							$elm$html$Html$td,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'font-size', '60%'),
+									A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(text)
+								]));
+					},
+					A2($elm$core$List$cons, '', labels)));
+		};
+		var cellAttributes = F3(
+			function (row, col, cell) {
+				return _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$Attributes$style,
+						'background-color',
+						A3(fillColor, row, col, cell.value)),
+						A2($elm$html$Html$Attributes$style, 'border', '2px solid black'),
+						$elm$html$Html$Attributes$title(cell.message),
+						$elm$html$Html$Events$onMouseOver(
+						$author$project$Model$OnHoverHeatMap(
+							{column: col, message: cell.message, row: row, value: cell.value})),
+						$elm$html$Html$Events$onMouseLeave($author$project$Model$OnLeaveHeatMap)
+					]);
+			});
+		var toTableRow = F2(
+			function (rowIndex, cellList) {
+				return A2(
+					$elm$html$Html$tr,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'height', cellHeight)
+						]),
+					_Utils_ap(
+						firstColumn(rowIndex),
+						A2(
+							$elm$core$List$indexedMap,
+							function (col) {
+								return function (cell) {
+									if (cell.$ === 'Just') {
+										var c = cell.a;
+										return A2(
+											$elm$html$Html$td,
+											A3(cellAttributes, rowIndex, col, c),
+											_List_fromArray(
+												[$author$project$Components$HeatMap$emptyCellContent]));
+									} else {
+										return A2(
+											$elm$html$Html$td,
+											_List_fromArray(
+												[
+													A2($elm$html$Html$Attributes$style, 'background-color', '#000000ff'),
+													A2($elm$html$Html$Attributes$style, 'border', '2px solid black')
+												]),
+											_List_fromArray(
+												[$author$project$Components$HeatMap$emptyCellContent]));
+									}
+								};
+							},
+							cellList)));
+			});
+		var rows = function (tableRows) {
+			return A2(
+				$elm$core$List$cons,
+				firstRowLabels(hmmodel.columnLabels),
+				tableRows);
+		}(
+			A2($elm$core$List$indexedMap, toTableRow, quadHeatMapCells));
+		return A2(
+			$elm$html$Html$table,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'width', '100%'),
+					A2($elm$html$Html$Attributes$style, 'height', 'auto'),
+					A2($elm$html$Html$Attributes$style, 'border-collapse', 'collapse')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$colgroup,
+					_List_Nil,
+					A2(
+						$elm$core$List$cons,
+						A2(
+							$elm$html$Html$col,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'width', '15%')
+								]),
+							_List_Nil),
+						A2(
+							$elm$core$List$repeat,
+							maxRowLength,
+							A2(
+								$elm$html$Html$col,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'width', cellWidth)
+									]),
+								_List_Nil)))),
+					A2(
+					$elm$html$Html$tbody,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'width', '100%'),
+							A2($elm$html$Html$Attributes$style, 'height', 'auto')
+						]),
+					rows)
+				]));
+	});
+var $author$project$Components$HeatMap$legend = function (_v0) {
+	var swatch = function (_v1) {
+		var v = _v1.a;
+		var c = _v1.b;
+		var labelText = (v === 50) ? '50+' : A2(
+			$elm$core$Maybe$withDefault,
+			$elm$core$String$fromFloat(v),
+			$elm$core$List$head(
+				A2(
+					$elm$core$String$split,
+					'.',
+					$elm$core$String$fromFloat(v))));
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+					A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
+					A2($elm$html$Html$Attributes$style, 'align-items', 'center'),
+					A2($elm$html$Html$Attributes$style, 'gap', '2px'),
+					A2($elm$html$Html$Attributes$style, 'min-width', '32px')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'width', '28px'),
+							A2($elm$html$Html$Attributes$style, 'height', '14px'),
+							A2($elm$html$Html$Attributes$style, 'border', '1px solid #ccc'),
+							A2(
+							$elm$html$Html$Attributes$style,
+							'background-color',
+							$avh4$elm_color$Color$toCssString(c))
+						]),
+					_List_Nil),
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'font-size', '10px'),
+							A2($elm$html$Html$Attributes$style, 'color', '#555')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(labelText)
+						]))
+				]));
+	};
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'font-size', '12px'),
+						A2($elm$html$Html$Attributes$style, 'color', '#555'),
+						A2($elm$html$Html$Attributes$style, 'margin-bottom', '4px')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Legende: Medaillen (diskrete Stufen)')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+						A2($elm$html$Html$Attributes$style, 'align-items', 'flex-end'),
+						A2($elm$html$Html$Attributes$style, 'gap', '4px'),
+						A2($elm$html$Html$Attributes$style, 'flex-wrap', 'wrap')
+					]),
+				A2($elm$core$List$map, swatch, $author$project$Components$HeatMap$colorSteps))
+			]));
+};
+var $author$project$Components$HeatMap$heatmap = function (hmmodel) {
+	var maxRowLength = A2(
+		$elm$core$Maybe$withDefault,
+		1,
+		$elm$core$List$maximum(
+			A2($elm$core$List$map, $elm$core$List$length, hmmodel.data)));
+	var quadHeatMapCells = A2(
+		$elm$core$List$map,
+		function (row) {
+			var missingCells = maxRowLength - $elm$core$List$length(row);
+			return (missingCells > 0) ? A2(
+				$elm$core$List$append,
+				row,
+				A2($elm$core$List$repeat, missingCells, $elm$core$Maybe$Nothing)) : row;
+		},
+		A2(
+			$elm$core$List$map,
+			$elm$core$List$map(
+				function (v) {
+					return $elm$core$Maybe$Just(
+						{
+							column: 0,
+							message: $elm$core$String$fromFloat(v),
+							row: 0,
+							value: v
+						});
+				}),
+			hmmodel.data));
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'width', '100%'),
+				A2($elm$html$Html$Attributes$style, 'max-width', '100%'),
+				A2($elm$html$Html$Attributes$style, 'border', 'solid 1px black'),
+				A2($elm$html$Html$Attributes$style, 'padding', '8px'),
+				A2($elm$html$Html$Attributes$style, 'box-sizing', 'border-box'),
+				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
+				A2($elm$html$Html$Attributes$style, 'gap', '8px'),
+				A2($elm$html$Html$Attributes$style, 'overflow-x', 'auto')
+			]),
+		_List_fromArray(
+			[
+				$author$project$Components$HeatMap$legend(hmmodel),
+				A2($author$project$Components$HeatMap$drawCells, quadHeatMapCells, hmmodel)
+			]));
+};
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $author$project$View$nextLink = function (target) {
+	return A2(
+		$elm$html$Html$a,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$href(target),
+				A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
+				A2($elm$html$Html$Attributes$style, 'padding', '10px 16px'),
+				A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
+				A2($elm$html$Html$Attributes$style, 'color', '#fff'),
+				A2($elm$html$Html$Attributes$style, 'border-radius', '4px'),
+				A2($elm$html$Html$Attributes$style, 'text-decoration', 'none')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text('Weiter')
+			]));
+};
+var $author$project$View$heatmapSection = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$id('heatmap'),
+				A2($elm$html$Html$Attributes$style, 'margin', '60px 0'),
+				A2($elm$html$Html$Attributes$style, 'padding', '20px')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'max-width', '900px'),
+						A2($elm$html$Html$Attributes$style, 'margin', '0 auto')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h2,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
+								A2($elm$html$Html$Attributes$style, 'margin-bottom', '20px'),
+								A2($elm$html$Html$Attributes$style, 'color', '#333')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('4. Medaillen Entwicklung')
+							])),
+						function () {
+						if (model.loading) {
+							return A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Lade Daten...')
+									]));
+						} else {
+							var _v0 = model.error;
+							if (_v0.$ === 'Just') {
+								var err = _v0.a;
+								return A2(
+									$elm$html$Html$p,
+									_List_fromArray(
+										[
+											A2($elm$html$Html$Attributes$style, 'color', '#b00020')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Fehler beim Laden: ' + err)
+										]));
+							} else {
+								return $elm$html$Html$text('');
+							}
+						}
+					}(),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+								A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
+								A2($elm$html$Html$Attributes$style, 'align-items', 'center'),
+								A2($elm$html$Html$Attributes$style, 'gap', '12px')
+							]),
+						_List_fromArray(
+							[
+								$author$project$Components$HeatMap$heatmap(model.heatmapmodel),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'font-size', '12px'),
+										A2($elm$html$Html$Attributes$style, 'color', '#555')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Tip: Hover cells to see values. Only the last 7 Olympics and countries with ≤6 letters are shown for performance.')
+									]))
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+						A2($elm$html$Html$Attributes$style, 'max-width', '900px'),
+						A2($elm$html$Html$Attributes$style, 'margin', '10px auto 0')
+					]),
+				_List_fromArray(
+					[
+						$author$project$View$nextLink('#medaillenspiegel')
+					]))
+			]));
+};
 var $author$project$Model$HoverMedalTable = function (a) {
 	return {$: 'HoverMedalTable', a: a};
 };
@@ -9430,9 +10197,7 @@ var $author$project$Model$SelectCountryFromTable = function (a) {
 var $author$project$Model$SetTableCriterion = function (a) {
 	return {$: 'SetTableCriterion', a: a};
 };
-var $elm$core$String$fromFloat = _String_fromNumber;
 var $elm$core$Basics$pow = _Basics_pow;
-var $elm$core$Basics$round = _Basics_round;
 var $author$project$View$roundTo = F2(
 	function (n, v) {
 		var factor = A2($elm$core$Basics$pow, 10, n);
@@ -9560,47 +10325,6 @@ var $author$project$View$formatPcValue = F3(
 			}
 		}
 	});
-var $elm$html$Html$h2 = _VirtualDom_node('h2');
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $author$project$View$nextLink = function (target) {
-	return A2(
-		$elm$html$Html$a,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$href(target),
-				A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
-				A2($elm$html$Html$Attributes$style, 'padding', '10px 16px'),
-				A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
-				A2($elm$html$Html$Attributes$style, 'color', '#fff'),
-				A2($elm$html$Html$Attributes$style, 'border-radius', '4px'),
-				A2($elm$html$Html$Attributes$style, 'text-decoration', 'none')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text('Weiter')
-			]));
-};
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
 var $elm$html$Html$Events$onClick = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
@@ -9646,12 +10370,6 @@ var $elm$html$Html$Events$onMouseEnter = function (msg) {
 		'mouseenter',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$Events$onMouseLeave = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'mouseleave',
-		$elm$json$Json$Decode$succeed(msg));
-};
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$json$Json$Encode$bool = _Json_wrap;
@@ -9663,13 +10381,8 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
-var $elm$html$Html$span = _VirtualDom_node('span');
-var $elm$html$Html$table = _VirtualDom_node('table');
-var $elm$html$Html$tbody = _VirtualDom_node('tbody');
-var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
-var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$View$medaillenspiegelSection = function (model) {
 	var selectedId = model.tableCriterion;
@@ -11547,10 +12260,6 @@ var $author$project$Components$Sunburst$arc = function (s) {
 			startAngle: s.x
 		});
 };
-var $avh4$elm_color$Color$RgbaSpace = F4(
-	function (a, b, c, d) {
-		return {$: 'RgbaSpace', a: a, b: b, c: c, d: d};
-	});
 var $avh4$elm_color$Color$black = A4($avh4$elm_color$Color$RgbaSpace, 0 / 255, 0 / 255, 0 / 255, 1.0);
 var $gampleman$elm_visualization$Scale$Scale = function (a) {
 	return {$: 'Scale', a: a};
@@ -11610,22 +12319,6 @@ var $gampleman$elm_visualization$Scale$ordinal = F2(
 	function (range_, domain_) {
 		return $gampleman$elm_visualization$Scale$Scale(
 			{convert: $gampleman$elm_visualization$Scale$Ordinal$convert, domain: domain_, range: range_});
-	});
-var $avh4$elm_color$Color$rgb = F3(
-	function (r, g, b) {
-		return A4($avh4$elm_color$Color$RgbaSpace, r, g, b, 1.0);
-	});
-var $avh4$elm_color$Color$scaleFrom255 = function (c) {
-	return c / 255;
-};
-var $avh4$elm_color$Color$rgb255 = F3(
-	function (r, g, b) {
-		return A4(
-			$avh4$elm_color$Color$RgbaSpace,
-			$avh4$elm_color$Color$scaleFrom255(r),
-			$avh4$elm_color$Color$scaleFrom255(g),
-			$avh4$elm_color$Color$scaleFrom255(b),
-			1.0);
 	});
 var $gampleman$elm_visualization$Scale$Color$tableau10 = _List_fromArray(
 	[
@@ -12210,35 +12903,6 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 			_VirtualDom_noJavaScriptOrHtmlUri(value));
 	});
 var $elm_community$typed_svg$TypedSvg$Core$attribute = $elm$virtual_dom$VirtualDom$attribute;
-var $avh4$elm_color$Color$toCssString = function (_v0) {
-	var r = _v0.a;
-	var g = _v0.b;
-	var b = _v0.c;
-	var a = _v0.d;
-	var roundTo = function (x) {
-		return $elm$core$Basics$round(x * 1000) / 1000;
-	};
-	var pct = function (x) {
-		return $elm$core$Basics$round(x * 10000) / 100;
-	};
-	return $elm$core$String$concat(
-		_List_fromArray(
-			[
-				'rgba(',
-				$elm$core$String$fromFloat(
-				pct(r)),
-				'%,',
-				$elm$core$String$fromFloat(
-				pct(g)),
-				'%,',
-				$elm$core$String$fromFloat(
-				pct(b)),
-				'%,',
-				$elm$core$String$fromFloat(
-				roundTo(a)),
-				')'
-			]));
-};
 var $elm_community$typed_svg$TypedSvg$TypesToStrings$paintToString = function (paint) {
 	switch (paint.$) {
 		case 'Paint':
@@ -12834,13 +13498,7 @@ var $elm$html$Html$Events$preventDefaultOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
 	});
-var $elm$core$List$sort = function (xs) {
-	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
-};
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $elm_community$list_extra$List$Extra$unique = function (list) {
-	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, _List_Nil, list, _List_Nil);
-};
 var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $elm_community$typed_svg$TypedSvg$Types$AnchorStart = {$: 'AnchorStart'};
 var $elm_community$typed_svg$TypedSvg$Types$Opacity = function (a) {
@@ -12926,7 +13584,6 @@ var $gampleman$elm_visualization$Shape$Generators$line = F2(
 	});
 var $gampleman$elm_visualization$Shape$line = $gampleman$elm_visualization$Shape$Generators$line;
 var $elm_community$typed_svg$TypedSvg$line = $elm_community$typed_svg$TypedSvg$Core$node('line');
-var $elm$core$Basics$isNaN = _Basics_isNaN;
 var $gampleman$elm_visualization$Scale$Continuous$normalize = F2(
 	function (a, b) {
 		var c = b - a;
@@ -13282,13 +13939,6 @@ var $folkertdev$one_true_path_experiment$Curve$linear = function (points) {
 	}
 };
 var $gampleman$elm_visualization$Shape$linearCurve = $folkertdev$one_true_path_experiment$Curve$linear;
-var $avh4$elm_color$Color$toRgba = function (_v0) {
-	var r = _v0.a;
-	var g = _v0.b;
-	var b = _v0.c;
-	var a = _v0.d;
-	return {alpha: a, blue: b, green: g, red: r};
-};
 var $noahzgordon$elm_color_extra$Color$Convert$colorToXyz = function (cl) {
 	var c = function (ch) {
 		var ch_ = (ch > 4.045e-2) ? A2($elm$core$Basics$pow, (ch + 5.5e-2) / 1.055, 2.4) : (ch / 12.92);
@@ -13562,16 +14212,6 @@ var $noahzgordon$elm_color_extra$Color$Gradient$linearGradient = F3(
 			palette);
 		return A3($noahzgordon$elm_color_extra$Color$Gradient$linearGradientFromStops, space, gr, size);
 	});
-var $elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$core$List$minimum = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -14899,42 +15539,10 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 					]),
 				_List_fromArray(
 					[
-						$author$project$View$nextLink('#visualisierung4')
+						$author$project$View$nextLink('#heatmap')
 					]))
 			]));
 };
-var $author$project$View$visualisierung4 = A2(
-	$elm$html$Html$div,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$id('visualisierung4'),
-			A2($elm$html$Html$Attributes$style, 'margin', '60px 0'),
-			A2($elm$html$Html$Attributes$style, 'padding', '20px'),
-			A2($elm$html$Html$Attributes$style, 'background-color', '#f8f9fa')
-		]),
-	_List_fromArray(
-		[
-			A2(
-			$elm$html$Html$h2,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'margin', '0 0 16px 0')
-				]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('4. Visualisierung')
-				])),
-			A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					A2($elm$html$Html$Attributes$style, 'text-align', 'right')
-				]),
-			_List_fromArray(
-				[
-					$author$project$View$nextLink('#medaillenspiegel')
-				]))
-		]));
 var $author$project$View$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -14958,7 +15566,7 @@ var $author$project$View$view = function (model) {
 						$author$project$View$medaillenspiegelSection(model),
 						$author$project$View$medaillenverteilungSection(model),
 						$author$project$View$parallelekoordinatensection(model),
-						$author$project$View$visualisierung4
+						$author$project$View$heatmapSection(model)
 					]))
 			]));
 };

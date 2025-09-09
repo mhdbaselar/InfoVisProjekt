@@ -7,8 +7,7 @@ import Hierarchy
 import Http
 import List.Extra
 import Tree
-
-
+import String exposing (fromInt)
 
 
 -- Datenmodell
@@ -25,9 +24,6 @@ type alias Participation =
     , event : String
     , medal : String
     }
-
-
-
 
 -- Medaillentabelle (Platzierungen + Gesamt)
 
@@ -70,6 +66,20 @@ type alias SBModel =
     , total : Float
     }
 
+type alias Cell =
+    { value : Float
+    , message : String
+    , row : Int
+    , column : Int
+    }
+
+type alias HMModel =
+    { data : List (List Float)
+    , columnLabels : List String
+    , rowLabels : List String
+    , selected : Maybe Cell
+    }
+
 
 -- App Model
 
@@ -90,6 +100,7 @@ type alias Model =
     , showPcDebug : Bool
     , pcHover : Maybe String
     , pcmodel : PCModel
+    , heatmapmodel : HMModel
     , loading : Bool
     , error : Maybe String
     }
@@ -111,6 +122,8 @@ type Msg
     | TogglePcMode Bool
     | TogglePcDebug Bool
     | SetPcHover (Maybe String)
+    | OnHoverHeatMap Cell
+    | OnLeaveHeatMap
 
 init : ( Model, Cmd Msg )
 init =
@@ -119,9 +132,9 @@ init =
       , populationByCountry = Dict.empty
       , gdpByCountry = Dict.empty
       , sbmodel = { layout = [], total = 0, hovered = Nothing }
-    , sbcountry = ""
-    , hoverTable = Nothing
-    , tableCriterion = "medals"
+      , sbcountry = ""
+      , hoverTable = Nothing
+      , tableCriterion = "medals"
       , axisOrder = [ "medals", "pop", "gdp", "age" ]
       , draggingAxis = Nothing
       , dropTargetAxis = Nothing
@@ -130,6 +143,7 @@ init =
       , showPcDebug = False
       , pcHover = Nothing
       , pcmodel = { axes = [], series = [], hovered = Nothing, ranking = False }
+      , heatmapmodel = { data = [], columnLabels = [], rowLabels = [], selected = Nothing}
       , loading = True
       , error = Nothing
       }
@@ -159,6 +173,27 @@ normalizeCountry name =
         "Great Britain" -> "United Kingdom"
         _ -> name
 
+
+-- HeatMap-Team-Normalisierung: entfernt numerisches Suffix wie "-1"/"-2" am Ende
+stripTrailingDashDigits : String -> String
+stripTrailingDashDigits s =
+    let
+        parts = String.split "-" s
+    in
+    case List.reverse parts of
+        lastPart :: restRev ->
+            if String.all Char.isDigit lastPart && (List.length parts >= 2) then
+                restRev |> List.reverse |> String.join "-"
+            else
+                s
+
+        _ ->
+            s
+
+
+normalizeTeamHM : String -> String
+normalizeTeamHM team =
+    stripTrailingDashDigits team
 
 -- Manuelle BIP-Overrides (Keys müssen bereits normalisierte Ländernamen sein)
 manualGdpOverrides : Dict String Float
@@ -551,3 +586,51 @@ toPCModel model =
 recomputePcModel : Model -> Model
 recomputePcModel m =
     { m | pcmodel = toPCModel m }
+
+toHMModel : List Participation -> List String -> HMModel
+toHMModel parts teams =
+    let
+        -- Nur Datensätze mit Medaille zählen
+        medalEntries =
+            parts
+                |> filterSportsEventMedal
+                |> List.filter (\p -> p.medal /= "No medal" && p.medal /= "NA")
+
+        -- Jahre ermitteln
+        allYears = medalEntries |> List.map .year |> List.sort |> List.Extra.unique
+
+        -- (team, year) -> count voraggregieren, inkl. Team-Normalisierung und Filter auf Teamnamen <= 6
+        addCount p dict =
+            let
+                rawTeam = if p.team /= "" then p.team else p.noc
+                team = normalizeTeamHM (normalizeCountry rawTeam)
+            in
+            if (String.length team <= 600) && (List.member p.year allYears) && (team /= "EOR") && (team /= "AIN") then
+                let key = ( team, p.year ) in
+                Dict.update key (\m -> Just (Maybe.withDefault 0 m + 1)) dict
+            else
+                dict
+
+        countsBy : Dict ( String, Int ) Int
+        countsBy = List.foldl addCount Dict.empty medalEntries
+
+        {-teams =
+            countsBy
+                |> Dict.keys
+                |> List.map Tuple.first
+                |> List.Extra.unique
+                |> List.sort-}
+
+        dataMatrix : List (List Float)
+        dataMatrix =
+            teams
+                |> List.map (\team ->
+                    allYears
+                        |> List.map (\y -> countsBy |> Dict.get ( team, y ) |> Maybe.withDefault 0 |> toFloat)
+                   )
+    in
+    { data = dataMatrix
+    , columnLabels = (List.map fromInt allYears)
+    , rowLabels = teams
+    , selected = Nothing
+    }
