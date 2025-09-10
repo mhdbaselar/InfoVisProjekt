@@ -27,12 +27,12 @@ import Helpers exposing (nocToCountry)
 
 sb_w : Float
 sb_w =
-    500
+    600
 
 
 sb_h : Float
 sb_h =
-    450
+    550
 
 
 radius : Float
@@ -64,7 +64,7 @@ sunburst sbmodel country =
                 |> List.Extra.unique
     in
     svg [ viewBox 0 0 sb_w sb_h ]
-        [ g [ transform [ Translate (sb_w / 2) (sb_h / 2)] ]
+        [ g [ transform [ Translate (sb_w / 2) 200] ]
             [ g []
                 (sbmodel.layout
                     |> List.map

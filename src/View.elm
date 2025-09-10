@@ -287,31 +287,31 @@ medaillenspiegelSection model =
                 [ text "1. Medaillenspiegel" ]
             -- Kriterium-Auswahl + Sprung zu Parallelen Koordinaten
             , div [ style "margin" "8px 0 16px 0", style "display" "flex", style "align-items" "center", style "justify-content" "space-between" ]
-                                [ -- links: Auswahl
-                                    div [ style "display" "flex", style "gap" "8px", style "align-items" "center" ]
-                                        [ span [] [ text "Kriterium für Ranking:" ]
-                                        , select [ onInput SetTableCriterion ]
-                                                (model.pcmodel.axes
-                                                        |> List.map (\ax ->
-                                                                if ax.id == selectedId then
-                                                                        option [ selected True, value ax.id ] [ text (axisLabel ax.id) ]
-                                                                else
-                                                                        option [ value ax.id ] [ text (axisLabel ax.id) ]
-                                                        )
-                                                )
-                                        ]
-                                    -- rechts: Button-Link
-                                , a
-                                        [ href "#parallele-koordinaten"
-                                        , style "display" "inline-block"
-                                        , style "padding" "8px 12px"
-                                        , style "background-color" "#007cba"
-                                        , style "color" "#fff"
-                                        , style "border-radius" "4px"
-                                        , style "text-decoration" "none"
-                                        ]
+                [ -- links: Auswahl
+                    div [ style "display" "flex", style "gap" "8px", style "align-items" "center" ]
+                        [ span [] [ text "Kriterium für Ranking:" ]
+                        , select [ onInput SetTableCriterion ]
+                                (model.pcmodel.axes
+                                        |> List.map (\ax ->
+                                                if ax.id == selectedId then
+                                                        option [ selected True, value ax.id ] [ text (axisLabel ax.id) ]
+                                                else
+                                                        option [ value ax.id ] [ text (axisLabel ax.id) ]
+                                        )
+                                )
+                        ]
+                    -- rechts: Button-Link
+                , a
+                    [ href "#parallele-koordinaten"
+                    , style "display" "inline-block"
+                    , style "padding" "8px 12px"
+                    , style "background-color" "#007cba"
+                    , style "color" "#fff"
+                    , style "border-radius" "4px"
+                    , style "text-decoration" "none"
+                    ]
                     [ text "Vergleiche Rankings" ]
-                                ]
+                ]
             , if model.loading then
                 p [] [ text "Lade Daten..." ]
               else
@@ -454,17 +454,11 @@ medaillenverteilungSection model =
                         p [ style "color" "#b00020" ] [ text ("Fehler beim Laden: " ++ err) ]
                     Nothing ->
                         text ""
-            , div [style "display" "flex", style "flex-direction" "row", style "align-items" "flex-start"] [
-                div [style "width" "100%", style "height" "100%"] [
-                    if model.sbmodel.total > 0 then
-                        div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
-                            [ p [] [ text "Tip: More details will be displayed when you hover over the category" ] ]
-                    else div [] []
-                    , sunburst model.sbmodel model.sbcountry
-                ]
-                , div [style "width" "300px", style "display" "flex", style "flex-direction" "column", style "align-items" "center"] [
-                    h3 [] [ text "Select country" ]
-                    , select [style "width" "180px", onInput ChangeSBCountry ]
+            , div [] [
+                div [style "display" "flex", style "flex-direction" "row", style "justify-content" "space-between"] [
+                    div [ style "display" "flex", style "gap" "8px", style "align-items" "center" ] [
+                        text "Dargestelltes Land:"
+                        , select [style "width" "180px", onInput ChangeSBCountry ]
                         ( countries
                             |> List.map (\( noc, name ) ->
                                 if noc == model.sbcountry then
@@ -474,8 +468,17 @@ medaillenverteilungSection model =
                             )
                         )
                     ]
+                    , text (String.concat ["Anzahl Medaillen: ", String.fromFloat model.sbmodel.total])
+                ]
+                , div [style "width" "100%", style "height" "100%"] [
+                    if model.sbmodel.total > 0 then
+                        div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
+                            [ text "Tip: More details will be displayed when you hover over the category" ]
+                    else div [] []
+                    , sunburst model.sbmodel model.sbcountry
                 ]
             ]
+        ]
         , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
             [ linkToTop ]
         ]
