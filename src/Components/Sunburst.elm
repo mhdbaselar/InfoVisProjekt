@@ -19,6 +19,7 @@ import TypedSvg.Events
 import TypedSvg.Types exposing (AnchorAlignment(..), Opacity(..), Paint(..), Transform(..), em)
 
 import Model exposing (..)
+import Helpers exposing (nocToCountry)
 
 
 -- Constants
@@ -39,50 +40,52 @@ radius =
     min sb_w sb_h / 2
 
 -- Make arcs colorfull
-colorScale : OrdinalScale String Color
-colorScale =
-    -- TODO: add sports
-    Scale.ordinal (Color.rgb 0.5 0.5 0.5 :: Scale.Color.tableau10) [ "Swimming", "Athletics" ]
-
-sunburst : SBModel -> Html Msg
-sunburst sbmodel =
+mapColor : SBTreeData -> List String -> Color
+mapColor data range = 
     let
-        _ = -- update sbmodel
-            case sbmodel.hovered of
-                Just { sequence } ->
-                    List.Extra.inits sequence
-                        |> Set.fromList
+        colors = List.range 0 (List.length range)
+                |> List.map (\i -> Scale.Color.rainbowInterpolator (toFloat i / toFloat (List.length range)))
+        color =
+            Scale.convert (Scale.ordinal colors range) (List.head data.sequence |> Maybe.withDefault "")
+            |> Maybe.withDefault Color.black
+            |> Color.toRgba
+        darkConst = (9 - (List.length data.sequence |> toFloat)) * 0.125
+    in
+    Color.rgb (color.red * darkConst) (color.green * darkConst) (color.blue * darkConst)
 
-                Nothing ->
-                    Set.empty
-
+sunburst : SBModel -> String -> Html Msg
+sunburst sbmodel country =
+    let
         format f =
             String.left 5 (String.fromFloat f) ++ "%"
+        range =
+            sbmodel.layout
+                |> List.map (\l -> List.head l.node.sequence |> Maybe.withDefault "")
+                |> List.Extra.unique
     in
     svg [ viewBox 0 0 sb_w sb_h ]
-        [ g [ transform [ Translate radius radius ] ]
+        [ g [ transform [ Translate (sb_w / 2) (sb_h / 2)] ]
             [ g []
-                (if sbmodel.total == 0 then
-                    [text_ [] [text "Keine Medaillen gewonnen"]]
-                else
-                    (sbmodel.layout
-                        |> List.map
-                            (\item ->
-                                Path.element (arc item)
-                                    [ fill (Paint (Scale.convert colorScale item.node.category |> Maybe.withDefault Color.black)) ]
-                            )
-                    )
+                (sbmodel.layout
+                    |> List.map
+                        (\item ->
+                            Path.element (arc item)
+                                [ fill (Paint (mapColor item.node range)) ]
+                        )
                 )
             , Svg.Lazy.lazy2 mouseInteractionArcs sbmodel.layout sbmodel.total
             , case sbmodel.hovered of
                 Just { percentage, sequence } ->
                     g [ textAnchor AnchorMiddle, TypedSvg.Attributes.fontFamily [ "sans-serif" ], fill (Paint (Color.rgb 0.5 0.5 0.5)) ]
-                        [ text_ [ TypedSvg.Attributes.InPx.fontSize 28, y -15 ] [ text (format percentage) ]
-                        , text_ [ y 15 ] [ text (List.Extra.last sequence |> Maybe.withDefault "") ]
-                        ]
+                        (text_ [ TypedSvg.Attributes.InPx.fontSize 28, y -20 ] [ text (format percentage) ]
+                        :: (List.indexedMap (\i s -> text_ [ TypedSvg.Attributes.InPx.fontSize (18 - ((toFloat i) * 4)), y (toFloat i * 20) ] [ text s ]) sequence))
 
                 Nothing ->
-                    text ""
+                    g [ textAnchor AnchorMiddle, TypedSvg.Attributes.fontFamily [ "sans-serif" ], fill (Paint (Color.rgb 0.5 0.5 0.5)) ]
+                        (if sbmodel.total == 0 then    
+                                [ text_ [ TypedSvg.Attributes.InPx.fontSize 15, y 15 ] [ text (String.concat [nocToCountry country, " hat keine Medaillen gewonnen"]) ]]
+                        else
+                                [ text_ [ TypedSvg.Attributes.InPx.fontSize 20, y 10 ] [ text (nocToCountry country) ] ])
             ]
         ]
 
@@ -99,7 +102,7 @@ mouseInteractionArcs segments total =
                             (HoverSB
                                 (Just
                                     { sequence = item.node.sequence
-                                    , percentage = 100 * item.value / total
+                                    , percentage = (10000 * item.value / total |> round |> (\n -> toFloat n / 100))
                                     }
                                 )
                             )

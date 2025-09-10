@@ -510,6 +510,34 @@ decodeGdpCsv body =
 
 -- Sunburst vorbereiten wie zuvor
 
+sportsToCategory : String -> String -> List String
+sportsToCategory sport event =
+    -- TODO: make complete
+    case sport of
+        "Swimming" -> ["Aquatics", "Swimming", event]
+        "Artistic Swimming" -> ["Aquatics", "Artistic Swimming", event]
+        "Water Polo" -> ["Aquatics", "Water Polo", event]
+        "Diving" -> ["Aquatics", "Diving", event]
+        "Marathon Swimming" -> ["Aquatics", "Marathon Swimming", event]
+        "3x3 Basketball" -> ["Basketball", "3x3", event]
+        "Basketball" -> ["Basketball", "Basketball", event]
+        "Canoe Slalom" -> ["Canoe", "Slalom", event]
+        "Canoe Sprint" -> ["Canoe", "Sprint", event]
+        "Cycling Road" -> ["Cycling", "Road", event]
+        "Cycling Track" -> ["Cycling", "Track", event]
+        "Cycling Mountain Bike" -> ["Cycling", "Mountain Bike", event]
+        "Cycling BMX Freestyle" -> ["Cycling", "BMX Freestyle", event]
+        "Cycling BMX Racing" -> ["Cycling", "BMX Racing", event]
+        "Equestrian" -> "Equestrian" :: (String.split " " event)
+        "Field Hockey" -> ["Hockey", event]
+        "Artistic Gymnastics" -> ["Gymnastics", "Artistic", event]
+        "Rhythmic Gymnastics" -> ["Gymnastics", "Rhythmic", event]
+        "Trampoline Gymnastics" -> ["Gymnastics", "Trampoline", event]
+        "Rugby Sevens" -> ["Rugby", "Sevens", event]
+        "Volleyball" -> ["Volleyball", "Indoor", event]
+        "Beach Volleyball" -> ["Volleyball", "Beach", event]
+        _ -> [sport, event]
+
 toSBModel : List Participation -> String -> SBModel
 toSBModel parts country =
     let
@@ -519,9 +547,7 @@ toSBModel parts country =
         recordData =
             parts
             |> List.filter (\c -> c.noc == country && c.medal /= "No medal" )
-            |> List.map (\p -> { sequence = List.append [ p.sport ] [ p.event ], medalCount = 1 })
-            -- TODO: uniqueBy is a temporary solution!!!
-            --       If one country won 2 medals in the same event medalCount must be 2 (or 3)
+            |> List.map (\p -> { sequence = sportsToCategory p.sport p.event, medalCount = 1 })
             |> List.Extra.uniqueBy (\r -> r.sequence)
 
         treeData =
@@ -542,7 +568,7 @@ toSBModel parts country =
                     , category = List.Extra.last node.sequence |> Maybe.withDefault "end"
                     }
                 )
-            |> Tree.sortWith (\_ a b -> compare (Tree.label b).medalCount (Tree.label a).medalCount)
+            |> Tree.sortWith (\_ a b -> compare (Tree.label a).sequence (Tree.label b).sequence)
     in
     { layout =
         treeData
