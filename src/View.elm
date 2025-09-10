@@ -152,7 +152,7 @@ view model =
 -- Header mit Navigation und Olympischen Ringen
 headerSection : Html Msg
 headerSection =
-    div [ style "text-align" "center", style "padding" "20px", style "background-color" "#f8f9fa" ]
+    div [ style "text-align" "center", style "padding" "20px", style "background-color" "#f8f9fa", style "id" "top"]
         [ -- Navigation
           div [ style "margin-bottom" "20px" ]
             [ a [ href "#medaillenspiegel", style "margin" "0 15px", style "text-decoration" "none", style "color" "#007cba", style "font-weight" "bold" ]
@@ -406,7 +406,7 @@ medaillenspiegelSection model =
                 ]
             ]
         , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
-            [ nextLink "#medaillenverteilung" ]
+            [ linkToTop ]
         ]
 
 -- Sektion 2: Medaillenverteilung
@@ -459,7 +459,7 @@ medaillenverteilungSection model =
                 ]
             ]
         , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
-            [ nextLink "#parallele-koordinaten" ]
+            [ linkToTop ]
         ]
 
 -- Sektion 3: Parallele Koordinaten
@@ -699,7 +699,7 @@ parallelekoordinatensection model =
                 text ""
             ]
 
-    , div [ style "text-align" "right" ] [ nextLink "#heatmap" ]
+    , div [ style "text-align" "right" ] [ linkToTop ]
         ]
 
 -- Sektion 4: HeatMap
@@ -724,15 +724,15 @@ heatmapSection model =
                 ]
             ]
         , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
-            [ nextLink "#medaillenspiegel" ]
+            [ linkToTop ]
         ]
 
 
 -- "Weiter" CTA as styled link
-nextLink : String -> Html msg
-nextLink target =
+linkToTop : Html msg
+linkToTop =
     a
-        [ href target
+        [ href "#top"
         , style "display" "inline-block"
         , style "padding" "10px 16px"
         , style "background-color" "#007cba"
@@ -740,6 +740,6 @@ nextLink target =
         , style "border-radius" "4px"
         , style "text-decoration" "none"
         ]
-        [ text "Weiter" ]
+        [ text "Nach Oben" ]
 
 
