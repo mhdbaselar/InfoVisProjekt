@@ -258,20 +258,25 @@ medaillenspiegelSection model =
                             (Dict.get b.country relByCountry |> Maybe.withDefault 0)
                             (Dict.get a.country relByCountry |> Maybe.withDefault 0)
                     )
+        limitedRows =
+            if (model.collapseMedalTable == True) then
+                List.take 10 sortedRows
+            else
+                sortedRows
 
         relHeader : List (Html Msg)
         relHeader =
             case selectedId of
                 "pop" ->
-                    [ th [ style "text-align" "center", style "padding" "12px" ] [ text (axisLabel "pop" ++ " (Wert)") ]
+                    [ th [ style "text-align" "center", style "padding" "12px" ] [ text ("Einwohner (Wert)") ]
                     , th [ style "text-align" "center", style "padding" "12px" ] [ text "Med/Pop" ]
                     ]
                 "gdp" ->
-                    [ th [ style "text-align" "center", style "padding" "12px" ] [ text (axisLabel "gdp" ++ " (Wert)") ]
+                    [ th [ style "text-align" "center", style "padding" "12px" ] [ text ("BIP (Wert)") ]
                     , th [ style "text-align" "center", style "padding" "12px" ] [ text "Med/GDP" ]
                     ]
                 "age" ->
-                    [ th [ style "text-align" "center", style "padding" "12px" ] [ text (axisLabel "age" ++ " (Wert)") ]
+                    [ th [ style "text-align" "center", style "padding" "12px" ] [ text ("Median-Alter (Wert)") ]
                     , th [ style "text-align" "center", style "padding" "12px" ] [ text "Med/Age" ]
                     ]
                 _ -> []
@@ -280,10 +285,8 @@ medaillenspiegelSection model =
         [ div [ style "max-width" "900px", style "margin" "0 auto" ]
             [ h2 [ style "text-align" "left", style "margin-bottom" "20px", style "color" "#333" ]
                 [ text "1. Medaillenspiegel" ]
-            , div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
-                [ p [] [ text "Tip: Click any table row to select the country and jump to its medal distribution below." ] ]
-                        , -- Kriterium-Auswahl + Sprung zu Parallelen Koordinaten
-                            div [ style "margin" "8px 0 16px 0", style "display" "flex", style "align-items" "center", style "justify-content" "space-between" ]
+            -- Kriterium-Auswahl + Sprung zu Parallelen Koordinaten
+            , div [ style "margin" "8px 0 16px 0", style "display" "flex", style "align-items" "center", style "justify-content" "space-between" ]
                                 [ -- links: Auswahl
                                     div [ style "display" "flex", style "gap" "8px", style "align-items" "center" ]
                                         [ span [] [ text "Kriterium für Ranking:" ]
@@ -307,7 +310,7 @@ medaillenspiegelSection model =
                                         , style "border-radius" "4px"
                                         , style "text-decoration" "none"
                                         ]
-                                        [ text "Vergleiche Kriterien" ]
+                    [ text "Vergleiche Rankings" ]
                                 ]
             , if model.loading then
                 p [] [ text "Lade Daten..." ]
@@ -317,6 +320,8 @@ medaillenspiegelSection model =
                         p [ style "color" "#b00020" ] [ text ("Fehler beim Laden: " ++ err) ]
                     Nothing ->
                         text ""
+            , div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
+                [ p [] [ text "Tip: Click any table row to select the country and jump to its medal distribution below." ] ]    
             , table [ style "width" "100%", style "border-collapse" "collapse" ]
                 [ thead []
                     [ tr [ style "background-color" "#007cba", style "color" "white" ]
@@ -329,7 +334,7 @@ medaillenspiegelSection model =
                           ] ++ relHeader)
                     ]
                 , tbody []
-                    (sortedRows
+                    (limitedRows
                         |> List.map
                             (\r ->
                                 let
@@ -403,6 +408,19 @@ medaillenspiegelSection model =
                                     )
                             )
                     )
+                ]
+                , div [ style "text-align" "center", style "max-width" "900px", style "margin" "10px auto 0" ]
+                    [ div
+                        [ style "display" "inline-block"
+                        , style "padding" "10px 16px"
+                        , style "background-color" "#007cba"
+                        , style "color" "#fff"
+                        , style "border-radius" "4px"
+                        , style "text-decoration" "none"
+                        , style "cursor" "pointer"
+                        , Events.onClick CollapseMedalTable
+                        ]
+                        [ text (if (model.collapseMedalTable == True) then "Alle anzeigen" else "Weniger anzeigen") ]
                 ]
             ]
         , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]

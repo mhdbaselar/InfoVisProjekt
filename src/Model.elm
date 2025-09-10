@@ -83,6 +83,7 @@ type alias HMModel =
 type alias Model =
     { participations : List Participation
     , medalTable : List MedalTableRow
+    , collapseMedalTable : Bool
     , populationByCountry : Dict String { population : Int, medianAge : Int }
     , gdpByCountry : Dict String Float
     , sbmodel : SBModel
@@ -110,6 +111,7 @@ type Msg
     | HoverSB (Maybe { sequence : List String, percentage : Float })
     | ChangeSBCountry String
     | HoverMedalTable (Maybe String)
+    | CollapseMedalTable
     | SelectCountryFromTable String
     | NoOp
     | SetTableCriterion String
@@ -127,6 +129,7 @@ init : ( Model, Cmd Msg )
 init =
     ( { participations = []
       , medalTable = []
+      , collapseMedalTable = True
       , populationByCountry = Dict.empty
       , gdpByCountry = Dict.empty
       , sbmodel = { layout = [], total = 0, hovered = Nothing }
@@ -587,10 +590,10 @@ toSBModel parts country =
 axisLabel : String -> String
 axisLabel aid =
     case aid of
-        "medals" -> "Medaillenspiegel"
-        "pop" -> "Einwohner"
-        "gdp" -> "BIP"
-        "age" -> "Median-Alter"
+        "medals" -> "Anzahl Medaillen"
+        "pop" -> "Medaillen pro Einwohner"
+        "gdp" -> "Medaillen pro BIP"
+        "age" -> "Medaillen pro Median-Alter"
         _ -> aid
 
 

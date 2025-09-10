@@ -122,6 +122,8 @@ update msg model =
             ( { model | sbcountry = resolvedNoc, sbmodel = toSBModel model.participations resolvedNoc }, Cmd.none )
         HoverMedalTable name ->
             ( { model | hoverTable = name }, Cmd.none )
+        CollapseMedalTable ->
+            ( { model | collapseMedalTable = not model.collapseMedalTable }, Cmd.none )
         NoOp ->
             ( model, Cmd.none )
         SetTableCriterion crit ->
