@@ -13,17 +13,12 @@ import Helpers exposing (..)
 
 -- Datenmodell
 type alias Participation =
-    { playerId : Int
+    { medal : String
     , name : String
-    , sex : String
-    , team : String
-    , noc : String
-    , year : Int
-    , season : String
-    , city : String
     , sport : String
     , event : String
-    , medal : String
+    , noc : String
+    , year : Int
     }
 
 -- Medaillentabelle (Platzierungen + Gesamt)
@@ -35,6 +30,7 @@ type alias MedalTableRow =
     , bronze : Int
     , total : Int
     , placement : Int
+    , year : Int
     }
 
 
@@ -110,6 +106,7 @@ type Msg
     = OlympiaReceived (Result Http.Error String)
     | PopulationReceived (Result Http.Error String)
     | GdpReceived (Result Http.Error String)
+    | OlympiaHistroyReceived (Result Http.Error String)
     | HoverSB (Maybe { sequence : List String, percentage : Float })
     | ChangeSBCountry String
     | HoverMedalTable (Maybe String)
@@ -149,7 +146,7 @@ init =
       , error = Nothing
       }
     , Cmd.batch
-        [ requestOlympiaCsv olympiaCsvUrl
+        [ requestOly2024Csv olympia2024CsvUrl
         , requestPopulationCsv populationCsvUrl
         , requestGdpCsv gdpCsvUrl
     ]
@@ -220,21 +217,30 @@ manualPopulationOverrides =
         ]
 
 -- CSV laden
-olympiaCsvUrl : String
-olympiaCsvUrl = "/data/olympics_dataset.csv"
+olympia2024CsvUrl : String
+olympia2024CsvUrl = "/data/medals2024.csv"
+
+olympiaHistoryCsvUrl : String
+olympiaHistoryCsvUrl = "/data/medalsHistory.csv"
 
 populationCsvUrl : String
-populationCsvUrl = "/data/world_population_data.csv"
+populationCsvUrl = "/data/world_population_data.txt"
 
 gdpCsvUrl : String
-gdpCsvUrl = "/data/world_data_2023.csv"
+gdpCsvUrl = "/data/world_data_2023.txt"
 
-
-requestOlympiaCsv : String -> Cmd Msg
-requestOlympiaCsv url =
+requestOly2024Csv : String -> Cmd Msg
+requestOly2024Csv url =
     Http.get
         { url = url
-    , expect = Http.expectString OlympiaReceived
+        , expect = Http.expectString OlympiaReceived
+        }
+
+requestOlyHistoryCsv : String -> Cmd Msg
+requestOlyHistoryCsv url =
+    Http.get
+        { url = url
+        , expect = Http.expectString OlympiaHistroyReceived
         }
 
 requestPopulationCsv : String -> Cmd Msg
@@ -256,7 +262,7 @@ requestGdpCsv url =
 
 decodeOlympiaCsv : String -> Result String (List Participation)
 decodeOlympiaCsv body =
-    case Csv.decodeCsv Csv.FieldNamesFromFirstRow participationDecoder body of
+    case Csv.decodeCsv Csv.FieldNamesFromFirstRow decoder2024 body of
         Ok rows ->
             Ok rows
 
@@ -265,35 +271,71 @@ decodeOlympiaCsv body =
 
 
 -- Decoder für alle Spalten aus der CSV (per Header-Namen)
-participationDecoder : Csv.Decoder Participation
-participationDecoder =
-    Csv.into (\playerId name sex team noc year season city sport event medal ->
-        { playerId = playerId
+decoder2024 : Csv.Decoder Participation
+decoder2024 =
+    Csv.into (\medal_type name discipline event country_code ->
+        { medal = medal_type
         , name = name
-        , sex = sex
-        , team = normalizeCountry team
-        , noc = noc
-        , year = year
-        , season = season
-        , city = city
-        , sport = sport
+        , sport = discipline
         , event = event
-        , medal = medal
+        , noc = country_code
+        , year = 2024
         }
     )
-        |> Csv.pipeline (Csv.field "player_id" Csv.int)
-        |> Csv.pipeline (Csv.field "Name" Csv.string)
-        |> Csv.pipeline (Csv.field "Sex" Csv.string)
-        |> Csv.pipeline (Csv.field "Team" Csv.string)
-        |> Csv.pipeline (Csv.field "NOC" Csv.string)
-        |> Csv.pipeline (Csv.field "Year" Csv.int)
-        |> Csv.pipeline (Csv.field "Season" Csv.string)
-        |> Csv.pipeline (Csv.field "City" Csv.string)
-        |> Csv.pipeline (Csv.field "Sport" Csv.string)
-        |> Csv.pipeline (Csv.field "Event" Csv.string)
-        |> Csv.pipeline (Csv.field "Medal" Csv.string)
+        |> Csv.pipeline (Csv.field "medal_type" Csv.string)
+        |> Csv.pipeline (Csv.field "name" Csv.string)
+        |> Csv.pipeline (Csv.field "discipline" Csv.string)
+        |> Csv.pipeline (Csv.field "event" Csv.string)
+        |> Csv.pipeline (Csv.field "country_code" Csv.string)
 
+decodeOlyHistroyCsv : String -> Result String (List MedalTableRow)
+decodeOlyHistroyCsv body =
+    case Csv.decodeCsv Csv.FieldNamesFromFirstRow decoderHistory body of
+        Ok rows ->
+            Ok
+                (rows
+                    |> List.filter (\row -> String.contains "summer" (String.toLower row.edition))
+                    |> List.map (\row -> { country = row.country, gold = row.gold, silver = row.silver, bronze = row.bronze, total = row.total, placement = row.placement, year = row.year })
+                )
 
+        Err _ ->
+            Err "CSV decode error"
+
+-- Decoder für alle Spalten aus der CSV (per Header-Namen)
+
+type alias RawOlyHistData =
+    { country : String
+    , gold : Int
+    , silver : Int
+    , bronze : Int
+    , total : Int
+    , placement : Int
+    , year : Int
+    , edition : String
+    }
+
+decoderHistory : Csv.Decoder RawOlyHistData
+decoderHistory =
+    -- edition,year,country,country_noc,gold,silver,bronze,total
+    Csv.into (\edition year country gold silver bronze total ->
+        { country = country
+        , gold = gold
+        , silver = silver
+        , bronze = bronze
+        , total = total
+        , placement = 0
+        , year = year
+        , edition = edition
+        }
+    )
+        |> Csv.pipeline (Csv.field "edition" Csv.string)
+        |> Csv.pipeline (Csv.field "year" Csv.int)
+        |> Csv.pipeline (Csv.field "country" Csv.string)
+        |> Csv.pipeline (Csv.field "gold" Csv.int)
+        |> Csv.pipeline (Csv.field "silver" Csv.int)
+        |> Csv.pipeline (Csv.field "bronze" Csv.int)
+        |> Csv.pipeline (Csv.field "total" Csv.int)
+        
 -- Filter: Nur Datensätze eines bestimmten Jahres behalten
 filterByYear : Int -> List Participation -> List Participation
 filterByYear year participations =
@@ -335,16 +377,16 @@ toMedalTable participations =
 
         addMedal medal ( g, s, b ) =
             case medal of
-                "Gold" -> ( g + 1, s, b )
-                "Silver" -> ( g, s + 1, b )
-                "Bronze" -> ( g, s, b + 1 )
+                "Gold Medal" -> ( g + 1, s, b )
+                "Silver Medal" -> ( g, s + 1, b )
+                "Bronze Medal" -> ( g, s, b + 1 )
                 _ -> ( g, s, b )
 
         medalsByCountry : Dict String ( Int, Int, Int )
         medalsByCountry =
             List.foldl
                 (\p dict ->
-                    if p.medal == "Gold" || p.medal == "Silver" || p.medal == "Bronze" then
+                    if p.medal == "Gold Medal" || p.medal == "Silver Medal" || p.medal == "Bronze Medal" then
                         let
                             country = normalizeCountry (getCountry p)
                             old = Dict.get country dict |> Maybe.withDefault ( 0, 0, 0 )
@@ -381,7 +423,7 @@ toMedalTable participations =
                     case maybePrev of
                         Nothing -> 1
                         Just prevTriple -> if prevTriple == triple then prevRank else idx + 1
-                row = { country = c.country, gold = c.gold, silver = c.silver, bronze = c.bronze, total = c.gold + c.silver + c.bronze, placement = rank }
+                row = { country = c.country, gold = c.gold, silver = c.silver, bronze = c.bronze, total = c.gold + c.silver + c.bronze, placement = rank, year = 2024 }
             in
             ( Just triple, rank, row :: acc )
     in
@@ -593,41 +635,25 @@ recomputePcModel : Model -> Model
 recomputePcModel m =
     { m | pcmodel = toPCModel m }
 
-toHMModel : List Participation -> List String -> HMModel
-toHMModel parts teams =
+toHMModel : List MedalTableRow -> List String -> HMModel
+toHMModel rows teams =
     let
-        -- Nur Datensätze mit Medaille zählen
-        medalEntries =
-            parts
-                |> filterSportsEventMedal
-                |> List.filter (\p -> p.medal /= "No medal" && p.medal /= "NA")
-
         -- Jahre ermitteln
-        allYears = medalEntries |> List.map .year |> List.sort |> List.Extra.unique
-
-        -- (team, year) -> count voraggregieren, inkl. Team-Normalisierung und Filter auf Teamnamen <= 6
-        addCount p dict =
-            let
-                country = p.noc |> nocToCountry |> normalizeCountry
+        allYears = rows |> List.map .year |> List.sort |> List.Extra.unique
+        addRow p dict = 
+            let 
+                country = p.country |> nocToCountry |> normalizeCountry
             in
-            if (String.length country <= 600) && (List.member p.year allYears) && (country /= "Refugee Olympic Team") && (country /= "Individual Neutral Athletes") then
-                let key = ( country, p.year ) in
-                Dict.update key (\m -> Just (Maybe.withDefault 0 m + 1)) dict
+            if (country /= "Refugee Olympic Team") && (country /= "Individual Neutral Athletes") then
+                Dict.update ( country, p.year ) (\_ -> Just p.total) dict
             else
                 dict
 
         countsBy : Dict ( String, Int ) Int
-        countsBy = List.foldl addCount Dict.empty medalEntries
-
-        {-teams =
-            countsBy
-                |> Dict.keys
-                |> List.map Tuple.first
-                |> List.Extra.unique
-                |> List.sort-}
+        countsBy = List.foldl addRow Dict.empty rows
 
         dataMatrix : List (List Float)
-        dataMatrix =
+        dataMatrix = 
             teams
                 |> List.map (\team ->
                     allYears

@@ -18,31 +18,22 @@ update msg model =
                                 filteredParts =
                                     parts |> filterByYear 2024 |> filterSportsEventMedal
                                 mt = toMedalTable filteredParts
-
-                                -- Verwende NOC (eindeutig pro Land) statt Team für HeatMap-Zeilen
-                                nocs2024 =
-                                    (mt |> List.map .country)
-                                        ++ (parts |> List.map (.noc) |> List.map nocToCountry |> ListExtra.unique)
-                                        |> ListExtra.unique
-                                        |> List.filter (\noc -> noc /= "EOR" && noc /= "AIN")
-
                                 base =
                                     { model
                                         | participations = filteredParts
                                         , medalTable = mt
                                         , sbcountry = if model.sbcountry == "" then "GER" else model.sbcountry
                                         , sbmodel = toSBModel filteredParts (if model.sbcountry == "" then "GER" else model.sbcountry)
-                                        , heatmapmodel = toHMModel parts nocs2024
                                         , loading = False
                                         , error = Nothing
                                     }
                             in
-                            ( recomputePcModel base, Cmd.none )
+                            ( recomputePcModel base, requestOlyHistoryCsv olympiaHistoryCsvUrl )
                         Err decodeErr ->
                             ( { model | loading = False, error = Just decodeErr }, Cmd.none )
 
                 Err httpErr ->
-                    ( { model | loading = False, error = Just (httpErrorToString httpErr) }, Cmd.none )
+                    ( { model | loading = False, error = Just (httpErrorToString httpErr) }, Cmd.none )    
 
         PopulationReceived result ->
             case result of
@@ -87,6 +78,28 @@ update msg model =
 
                 Err httpErr ->
                     ( { model | error = Just (httpErrorToString httpErr) }, Cmd.none )
+        OlympiaHistroyReceived result ->
+            case result of
+                Ok body ->
+                    case decodeOlyHistroyCsv body of
+                        Ok rows ->
+                            let
+                                allMTrows = 
+                                    model.medalTable ++ rows
+                                    |> List.filter (\row -> row.country /= "Refugee Olympic Team" && row.country /= "Individual Neutral Athletes")
+                                nocs =
+                                    allMTrows
+                                        |> List.map (.country)
+                                        |> List.map nocToCountry
+                                        |> ListExtra.unique
+                                        |> List.filter (\noc -> noc /= "EOR" && noc /= "AIN")
+                            in
+                            ( { model | heatmapmodel = toHMModel allMTrows nocs }, Cmd.none )
+                        Err decodeErr ->
+                            ( { model | loading = False, error = Just decodeErr }, Cmd.none )
+
+                Err httpErr ->
+                    ( { model | loading = False, error = Just (httpErrorToString httpErr) }, Cmd.none )
         HoverSB hover ->
             let
                 modelSB = model.sbmodel
