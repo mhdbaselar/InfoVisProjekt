@@ -13,17 +13,12 @@ import Helpers exposing (..)
 
 -- Datenmodell
 type alias Participation =
-    { playerId : Int
+    { medal : String
     , name : String
-    , sex : String
-    , team : String
-    , noc : String
-    , year : Int
-    , season : String
-    , city : String
     , sport : String
     , event : String
-    , medal : String
+    , noc : String
+    , year : Int
     }
 
 -- Medaillentabelle (Platzierungen + Gesamt)
@@ -149,7 +144,7 @@ init =
       , error = Nothing
       }
     , Cmd.batch
-        [ requestOlympiaCsv olympiaCsvUrl
+        [ requestOlympiaCsv olympia2024CsvUrl
         , requestPopulationCsv populationCsvUrl
         , requestGdpCsv gdpCsvUrl
     ]
@@ -220,8 +215,8 @@ manualPopulationOverrides =
         ]
 
 -- CSV laden
-olympiaCsvUrl : String
-olympiaCsvUrl = "/data/olympics_dataset.csv"
+olympia2024CsvUrl : String
+olympia2024CsvUrl = "/data/medals2024.csv"
 
 populationCsvUrl : String
 populationCsvUrl = "/data/world_population_data.csv"
@@ -267,32 +262,20 @@ decodeOlympiaCsv body =
 -- Decoder für alle Spalten aus der CSV (per Header-Namen)
 participationDecoder : Csv.Decoder Participation
 participationDecoder =
-    Csv.into (\playerId name sex team noc year season city sport event medal ->
-        { playerId = playerId
+    Csv.into (\medal_type name discipline event country_code ->
+        { medal = medal_type
         , name = name
-        , sex = sex
-        , team = normalizeCountry team
-        , noc = noc
-        , year = year
-        , season = season
-        , city = city
-        , sport = sport
+        , sport = discipline
         , event = event
-        , medal = medal
+        , noc = country_code
+        , year = 2024
         }
     )
-        |> Csv.pipeline (Csv.field "player_id" Csv.int)
-        |> Csv.pipeline (Csv.field "Name" Csv.string)
-        |> Csv.pipeline (Csv.field "Sex" Csv.string)
-        |> Csv.pipeline (Csv.field "Team" Csv.string)
-        |> Csv.pipeline (Csv.field "NOC" Csv.string)
-        |> Csv.pipeline (Csv.field "Year" Csv.int)
-        |> Csv.pipeline (Csv.field "Season" Csv.string)
-        |> Csv.pipeline (Csv.field "City" Csv.string)
-        |> Csv.pipeline (Csv.field "Sport" Csv.string)
-        |> Csv.pipeline (Csv.field "Event" Csv.string)
-        |> Csv.pipeline (Csv.field "Medal" Csv.string)
-
+        |> Csv.pipeline (Csv.field "medal_type" Csv.string)
+        |> Csv.pipeline (Csv.field "name" Csv.string)
+        |> Csv.pipeline (Csv.field "discipline" Csv.string)
+        |> Csv.pipeline (Csv.field "event" Csv.string)
+        |> Csv.pipeline (Csv.field "country_code" Csv.string)
 
 -- Filter: Nur Datensätze eines bestimmten Jahres behalten
 filterByYear : Int -> List Participation -> List Participation
@@ -335,16 +318,16 @@ toMedalTable participations =
 
         addMedal medal ( g, s, b ) =
             case medal of
-                "Gold" -> ( g + 1, s, b )
-                "Silver" -> ( g, s + 1, b )
-                "Bronze" -> ( g, s, b + 1 )
+                "Gold Medal" -> ( g + 1, s, b )
+                "Silver Medal" -> ( g, s + 1, b )
+                "Bronze Medal" -> ( g, s, b + 1 )
                 _ -> ( g, s, b )
 
         medalsByCountry : Dict String ( Int, Int, Int )
         medalsByCountry =
             List.foldl
                 (\p dict ->
-                    if p.medal == "Gold" || p.medal == "Silver" || p.medal == "Bronze" then
+                    if p.medal == "Gold Medal" || p.medal == "Silver Medal" || p.medal == "Bronze Medal" then
                         let
                             country = normalizeCountry (getCountry p)
                             old = Dict.get country dict |> Maybe.withDefault ( 0, 0, 0 )
