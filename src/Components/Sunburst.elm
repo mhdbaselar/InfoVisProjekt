@@ -19,6 +19,7 @@ import TypedSvg.Events
 import TypedSvg.Types exposing (AnchorAlignment(..), Opacity(..), Paint(..), Transform(..), em)
 
 import Model exposing (..)
+import Helpers exposing (nocToCountry)
 
 
 -- Constants
@@ -39,30 +40,28 @@ radius =
     min sb_w sb_h / 2
 
 -- Make arcs colorfull
-sportCats : List String
-sportCats =
-    [ "Aquatics"
-    , "AquaticsSwimming"
-    , "Athletics"
-    , "Basketball"
-    , "Boxing"
-    , "Cycling"
-    , "Gymnastics"
-    , "Judo"
-    , "Equestrian"
-    , "Canoeing"
-    ]
-
-colorScale : OrdinalScale String Color
-colorScale =
-    -- TODO: add sports
-    Scale.ordinal (Color.rgb 0.5 0.5 0.5 :: Scale.Color.tableau10) sportCats
+mapColor : SBTreeData -> List String -> Color
+mapColor data range = 
+    let
+        colors = List.range 0 (List.length range)
+                |> List.map (\i -> Scale.Color.rainbowInterpolator (toFloat i / toFloat (List.length range)))
+        color =
+            Scale.convert (Scale.ordinal colors range) (List.head data.sequence |> Maybe.withDefault "")
+            |> Maybe.withDefault Color.black
+            |> Color.toRgba
+        darkConst = (9 - (List.length data.sequence |> toFloat)) * 0.125
+    in
+    Color.rgb (color.red * darkConst) (color.green * darkConst) (color.blue * darkConst)
 
 sunburst : SBModel -> String -> Html Msg
 sunburst sbmodel country =
     let
         format f =
             String.left 5 (String.fromFloat f) ++ "%"
+        range =
+            sbmodel.layout
+                |> List.map (\l -> List.head l.node.sequence |> Maybe.withDefault "")
+                |> List.Extra.unique
     in
     svg [ viewBox 0 0 sb_w sb_h ]
         [ g [ transform [ Translate (sb_w / 2) (sb_h / 2)] ]
@@ -71,7 +70,7 @@ sunburst sbmodel country =
                     |> List.map
                         (\item ->
                             Path.element (arc item)
-                                [ fill (Paint (Scale.convert colorScale (String.concat item.node.sequence) |> Maybe.withDefault Color.black)) ]
+                                [ fill (Paint (mapColor item.node range)) ]
                         )
                 )
             , Svg.Lazy.lazy2 mouseInteractionArcs sbmodel.layout sbmodel.total
@@ -84,9 +83,9 @@ sunburst sbmodel country =
                 Nothing ->
                     g [ textAnchor AnchorMiddle, TypedSvg.Attributes.fontFamily [ "sans-serif" ], fill (Paint (Color.rgb 0.5 0.5 0.5)) ]
                         (if sbmodel.total == 0 then    
-                                [ text_ [ TypedSvg.Attributes.InPx.fontSize 15, y 15 ] [ text (String.concat [country, " hat keine Medaillen gewonnen"]) ]]
+                                [ text_ [ TypedSvg.Attributes.InPx.fontSize 15, y 15 ] [ text (String.concat [nocToCountry country, " hat keine Medaillen gewonnen"]) ]]
                         else
-                                [ text_ [ TypedSvg.Attributes.InPx.fontSize 20, y 10 ] [ text country ] ])
+                                [ text_ [ TypedSvg.Attributes.InPx.fontSize 20, y 10 ] [ text (nocToCountry country) ] ])
             ]
         ]
 

@@ -438,11 +438,11 @@ medaillenverteilungSection model =
                         text ""
             , div [style "display" "flex", style "flex-direction" "row", style "align-items" "flex-start"] [
                 div [style "width" "100%", style "height" "100%"] [
-                    sunburst model.sbmodel model.sbcountry
-                    , if model.sbmodel.total > 0 then
-                            div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
-                                [ p [] [ text "Tip: More details will be displayed when you hover over the category" ] ]
-                        else div [] []
+                    if model.sbmodel.total > 0 then
+                        div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
+                            [ p [] [ text "Tip: More details will be displayed when you hover over the category" ] ]
+                    else div [] []
+                    , sunburst model.sbmodel model.sbcountry
                 ]
                 , div [style "width" "300px", style "display" "flex", style "flex-direction" "column", style "align-items" "center"] [
                     h3 [] [ text "Select country" ]
@@ -718,9 +718,9 @@ heatmapSection model =
                     Nothing ->
                         text ""
             , div [ style "display" "flex", style "flex-direction" "column", style "align-items" "center", style "gap" "12px" ]
-                [ heatmap model.heatmapmodel
-                , div [ style "font-size" "12px", style "color" "#555" ]
-                    [ text "Tip: Hover cells to see values. Only the last 7 Olympics and countries with ≤6 letters are shown for performance." ]
+                [ div [ style "font-size" "12px", style "color" "#555" ]
+                    [ text "Tip: Hover cells to see values." ]
+                , heatmap model.heatmapmodel
                 ]
             ]
         , div [ style "text-align" "right", style "max-width" "900px", style "margin" "10px auto 0" ]
