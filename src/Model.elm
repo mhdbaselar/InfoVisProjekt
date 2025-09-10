@@ -8,6 +8,7 @@ import Http
 import List.Extra
 import Tree
 import String exposing (fromInt)
+import Helpers exposing (..)
 
 
 -- Datenmodell
@@ -307,7 +308,8 @@ filterSportsEventMedal participations =
         updateDict : Participation -> Dict String Participation -> Dict String Participation
         updateDict p dict =
             let
-                sKey = String.concat [ p.event, p.sport, p.team, p.medal ] |> String.words |> String.concat
+                -- Verwende NOC statt Team für eindeutige Länder-Kombination
+                sKey = String.concat [ p.event, p.sport, p.noc, p.medal ] |> String.words |> String.concat
             in
             case Dict.get sKey dict of
                 Just _ ->
@@ -328,7 +330,8 @@ filterSportsEventMedal participations =
 toMedalTable : List Participation -> List MedalTableRow
 toMedalTable participations =
     let
-        getLand p = if p.team /= "" then p.team else p.noc
+        -- Land ausschließlich über NOC bestimmen (Team kann mehrfach pro Land vorkommen)
+        getCountry p = p.noc |> nocToCountry |> normalizeCountry
 
         addMedal medal ( g, s, b ) =
             case medal of
@@ -343,10 +346,10 @@ toMedalTable participations =
                 (\p dict ->
                     if p.medal == "Gold" || p.medal == "Silver" || p.medal == "Bronze" then
                         let
-                            land = normalizeCountry (getLand p)
-                            old = Dict.get land dict |> Maybe.withDefault ( 0, 0, 0 )
+                            country = normalizeCountry (getCountry p)
+                            old = Dict.get country dict |> Maybe.withDefault ( 0, 0, 0 )
                         in
-                        Dict.insert land (addMedal p.medal old) dict
+                        Dict.insert country (addMedal p.medal old) dict
                     else
                         dict
                 )
@@ -473,7 +476,7 @@ toSBModel parts country =
         -- Convert Participation to List of records
         recordData =
             parts
-            |> List.filter (\c -> c.team == country && c.medal /= "No medal" )
+            |> List.filter (\c -> c.noc == country && c.medal /= "No medal" )
             |> List.map (\p -> { sequence = List.append [ p.sport ] [ p.event ], medalCount = 1 })
             -- TODO: uniqueBy is a temporary solution!!!
             --       If one country won 2 medals in the same event medalCount must be 2 (or 3)
@@ -530,7 +533,7 @@ toPCModel model =
 
         placementBy : Dict String (Float, Int)
         placementBy =
-            model.medalTable |> List.map (\r -> ( r.country, (toFloat r.placement, r.total) )) |> Dict.fromList
+            model.medalTable |> List.map (\r -> ( r.country |> nocToCountry |> normalizeCountry, (toFloat r.placement, r.total) )) |> Dict.fromList
 
         popBy : Dict String Float
         popBy = model.populationByCountry |> Dict.map (\_ v -> toFloat v.population)
@@ -565,7 +568,10 @@ toPCModel model =
                     _ -> 0
 
         countries : List String
-        countries = model.medalTable |> List.map .country |> List.filter (\c -> c /= "EOR" && c /= "AIN")
+        countries =
+            model.medalTable
+                |> List.map (.country >> nocToCountry >> normalizeCountry)
+                |> List.filter (\c -> c /= "Refugee Olympic Team" && c /= "Individual Neutral Athletes")
 
         seriesFor : String -> PCSeries
         seriesFor country =
@@ -602,11 +608,10 @@ toHMModel parts teams =
         -- (team, year) -> count voraggregieren, inkl. Team-Normalisierung und Filter auf Teamnamen <= 6
         addCount p dict =
             let
-                rawTeam = if p.team /= "" then p.team else p.noc
-                team = normalizeTeamHM (normalizeCountry rawTeam)
+                country = p.noc |> nocToCountry |> normalizeCountry
             in
-            if (String.length team <= 600) && (List.member p.year allYears) && (team /= "EOR") && (team /= "AIN") then
-                let key = ( team, p.year ) in
+            if (String.length country <= 600) && (List.member p.year allYears) && (country /= "Refugee Olympic Team") && (country /= "Individual Neutral Athletes") then
+                let key = ( country, p.year ) in
                 Dict.update key (\m -> Just (Maybe.withDefault 0 m + 1)) dict
             else
                 dict

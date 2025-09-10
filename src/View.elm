@@ -11,6 +11,7 @@ import Components.Sunburst exposing (sunburst)
 import Components.ParallelCoordinates as PC
 import Components.HeatMap exposing (heatmap)
 import Model exposing (..)
+import Helpers exposing (..)
 
 
 -- Hilfsfunktionen: kompakte Zahlenformate für Debug-Tabelle
@@ -348,7 +349,7 @@ medaillenspiegelSection model =
                                     , Events.onClick (SelectCountryFromTable r.country)
                                     ]
                                     ([ td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none" ] [ text (String.fromInt rankVal) ] ]
-                                    , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "font-weight" "bold" ] [ text r.country ] ]
+                                    , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "font-weight" "bold" ] [ text (nocToCountry r.country) ] ]
                                     , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ] [ text (String.fromInt r.gold) ] ]
                                     , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ] [ text (String.fromInt r.silver) ] ]
                                     , td [ style "padding" "0" ] [ a [ href "#medaillenverteilung", style "display" "block", style "padding" "10px", style "color" "inherit", style "text-decoration" "none", style "text-align" "center" ] [ text (String.fromInt r.bronze) ] ]
@@ -413,12 +414,14 @@ medaillenverteilungSection : Model -> Html Msg
 medaillenverteilungSection model =
     let
         -- Hilfsfunktion: Alle Ländernamen laden
-        countries : List String
+        -- Liste von (noc, name) Paaren, Value = NOC, Anzeige = Ländername
+        countries : List ( String, String )
         countries =
             model.participations
-            |> List.map (\p -> if p.team /= "" then p.team else p.noc)
-            |> Set.fromList
-            |> Set.toList
+                |> List.map (.noc)
+                |> Set.fromList
+                |> Set.toList
+                |> List.map (\noc -> ( noc, nocToCountry noc ))
 
     in
     div [ id "medaillenverteilung", style "margin" "60px 0", style "padding" "20px"]
@@ -437,8 +440,15 @@ medaillenverteilungSection model =
                 sunburst model.sbmodel
                 , div [style "width" "300px", style "display" "flex", style "flex-direction" "column", style "align-items" "center"] [
                     h3 [] [ text "Selected Country" ]
-                    , select [style "width" "150px", onInput ChangeSBCountry ]
-                        ( List.map (\p -> if p == model.sbcountry then option [selected True, value p] [ text p ] else option [value p] [ text p ]) countries)
+                    , select [style "width" "180px", onInput ChangeSBCountry ]
+                        ( countries
+                            |> List.map (\( noc, name ) ->
+                                if noc == model.sbcountry then
+                                    option [ selected True, value noc ] [ text name ]
+                                else
+                                    option [ value noc ] [ text name ]
+                            )
+                        )
                     ]
                 ]
             ]

@@ -4,6 +4,7 @@ import Model exposing (..)
 import Http
 import Dict
 import List.Extra as ListExtra
+import Helpers exposing (..)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -18,19 +19,20 @@ update msg model =
                                     parts |> filterByYear 2024 |> filterSportsEventMedal
                                 mt = toMedalTable filteredParts
 
-                                -- take teams of medaltable (sorted) and add all other
-                                teams2024 =
-                                    (mt |> List.map .country) ++ (parts |> filterByYear 2024 |> List.map (\p -> p.team) |> ListExtra.unique)
-                                    |> ListExtra.unique
-                                    |> List.filter (\team -> team /= "EOR" && team /= "AIN")
+                                -- Verwende NOC (eindeutig pro Land) statt Team für HeatMap-Zeilen
+                                nocs2024 =
+                                    (mt |> List.map .country)
+                                        ++ (parts |> List.map (.noc) |> List.map nocToCountry |> ListExtra.unique)
+                                        |> ListExtra.unique
+                                        |> List.filter (\noc -> noc /= "EOR" && noc /= "AIN")
 
                                 base =
                                     { model
                                         | participations = filteredParts
                                         , medalTable = mt
-                                        , sbcountry = if model.sbcountry == "" then "Germany" else model.sbcountry
-                                        , sbmodel = toSBModel filteredParts (if model.sbcountry == "" then "Germany" else model.sbcountry)
-                                        , heatmapmodel = toHMModel parts teams2024
+                                        , sbcountry = if model.sbcountry == "" then "GER" else model.sbcountry
+                                        , sbmodel = toSBModel filteredParts (if model.sbcountry == "" then "GER" else model.sbcountry)
+                                        , heatmapmodel = toHMModel parts nocs2024
                                         , loading = False
                                         , error = Nothing
                                     }
@@ -91,10 +93,20 @@ update msg model =
                 updateSBData = { modelSB | hovered = hover }
             in
             ( { model | sbmodel = updateSBData }, Cmd.none )
-        ChangeSBCountry country ->
-            ( { model | sbcountry = country, sbmodel = toSBModel model.participations country }, Cmd.none )
-        SelectCountryFromTable country ->
-            ( { model | sbcountry = country, sbmodel = toSBModel model.participations country }, Cmd.none )
+        ChangeSBCountry nocCode ->
+            -- Dropdown liefert bereits NOC-Code
+            ( { model | sbcountry = nocCode, sbmodel = toSBModel model.participations nocCode }, Cmd.none )
+        SelectCountryFromTable countryName ->
+            let
+                -- Versuche aus dem angeklickten Ländernamen (englisch) den NOC zu finden
+                resolvedNoc =
+                    model.participations
+                        |> List.filter (\p -> nocToCountry p.noc == countryName)
+                        |> List.head
+                        |> Maybe.map .noc
+                        |> Maybe.withDefault countryName
+            in
+            ( { model | sbcountry = resolvedNoc, sbmodel = toSBModel model.participations resolvedNoc }, Cmd.none )
         HoverMedalTable name ->
             ( { model | hoverTable = name }, Cmd.none )
         NoOp ->
