@@ -465,6 +465,16 @@ decodeGdpCsv body =
 
 -- Sunburst vorbereiten wie zuvor
 
+sportsToCategory : String -> String -> List String
+sportsToCategory sport event =
+    -- TODO: make complete
+    case sport of
+        "Swimming" -> ["Aquatics", "Swimming", event]
+        "Equestrian" -> "Equestrian" :: (String.split " " event)
+        "Canoe Slalom" -> ["Canoe", "Slalom", event]
+        "Canoe Sprint" -> ["Canoe", "Sprint", event]
+        _ -> [sport, event]
+
 toSBModel : List Participation -> String -> SBModel
 toSBModel parts country =
     let
@@ -474,7 +484,7 @@ toSBModel parts country =
         recordData =
             parts
             |> List.filter (\c -> c.team == country && c.medal /= "No medal" )
-            |> List.map (\p -> { sequence = List.append [ p.sport ] [ p.event ], medalCount = 1 })
+            |> List.map (\p -> { sequence = sportsToCategory p.sport p.event, medalCount = 1 })
             -- TODO: uniqueBy is a temporary solution!!!
             --       If one country won 2 medals in the same event medalCount must be 2 (or 3)
             |> List.Extra.uniqueBy (\r -> r.sequence)

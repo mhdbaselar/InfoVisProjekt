@@ -434,9 +434,15 @@ medaillenverteilungSection model =
                     Nothing ->
                         text ""
             , div [style "display" "flex", style "flex-direction" "row", style "align-items" "flex-start"] [
-                sunburst model.sbmodel
+                div [style "width" "100%", style "height" "100%"] [
+                    sunburst model.sbmodel model.sbcountry
+                    , if model.sbmodel.total > 0 then
+                            div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
+                                [ p [] [ text "Tip: More details will be displayed when you hover over the category" ] ]
+                        else div [] []
+                ]
                 , div [style "width" "300px", style "display" "flex", style "flex-direction" "column", style "align-items" "center"] [
-                    h3 [] [ text "Selected Country" ]
+                    h3 [] [ text "Select country" ]
                     , select [style "width" "150px", onInput ChangeSBCountry ]
                         ( List.map (\p -> if p == model.sbcountry then option [selected True, value p] [ text p ] else option [value p] [ text p ]) countries)
                     ]
