@@ -8,6 +8,7 @@ import Http
 import List.Extra
 import Tree
 import String exposing (fromInt)
+import Helpers exposing (..)
 
 
 -- Datenmodell
@@ -330,7 +331,7 @@ toMedalTable : List Participation -> List MedalTableRow
 toMedalTable participations =
     let
         -- Land ausschließlich über NOC bestimmen (Team kann mehrfach pro Land vorkommen)
-        getLand p = p.noc
+        getCountry p = p.noc |> nocToCountry |> normalizeCountry
 
         addMedal medal ( g, s, b ) =
             case medal of
@@ -345,10 +346,10 @@ toMedalTable participations =
                 (\p dict ->
                     if p.medal == "Gold" || p.medal == "Silver" || p.medal == "Bronze" then
                         let
-                            land = normalizeCountry (getLand p)
-                            old = Dict.get land dict |> Maybe.withDefault ( 0, 0, 0 )
+                            country = normalizeCountry (getCountry p)
+                            old = Dict.get country dict |> Maybe.withDefault ( 0, 0, 0 )
                         in
-                        Dict.insert land (addMedal p.medal old) dict
+                        Dict.insert country (addMedal p.medal old) dict
                     else
                         dict
                 )
@@ -532,7 +533,7 @@ toPCModel model =
 
         placementBy : Dict String (Float, Int)
         placementBy =
-            model.medalTable |> List.map (\r -> ( r.country, (toFloat r.placement, r.total) )) |> Dict.fromList
+            model.medalTable |> List.map (\r -> ( r.country |> nocToCountry |> normalizeCountry, (toFloat r.placement, r.total) )) |> Dict.fromList
 
         popBy : Dict String Float
         popBy = model.populationByCountry |> Dict.map (\_ v -> toFloat v.population)
@@ -567,7 +568,10 @@ toPCModel model =
                     _ -> 0
 
         countries : List String
-        countries = model.medalTable |> List.map .country |> List.filter (\c -> c /= "EOR" && c /= "AIN")
+        countries =
+            model.medalTable
+                |> List.map (.country >> nocToCountry >> normalizeCountry)
+                |> List.filter (\c -> c /= "Refugee Olympic Team" && c /= "Individual Neutral Athletes")
 
         seriesFor : String -> PCSeries
         seriesFor country =
@@ -604,10 +608,10 @@ toHMModel parts teams =
         -- (team, year) -> count voraggregieren, inkl. Team-Normalisierung und Filter auf Teamnamen <= 6
         addCount p dict =
             let
-                noc = p.noc |> normalizeCountry |> normalizeTeamHM
+                country = p.noc |> nocToCountry |> normalizeCountry
             in
-            if (String.length noc <= 600) && (List.member p.year allYears) && (noc /= "EOR") && (noc /= "AIN") then
-                let key = ( noc, p.year ) in
+            if (String.length country <= 600) && (List.member p.year allYears) && (country /= "Refugee Olympic Team") && (country /= "Individual Neutral Athletes") then
+                let key = ( country, p.year ) in
                 Dict.update key (\m -> Just (Maybe.withDefault 0 m + 1)) dict
             else
                 dict

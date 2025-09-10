@@ -8,6 +8,8 @@ import Json.Encode
 import Model exposing (Msg, Cell)
 import String exposing (fromFloat)
 import Model exposing (Msg(..), HMModel)
+import Helpers exposing (..)
+import Char
 
 
 
@@ -170,11 +172,21 @@ drawCells quadHeatMapCells hmmodel =
 
         firstColumn rowIndex =
             let
-                labelText =
+                rawLabel =
                     hmmodel.rowLabels
                         |> List.drop rowIndex
                         |> List.head
                         |> Maybe.withDefault ""
+
+                isAllUpper s =
+                    let chars = String.toList s in
+                    List.all Char.isUpper chars
+
+                labelText =
+                    if String.length rawLabel == 3 && isAllUpper rawLabel then
+                        nocToCountry rawLabel
+                    else
+                        rawLabel
             in
             [ Html.td
                 [ Html.Attributes.style "font-size" "60%"

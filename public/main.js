@@ -7478,7 +7478,499 @@ var $author$project$Model$manualPopulationOverrides = $elm$core$Dict$fromList(
 			'Kosovo',
 			{medianAge: 32, population: 1772128})
 		]));
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
 var $elm$core$Basics$neq = _Utils_notEqual;
+var $elm$core$String$toUpper = _String_toUpper;
+var $author$project$Helpers$nocToCountry = function (code) {
+	var _v0 = $elm$core$String$toUpper(code);
+	switch (_v0) {
+		case 'AIN':
+			return 'Individual Neutral Athletes';
+		case 'ANZ':
+			return 'Australasia';
+		case 'AHO':
+			return 'Netherlands Antilles';
+		case 'BOH':
+			return 'Bohemia';
+		case 'COR':
+			return 'Korea Team';
+		case 'CRT':
+			return 'Crete';
+		case 'EOR':
+			return 'Refugee Olympic Team';
+		case 'EUA':
+			return 'United Team of Germany';
+		case 'EUN':
+			return 'Unified Team';
+		case 'FRG':
+			return 'West Germany';
+		case 'GDR':
+			return 'East Germany';
+		case 'IOA':
+			return 'Independent Olympic Athletes';
+		case 'LIB':
+			return 'Lebanon';
+		case 'MAL':
+			return 'Malaya';
+		case 'MIX':
+			return 'Mixed team';
+		case 'NFL':
+			return 'Newfoundland';
+		case 'NBO':
+			return 'North Borneo';
+		case 'ROC':
+			return 'Russian Olympic Committee';
+		case 'ROT':
+			return 'Refugee Olympic Athletes';
+		case 'RHO':
+			return 'Rhodesia';
+		case 'SAA':
+			return 'Saar';
+		case 'SCG':
+			return 'Serbia and Montenegro';
+		case 'TCH':
+			return 'Czechoslovakia';
+		case 'UAR':
+			return 'United Arab Republic';
+		case 'UNK':
+			return 'Unknown';
+		case 'URS':
+			return 'Soviet Union';
+		case 'VNM':
+			return 'South Vietnam';
+		case 'WIF':
+			return 'West Indies Federation';
+		case 'YAR':
+			return 'North Yemen';
+		case 'YMD':
+			return 'South Yemen';
+		case 'YUG':
+			return 'Yugoslavia';
+		case 'AFG':
+			return 'Afghanistan';
+		case 'ALB':
+			return 'Albania';
+		case 'ALG':
+			return 'Algeria';
+		case 'AND':
+			return 'Andorra';
+		case 'ANG':
+			return 'Angola';
+		case 'ANT':
+			return 'Antigua and Barbuda';
+		case 'ARG':
+			return 'Argentina';
+		case 'ARM':
+			return 'Armenia';
+		case 'ARU':
+			return 'Aruba';
+		case 'ASA':
+			return 'American Samoa';
+		case 'AUS':
+			return 'Australia';
+		case 'AUT':
+			return 'Austria';
+		case 'AZE':
+			return 'Azerbaijan';
+		case 'BAH':
+			return 'Bahamas';
+		case 'BAN':
+			return 'Bangladesh';
+		case 'BAR':
+			return 'Barbados';
+		case 'BDI':
+			return 'Burundi';
+		case 'BEL':
+			return 'Belgium';
+		case 'BEN':
+			return 'Benin';
+		case 'BER':
+			return 'Bermuda';
+		case 'BHU':
+			return 'Bhutan';
+		case 'BIH':
+			return 'Bosnia and Herzegovina';
+		case 'BIZ':
+			return 'Belize';
+		case 'BLR':
+			return 'Belarus';
+		case 'BOL':
+			return 'Bolivia';
+		case 'BOT':
+			return 'Botswana';
+		case 'BRA':
+			return 'Brazil';
+		case 'BRN':
+			return 'Bahrain';
+		case 'BRU':
+			return 'Brunei';
+		case 'BUL':
+			return 'Bulgaria';
+		case 'BUR':
+			return 'Burkina Faso';
+		case 'CAF':
+			return 'Central African Republic';
+		case 'CAM':
+			return 'Cambodia';
+		case 'CAN':
+			return 'Canada';
+		case 'CAY':
+			return 'Cayman Islands';
+		case 'CGO':
+			return 'Republic of the Congo';
+		case 'CHA':
+			return 'Chad';
+		case 'CHI':
+			return 'Chile';
+		case 'CHN':
+			return 'China';
+		case 'CIV':
+			return 'Côte d\'Ivoire';
+		case 'CMR':
+			return 'Cameroon';
+		case 'COD':
+			return 'Democratic Republic of the Congo';
+		case 'COK':
+			return 'Cook Islands';
+		case 'COL':
+			return 'Colombia';
+		case 'COM':
+			return 'Comoros';
+		case 'CPV':
+			return 'Cape Verde';
+		case 'CRC':
+			return 'Costa Rica';
+		case 'CRO':
+			return 'Croatia';
+		case 'CUB':
+			return 'Cuba';
+		case 'CYP':
+			return 'Cyprus';
+		case 'CZE':
+			return 'Czechia';
+		case 'DEN':
+			return 'Denmark';
+		case 'DJI':
+			return 'Djibouti';
+		case 'DMA':
+			return 'Dominica';
+		case 'DOM':
+			return 'Dominican Republic';
+		case 'ECU':
+			return 'Ecuador';
+		case 'EGY':
+			return 'Egypt';
+		case 'ERI':
+			return 'Eritrea';
+		case 'ESA':
+			return 'El Salvador';
+		case 'ESP':
+			return 'Spain';
+		case 'EST':
+			return 'Estonia';
+		case 'ETH':
+			return 'Ethiopia';
+		case 'FIJ':
+			return 'Fiji';
+		case 'FIN':
+			return 'Finland';
+		case 'FRA':
+			return 'France';
+		case 'FSM':
+			return 'Micronesia';
+		case 'GAB':
+			return 'Gabon';
+		case 'GAM':
+			return 'Gambia';
+		case 'GBR':
+			return 'United Kingdom';
+		case 'GBS':
+			return 'Guinea-Bissau';
+		case 'GEO':
+			return 'Georgia';
+		case 'GEQ':
+			return 'Equatorial Guinea';
+		case 'GER':
+			return 'Germany';
+		case 'GHA':
+			return 'Ghana';
+		case 'GRE':
+			return 'Greece';
+		case 'GRN':
+			return 'Grenada';
+		case 'GUA':
+			return 'Guatemala';
+		case 'GUI':
+			return 'Guinea';
+		case 'GUM':
+			return 'Guam';
+		case 'GUY':
+			return 'Guyana';
+		case 'HAI':
+			return 'Haiti';
+		case 'HKG':
+			return 'Hong Kong';
+		case 'HON':
+			return 'Honduras';
+		case 'HUN':
+			return 'Hungary';
+		case 'INA':
+			return 'Indonesia';
+		case 'IND':
+			return 'India';
+		case 'IRI':
+			return 'Iran';
+		case 'IRL':
+			return 'Ireland';
+		case 'IRQ':
+			return 'Iraq';
+		case 'ISL':
+			return 'Iceland';
+		case 'ISR':
+			return 'Israel';
+		case 'ISV':
+			return 'Virgin Islands';
+		case 'ITA':
+			return 'Italy';
+		case 'IVB':
+			return 'British Virgin Islands';
+		case 'JAM':
+			return 'Jamaica';
+		case 'JOR':
+			return 'Jordan';
+		case 'JPN':
+			return 'Japan';
+		case 'KAZ':
+			return 'Kazakhstan';
+		case 'KEN':
+			return 'Kenya';
+		case 'KGZ':
+			return 'Kyrgyzstan';
+		case 'KIR':
+			return 'Kiribati';
+		case 'KOR':
+			return 'South Korea';
+		case 'KOS':
+			return 'Kosovo';
+		case 'KSA':
+			return 'Saudi Arabia';
+		case 'KUW':
+			return 'Kuwait';
+		case 'LAO':
+			return 'Laos';
+		case 'LAT':
+			return 'Latvia';
+		case 'LBA':
+			return 'Libya';
+		case 'LBN':
+			return 'Lebanon';
+		case 'LBR':
+			return 'Liberia';
+		case 'LCA':
+			return 'Saint Lucia';
+		case 'LES':
+			return 'Lesotho';
+		case 'LIE':
+			return 'Liechtenstein';
+		case 'LTU':
+			return 'Lithuania';
+		case 'LUX':
+			return 'Luxembourg';
+		case 'MAD':
+			return 'Madagascar';
+		case 'MAR':
+			return 'Morocco';
+		case 'MAS':
+			return 'Malaysia';
+		case 'MAW':
+			return 'Malawi';
+		case 'MDA':
+			return 'Moldova';
+		case 'MDV':
+			return 'Maldives';
+		case 'MEX':
+			return 'Mexico';
+		case 'MGL':
+			return 'Mongolia';
+		case 'MHL':
+			return 'Marshall Islands';
+		case 'MKD':
+			return 'North Macedonia';
+		case 'MLI':
+			return 'Mali';
+		case 'MLT':
+			return 'Malta';
+		case 'MNE':
+			return 'Montenegro';
+		case 'MON':
+			return 'Monaco';
+		case 'MOZ':
+			return 'Mozambique';
+		case 'MRI':
+			return 'Mauritius';
+		case 'MTN':
+			return 'Mauritania';
+		case 'MYA':
+			return 'Myanmar';
+		case 'NAM':
+			return 'Namibia';
+		case 'NCA':
+			return 'Nicaragua';
+		case 'NED':
+			return 'Netherlands';
+		case 'NEP':
+			return 'Nepal';
+		case 'NGR':
+			return 'Nigeria';
+		case 'NIG':
+			return 'Niger';
+		case 'NOR':
+			return 'Norway';
+		case 'NRU':
+			return 'Nauru';
+		case 'NZL':
+			return 'New Zealand';
+		case 'OMA':
+			return 'Oman';
+		case 'PAK':
+			return 'Pakistan';
+		case 'PAN':
+			return 'Panama';
+		case 'PAR':
+			return 'Paraguay';
+		case 'PER':
+			return 'Peru';
+		case 'PHI':
+			return 'Philippines';
+		case 'PLE':
+			return 'Palestine';
+		case 'PLW':
+			return 'Palau';
+		case 'PNG':
+			return 'Papua New Guinea';
+		case 'POL':
+			return 'Poland';
+		case 'POR':
+			return 'Portugal';
+		case 'PRK':
+			return 'North Korea';
+		case 'PUR':
+			return 'Puerto Rico';
+		case 'QAT':
+			return 'Qatar';
+		case 'ROU':
+			return 'Romania';
+		case 'RSA':
+			return 'South Africa';
+		case 'RUS':
+			return 'Russia';
+		case 'RWA':
+			return 'Rwanda';
+		case 'SAM':
+			return 'Samoa';
+		case 'SEN':
+			return 'Senegal';
+		case 'SEY':
+			return 'Seychelles';
+		case 'SGP':
+			return 'Singapore';
+		case 'SKN':
+			return 'Saint Kitts and Nevis';
+		case 'SLE':
+			return 'Sierra Leone';
+		case 'SLO':
+			return 'Slovenia';
+		case 'SMR':
+			return 'San Marino';
+		case 'SOL':
+			return 'Solomon Islands';
+		case 'SOM':
+			return 'Somalia';
+		case 'SRB':
+			return 'Serbia';
+		case 'SRI':
+			return 'Sri Lanka';
+		case 'SSD':
+			return 'South Sudan';
+		case 'STP':
+			return 'São Tomé and Príncipe';
+		case 'SUD':
+			return 'Sudan';
+		case 'SUI':
+			return 'Switzerland';
+		case 'SUR':
+			return 'Suriname';
+		case 'SVK':
+			return 'Slovakia';
+		case 'SWE':
+			return 'Sweden';
+		case 'SWZ':
+			return 'Eswatini';
+		case 'SYR':
+			return 'Syria';
+		case 'TAN':
+			return 'Tanzania';
+		case 'TGA':
+			return 'Tonga';
+		case 'THA':
+			return 'Thailand';
+		case 'TJK':
+			return 'Tajikistan';
+		case 'TKM':
+			return 'Turkmenistan';
+		case 'TLS':
+			return 'Timor-Leste';
+		case 'TOG':
+			return 'Togo';
+		case 'TPE':
+			return 'Taiwan';
+		case 'TTO':
+			return 'Trinidad and Tobago';
+		case 'TUN':
+			return 'Tunisia';
+		case 'TUR':
+			return 'Turkey';
+		case 'TUV':
+			return 'Tuvalu';
+		case 'UAE':
+			return 'United Arab Emirates';
+		case 'UGA':
+			return 'Uganda';
+		case 'UKR':
+			return 'Ukraine';
+		case 'URU':
+			return 'Uruguay';
+		case 'USA':
+			return 'United States';
+		case 'UZB':
+			return 'Uzbekistan';
+		case 'VAN':
+			return 'Vanuatu';
+		case 'VEN':
+			return 'Venezuela';
+		case 'VIE':
+			return 'Vietnam';
+		case 'VIN':
+			return 'Saint Vincent and the Grenadines';
+		case 'YEM':
+			return 'Yemen';
+		case 'ZAM':
+			return 'Zambia';
+		case 'ZIM':
+			return 'Zimbabwe';
+		default:
+			return code;
+	}
+};
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Model$axisLabel = function (aid) {
 	switch (aid) {
@@ -7534,7 +8026,8 @@ var $author$project$Model$toPCModel = function (model) {
 			$elm$core$List$map,
 			function (r) {
 				return _Utils_Tuple2(
-					r.country,
+					$author$project$Model$normalizeCountry(
+						$author$project$Helpers$nocToCountry(r.country)),
 					_Utils_Tuple2(r.placement, r.total));
 			},
 			model.medalTable));
@@ -7542,13 +8035,16 @@ var $author$project$Model$toPCModel = function (model) {
 	var countries = A2(
 		$elm$core$List$filter,
 		function (c) {
-			return (c !== 'EOR') && (c !== 'AIN');
+			return (c !== 'Refugee Olympic Team') && (c !== 'Individual Neutral Athletes');
 		},
 		A2(
 			$elm$core$List$map,
-			function ($) {
-				return $.country;
-			},
+			A2(
+				$elm$core$Basics$composeR,
+				function ($) {
+					return $.country;
+				},
+				A2($elm$core$Basics$composeR, $author$project$Helpers$nocToCountry, $author$project$Model$normalizeCountry)),
 			model.medalTable));
 	var axes = A2(
 		$elm$core$List$map,
@@ -7818,23 +8314,6 @@ var $elm$core$List$member = F2(
 			},
 			xs);
 	});
-var $author$project$Model$stripTrailingDashDigits = function (s) {
-	var parts = A2($elm$core$String$split, '-', s);
-	var _v0 = $elm$core$List$reverse(parts);
-	if (_v0.b) {
-		var lastPart = _v0.a;
-		var restRev = _v0.b;
-		return (A2($elm$core$String$all, $elm$core$Char$isDigit, lastPart) && ($elm$core$List$length(parts) >= 2)) ? A2(
-			$elm$core$String$join,
-			'-',
-			$elm$core$List$reverse(restRev)) : s;
-	} else {
-		return s;
-	}
-};
-var $author$project$Model$normalizeTeamHM = function (team) {
-	return $author$project$Model$stripTrailingDashDigits(team);
-};
 var $elm$core$List$sortBy = _List_sortBy;
 var $elm$core$List$sort = function (xs) {
 	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
@@ -7894,10 +8373,10 @@ var $author$project$Model$toHMModel = F2(
 					medalEntries)));
 		var addCount = F2(
 			function (p, dict) {
-				var noc = $author$project$Model$normalizeTeamHM(
-					$author$project$Model$normalizeCountry(p.noc));
-				if (($elm$core$String$length(noc) <= 600) && (A2($elm$core$List$member, p.year, allYears) && ((noc !== 'EOR') && (noc !== 'AIN')))) {
-					var key = _Utils_Tuple2(noc, p.year);
+				var country = $author$project$Model$normalizeCountry(
+					$author$project$Helpers$nocToCountry(p.noc));
+				if (($elm$core$String$length(country) <= 600) && (A2($elm$core$List$member, p.year, allYears) && ((country !== 'Refugee Olympic Team') && (country !== 'Individual Neutral Athletes')))) {
+					var key = _Utils_Tuple2(country, p.year);
 					return A3(
 						$elm$core$Dict$update,
 						key,
@@ -7963,8 +8442,9 @@ var $author$project$Model$toMedalTable = function (participations) {
 				rank,
 				A2($elm$core$List$cons, row, acc));
 		});
-	var getLand = function (p) {
-		return p.noc;
+	var getCountry = function (p) {
+		return $author$project$Model$normalizeCountry(
+			$author$project$Helpers$nocToCountry(p.noc));
 	};
 	var addMedal = F2(
 		function (medal, _v6) {
@@ -7987,15 +8467,15 @@ var $author$project$Model$toMedalTable = function (participations) {
 		F2(
 			function (p, dict) {
 				if ((p.medal === 'Gold') || ((p.medal === 'Silver') || (p.medal === 'Bronze'))) {
-					var land = $author$project$Model$normalizeCountry(
-						getLand(p));
+					var country = $author$project$Model$normalizeCountry(
+						getCountry(p));
 					var old = A2(
 						$elm$core$Maybe$withDefault,
 						_Utils_Tuple3(0, 0, 0),
-						A2($elm$core$Dict$get, land, dict));
+						A2($elm$core$Dict$get, country, dict));
 					return A3(
 						$elm$core$Dict$insert,
-						land,
+						country,
 						A2(addMedal, p.medal, old),
 						dict);
 				} else {
@@ -9084,10 +9564,13 @@ var $author$project$Update$update = F2(
 									$elm_community$list_extra$List$Extra$unique(
 										A2(
 											$elm$core$List$map,
-											function ($) {
-												return $.noc;
-											},
-											A2($author$project$Model$filterByYear, 2024, parts))))));
+											$author$project$Helpers$nocToCountry,
+											A2(
+												$elm$core$List$map,
+												function ($) {
+													return $.noc;
+												},
+												parts))))));
 						var base = _Utils_update(
 							model,
 							{
@@ -9096,11 +9579,11 @@ var $author$project$Update$update = F2(
 								loading: false,
 								medalTable: mt,
 								participations: filteredParts,
-								sbcountry: (model.sbcountry === '') ? 'Germany' : model.sbcountry,
+								sbcountry: (model.sbcountry === '') ? 'GER' : model.sbcountry,
 								sbmodel: A2(
 									$author$project$Model$toSBModel,
 									filteredParts,
-									(model.sbcountry === '') ? 'Germany' : model.sbcountry)
+									(model.sbcountry === '') ? 'GER' : model.sbcountry)
 							});
 						return _Utils_Tuple2(
 							$author$project$Model$recomputePcModel(base),
@@ -9226,23 +9709,40 @@ var $author$project$Update$update = F2(
 						{sbmodel: updateSBData}),
 					$elm$core$Platform$Cmd$none);
 			case 'ChangeSBCountry':
-				var country = msg.a;
+				var nocCode = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							sbcountry: country,
-							sbmodel: A2($author$project$Model$toSBModel, model.participations, country)
+							sbcountry: nocCode,
+							sbmodel: A2($author$project$Model$toSBModel, model.participations, nocCode)
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'SelectCountryFromTable':
-				var country = msg.a;
+				var countryName = msg.a;
+				var resolvedNoc = A2(
+					$elm$core$Maybe$withDefault,
+					countryName,
+					A2(
+						$elm$core$Maybe$map,
+						function ($) {
+							return $.noc;
+						},
+						$elm$core$List$head(
+							A2(
+								$elm$core$List$filter,
+								function (p) {
+									return _Utils_eq(
+										$author$project$Helpers$nocToCountry(p.noc),
+										countryName);
+								},
+								model.participations))));
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							sbcountry: country,
-							sbmodel: A2($author$project$Model$toSBModel, model.participations, country)
+							sbcountry: resolvedNoc,
+							sbmodel: A2($author$project$Model$toSBModel, model.participations, resolvedNoc)
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'HoverMedalTable':
@@ -9554,6 +10054,14 @@ var $author$project$Model$OnHoverHeatMap = function (a) {
 	return {$: 'OnHoverHeatMap', a: a};
 };
 var $author$project$Model$OnLeaveHeatMap = {$: 'OnLeaveHeatMap'};
+var $elm$core$Basics$not = _Basics_not;
+var $elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			$elm$core$List$any,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
+			list);
+	});
 var $elm$html$Html$col = _VirtualDom_node('col');
 var $elm$html$Html$colgroup = _VirtualDom_node('colgroup');
 var $avh4$elm_color$Color$RgbaSpace = F4(
@@ -9603,16 +10111,6 @@ var $author$project$Components$HeatMap$colorSteps = _List_fromArray(
 		A3($avh4$elm_color$Color$rgb255, 140, 0, 0))
 	]);
 var $elm$core$Basics$isNaN = _Basics_isNaN;
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $author$project$Components$HeatMap$colorSchemeGet = function (v) {
 	if ($elm$core$Basics$isNaN(v)) {
 		return A3($avh4$elm_color$Color$rgb255, 200, 200, 200);
@@ -9756,6 +10254,10 @@ var $avh4$elm_color$Color$toCssString = function (_v0) {
 				')'
 			]));
 };
+var $elm$core$String$foldr = _String_foldr;
+var $elm$core$String$toList = function (string) {
+	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
+};
 var $avh4$elm_color$Color$toRgba = function (_v0) {
 	var r = _v0.a;
 	var g = _v0.b;
@@ -9772,11 +10274,16 @@ var $author$project$Components$HeatMap$drawCells = F2(
 			$elm$core$List$maximum(
 				A2($elm$core$List$map, $elm$core$List$length, quadHeatMapCells)));
 		var firstColumn = function (rowIndex) {
-			var labelText = A2(
+			var rawLabel = A2(
 				$elm$core$Maybe$withDefault,
 				'',
 				$elm$core$List$head(
 					A2($elm$core$List$drop, rowIndex, hmmodel.rowLabels)));
+			var isAllUpper = function (s) {
+				var chars = $elm$core$String$toList(s);
+				return A2($elm$core$List$all, $elm$core$Char$isUpper, chars);
+			};
+			var labelText = (($elm$core$String$length(rawLabel) === 3) && isAllUpper(rawLabel)) ? $author$project$Helpers$nocToCountry(rawLabel) : rawLabel;
 			return _List_fromArray(
 				[
 					A2(
@@ -10224,10 +10731,6 @@ var $elm_community$list_extra$List$Extra$dropWhile = F2(
 		}
 	});
 var $elm$core$String$fromList = _String_fromList;
-var $elm$core$String$foldr = _String_foldr;
-var $elm$core$String$toList = function (string) {
-	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
-};
 var $author$project$View$trimFloat = function (s) {
 	if (A2($elm$core$String$contains, '.', s)) {
 		var noZeros = $elm$core$String$fromList(
@@ -10944,7 +11447,8 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 																	]),
 																_List_fromArray(
 																	[
-																		$elm$html$Html$text(r.country)
+																		$elm$html$Html$text(
+																		$author$project$Helpers$nocToCountry(r.country))
 																	]))
 															])),
 														A2(
@@ -11326,7 +11830,6 @@ var $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo = function (a) 
 	return {$: 'MoveTo', a: a};
 };
 var $folkertdev$one_true_path_experiment$LowLevel$Command$moveTo = $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo;
-var $elm$core$Basics$not = _Basics_not;
 var $elm$core$Basics$sin = _Basics_sin;
 var $folkertdev$one_true_path_experiment$SubPath$SubPath = function (a) {
 	return {$: 'SubPath', a: a};
@@ -13301,14 +13804,21 @@ var $author$project$Components$Sunburst$sunburst = function (sbmodel) {
 			]));
 };
 var $author$project$View$medaillenverteilungSection = function (model) {
-	var countries = $elm$core$Set$toList(
-		$elm$core$Set$fromList(
-			A2(
-				$elm$core$List$map,
-				function ($) {
-					return $.noc;
-				},
-				model.participations)));
+	var countries = A2(
+		$elm$core$List$map,
+		function (noc) {
+			return _Utils_Tuple2(
+				noc,
+				$author$project$Helpers$nocToCountry(noc));
+		},
+		$elm$core$Set$toList(
+			$elm$core$Set$fromList(
+				A2(
+					$elm$core$List$map,
+					function ($) {
+						return $.noc;
+					},
+					model.participations))));
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -13401,31 +13911,33 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 										$elm$html$Html$select,
 										_List_fromArray(
 											[
-												A2($elm$html$Html$Attributes$style, 'width', '150px'),
+												A2($elm$html$Html$Attributes$style, 'width', '180px'),
 												$elm$html$Html$Events$onInput($author$project$Model$ChangeSBCountry)
 											]),
 										A2(
 											$elm$core$List$map,
-											function (p) {
-												return _Utils_eq(p, model.sbcountry) ? A2(
+											function (_v1) {
+												var noc = _v1.a;
+												var name = _v1.b;
+												return _Utils_eq(noc, model.sbcountry) ? A2(
 													$elm$html$Html$option,
 													_List_fromArray(
 														[
 															$elm$html$Html$Attributes$selected(true),
-															$elm$html$Html$Attributes$value(p)
+															$elm$html$Html$Attributes$value(noc)
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(p)
+															$elm$html$Html$text(name)
 														])) : A2(
 													$elm$html$Html$option,
 													_List_fromArray(
 														[
-															$elm$html$Html$Attributes$value(p)
+															$elm$html$Html$Attributes$value(noc)
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text(p)
+															$elm$html$Html$text(name)
 														]));
 											},
 											countries))
