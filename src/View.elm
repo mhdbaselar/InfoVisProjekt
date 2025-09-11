@@ -321,7 +321,7 @@ medaillenspiegelSection model =
                     Nothing ->
                         text ""
             , div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
-                [ p [] [ text "Tip: Click any table row to select the country and jump to its medal distribution below." ] ]    
+                [ p [] [ text "Tip: Click any table row to select the country and jump to its medal distribution below." ] ]
             , table [ style "width" "100%", style "border-collapse" "collapse" ]
                 [ thead []
                     [ tr [ style "background-color" "#007cba", style "color" "white" ]
@@ -561,7 +561,7 @@ parallelekoordinatensection model =
         , div [ style "display" "flex", style "justify-content" "center" ]
             [ PC.view cfg axes series highlighted ]
         , div [ style "max-width" "750px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
-            [ p [] [ text "Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Therefore, there are no values for population, GDP or age, which is why they are not included in this ranking." ] ]   
+            [ p [] [ text "Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Therefore, there are no values for population, GDP or age, which is why they are not included in this ranking." ] ]
         ]
     , div [ style "text-align" "right" ] [ linkToTop ]
         ]

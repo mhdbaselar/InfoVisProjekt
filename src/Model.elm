@@ -151,19 +151,40 @@ init =
 normalizeCountry : String -> String
 normalizeCountry name =
     case name of
+        -- Bereits vorhanden
         "Ivory Coast" -> "Côte d'Ivoire"
         "Cote d'Ivoire" -> "Côte d'Ivoire"
         "DPR Korea" -> "North Korea"
+        "Democratic People's Republic of Korea" -> "North Korea"
+        "Republic of Korea" -> "South Korea"
         "Korea" -> "South Korea"
         "IR Iran" -> "Iran"
+        "Islamic Republic of Iran" -> "Iran"
         "Czech Republic" -> "Czechia"
         "Czech Republic (Czechia)" -> "Czechia"
+        "Bohemia" -> "Czechia"
+        "Czechoslovakia" -> "Czechia"
         "Republic of Ireland" -> "Ireland"
         "Chinese Taipei" -> "Taiwan"
         "Hong Kong, China" -> "Hong Kong"
         "Türkiye" -> "Turkey"
         "Republic of Moldova" -> "Moldova"
         "Great Britain" -> "United Kingdom"
+        "Russian Federation" -> "Russia"
+        "Russian Olympic Committee" -> "Russia"
+        "Soviet Union" -> "Russia"
+        "Unified Team" -> "Russia"
+        "East Germany" -> "Germany"
+        "West Germany" -> "Germany"
+        "People's Republic of China" -> "China"
+        "United Arab Republic" -> "Egypt"
+        "Syrian Arab Republic" -> "Syria"
+        "Kingdom of Saudi Arabia" -> "Saudi Arabia"
+        "United Republic of Tanzania" -> "Tanzania"
+        "The Bahamas" -> "Bahamas"
+        "Netherlands Antilles" -> "Netherlands"
+        "West Indies Federation" -> "Jamaica"
+        "Australasia" -> "Australia"
         _ -> name
 
 
@@ -290,7 +311,7 @@ decodeOlyHistroyCsv body =
             Ok
                 (rows
                     |> List.filter (\row -> String.contains "summer" (String.toLower row.edition))
-                    |> List.map (\row -> { country = row.country, gold = row.gold, silver = row.silver, bronze = row.bronze, total = row.total, placement = row.placement, year = row.year })
+                    |> List.map (\row -> { country = normalizeCountry row.country, gold = row.gold, silver = row.silver, bronze = row.bronze, total = row.total, placement = row.placement, year = row.year })
                 )
 
         Err _ ->
@@ -330,7 +351,7 @@ decoderHistory =
         |> Csv.pipeline (Csv.field "silver" Csv.int)
         |> Csv.pipeline (Csv.field "bronze" Csv.int)
         |> Csv.pipeline (Csv.field "total" Csv.int)
-        
+
 -- Filter: Nur Datensätze eines bestimmten Jahres behalten
 filterByYear : Int -> List Participation -> List Participation
 filterByYear year participations =
@@ -543,10 +564,10 @@ toSBModel parts country =
             |> List.map (\p -> { sequence = sportsToCategory p.sport p.event, medalCount = 1, medals = [p.medal] })
             |> List.foldl
                 (\item acc ->
-                -- Search for equal rows 
+                -- Search for equal rows
                 case List.Extra.find (\r -> r.sequence == item.sequence) acc of
                     Just found ->
-                        -- if found, search for first appearance and inc medalCount 
+                        -- if found, search for first appearance and inc medalCount
                         (List.filter (\r -> r.sequence /= item.sequence) acc)
                             ++ [ { sequence = item.sequence, medalCount = item.medalCount + 1, medals = found.medals ++ item.medals } ]
                     Nothing ->
@@ -569,9 +590,9 @@ toSBModel parts country =
             |> Tree.map
                 (\node ->
                     let
-                        seq = 
+                        seq =
                             node.medals
-                                |> List.map (\s -> String.split " " s |> List.head |> Maybe.withDefault "") 
+                                |> List.map (\s -> String.split " " s |> List.head |> Maybe.withDefault "")
                                 |> List.intersperse ", "
                                 |> String.concat
                     in
@@ -668,8 +689,8 @@ toHMModel rows teams =
     let
         -- Jahre ermitteln
         allYears = rows |> List.map .year |> List.sort |> List.Extra.unique
-        addRow p dict = 
-            let 
+        addRow p dict =
+            let
                 country = p.country |> nocToCountry |> normalizeCountry
             in
             if (country /= "Refugee Olympic Team") && (country /= "Individual Neutral Athletes") then
@@ -681,7 +702,7 @@ toHMModel rows teams =
         countsBy = List.foldl addRow Dict.empty rows
 
         dataMatrix : List (List Float)
-        dataMatrix = 
+        dataMatrix =
             teams
                 |> List.map (\team ->
                     allYears
