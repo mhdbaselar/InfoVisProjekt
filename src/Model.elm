@@ -50,7 +50,7 @@ type alias PCModel =
 
 -- Tree Data for SunBurst-Vis
 type alias SBTreeData =
-    { sequence : List String, category : String, medalCount : Int }
+    { sequence : List String, medalCount : Int }
 
 -- Calculated svg-data for SunBurst-Vis
 type alias LayedOutDatum =
@@ -512,10 +512,8 @@ decodeGdpCsv body =
 
 
 -- Sunburst vorbereiten wie zuvor
-
 sportsToCategory : String -> String -> List String
 sportsToCategory sport event =
-    -- TODO: make complete
     case sport of
         "Swimming" -> ["Aquatics", "Swimming", event]
         "Artistic Swimming" -> ["Aquatics", "Artistic Swimming", event]
@@ -549,29 +547,47 @@ toSBModel parts country =
         -- Convert Participation to List of records
         recordData =
             parts
-            |> List.filter (\c -> c.noc == country && c.medal /= "No medal" )
-            |> List.map (\p -> { sequence = sportsToCategory p.sport p.event, medalCount = 1 })
-            |> List.Extra.uniqueBy (\r -> r.sequence)
+            |> List.filter (\c -> c.noc == country && c.medal /= "No medal")
+            |> List.map (\p -> { sequence = sportsToCategory p.sport p.event, medalCount = 1, medals = [p.medal] })
+            |> List.foldl
+                (\item acc ->
+                -- Search for equal rows 
+                case List.Extra.find (\r -> r.sequence == item.sequence) acc of
+                    Just found ->
+                        -- if found, search for first appearance and inc medalCount 
+                        (List.filter (\r -> r.sequence /= item.sequence) acc)
+                            ++ [ { sequence = item.sequence, medalCount = item.medalCount + 1, medals = found.medals ++ item.medals } ]
+                    Nothing ->
+                        -- else add new item
+                        item :: acc
+                )
+                []
 
         treeData =
             recordData
             |> Tree.stratifyWithPath
                 { path = \item -> List.Extra.inits item.sequence
-                , createMissingNode = \path -> { sequence = List.Extra.last path |> Maybe.withDefault [], medalCount = 0 }
+                , createMissingNode = \path -> { sequence = List.Extra.last path |> Maybe.withDefault [], medalCount = 0, medals = [] }
                 }
-            |> Result.withDefault (Tree.singleton { sequence = ["Tree error"], medalCount = 0 })
+            |> Result.withDefault (Tree.singleton { sequence = ["Tree error"], medalCount = 0, medals = [] })
             |> Tree.sumUp identity
                 (\node children ->
                     { node | medalCount = List.sum (List.map .medalCount children) }
                 )
             |> Tree.map
                 (\node ->
-                    { sequence = node.sequence
+                    let
+                        seq = 
+                            node.medals
+                                |> List.map (\s -> String.split " " s |> List.head |> Maybe.withDefault "") 
+                                |> List.intersperse ", "
+                                |> String.concat
+                    in
+                    { sequence = node.sequence ++ [seq]
                     , medalCount = node.medalCount
-                    , category = List.Extra.last node.sequence |> Maybe.withDefault "end"
                     }
                 )
-            |> Tree.sortWith (\_ a b -> compare (Tree.label a).sequence (Tree.label b).sequence)
+            |> Tree.sortWith (\_ a b -> compare (Tree.label b).medalCount (Tree.label a).medalCount)
     in
     { layout =
         treeData
