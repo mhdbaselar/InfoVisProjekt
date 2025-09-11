@@ -10,6 +10,7 @@ import String exposing (fromFloat)
 import Model exposing (Msg(..), HMModel)
 import Helpers exposing (..)
 import Char
+import Svg exposing (text_)
 
 
 
@@ -76,12 +77,13 @@ heatmap hmmodel =
     , Html.Attributes.style "padding" "8px"
     , Html.Attributes.style "box-sizing" "border-box"
     , Html.Attributes.style "display" "flex"
-    , Html.Attributes.style "flex-direction" "column"
+    , Html.Attributes.style "flex-direction" "row"
     , Html.Attributes.style "gap" "8px"
     , Html.Attributes.style "overflow-x" "auto"
     ]
-    [ legend hmmodel
-    , drawCells quadHeatMapCells hmmodel
+    [ Html.div [Html.Attributes.style "height" "80vh", Html.Attributes.style "overflow-y" "scroll" , Html.Attributes.style "padding-right" "10px"]
+        [ drawCells quadHeatMapCells hmmodel ]
+    , legend hmmodel
     ]
 
 
@@ -100,8 +102,8 @@ legend _ =
                 , Html.Attributes.style "min-width" "32px"
                 ]
                 [ Html.div
-                    [ Html.Attributes.style "width" "28px"
-                    , Html.Attributes.style "height" "14px"
+                    [ Html.Attributes.style "width" "20px"
+                    , Html.Attributes.style "height" "16px"
                     , Html.Attributes.style "border" "1px solid #ccc"
                     , Html.Attributes.style "background-color" (Color.toCssString c)
                     ]
@@ -109,10 +111,11 @@ legend _ =
                 , Html.span [ Html.Attributes.style "font-size" "10px", Html.Attributes.style "color" "#555" ] [ Html.text labelText ]
                 ]
     in
-    Html.div []
-        [ Html.div [ Html.Attributes.style "font-size" "12px", Html.Attributes.style "color" "#555", Html.Attributes.style "margin-bottom" "4px" ]
-            [ Html.text "Legende: Medaillen (diskrete Stufen)" ]
-        , Html.div [ Html.Attributes.style "display" "flex", Html.Attributes.style "align-items" "flex-end", Html.Attributes.style "gap" "4px", Html.Attributes.style "flex-wrap" "wrap" ]
+    Html.div [ Html.Attributes.style "max-width" "55px" ]
+        [ Html.div [ Html.Attributes.style "font-size" "12px", Html.Attributes.style "color" "#555", Html.Attributes.style "margin-bottom" "4px", Html.Attributes.style "text-align" "center" ]
+            [ Html.h3 [ Html.Attributes.style "margin-bottom" "0" ] [ Html.text "Legende"]
+            , Html.text "Anzahl Medaillen (diskrete Stufen)" ]
+        , Html.div [ Html.Attributes.style "display" "flex", Html.Attributes.style "justify-content" "center", Html.Attributes.style "gap" "4px", Html.Attributes.style "flex-wrap" "wrap" ]
             (List.map swatch colorSteps)
         ]
 
@@ -131,11 +134,6 @@ drawCells quadHeatMapCells hmmodel =
                 |> List.maximum
                 |> Maybe.withDefault 1
 
-        cellHeight =
-            (1 + List.length quadHeatMapCells)
-            |> toFloat
-            |> (\hei -> fromFloat (100 / hei) ++ "%")
-
         fillColor row col cellvalue =
             let
                 color =
@@ -146,10 +144,16 @@ drawCells quadHeatMapCells hmmodel =
                     if row == cellWithPosition.row && col == cellWithPosition.column then
                         let
                             rgb = Color.toRgba  color
-                            darkConst = 0.75
+                            darkConst = 0.65
                         in
                         Color.rgb (rgb.red * darkConst) (rgb.green * darkConst) (rgb.blue * darkConst)
 
+                    else if row == cellWithPosition.row || col == cellWithPosition.column then
+                        let
+                            rgb = Color.toRgba  color
+                            darkConst = 0.85
+                        in
+                        Color.rgb (rgb.red * darkConst) (rgb.green * darkConst) (rgb.blue * darkConst)
                     else
                         color
 
@@ -160,11 +164,19 @@ drawCells quadHeatMapCells hmmodel =
 
         firstRowLabels labels =
             Html.tr
-                [ Html.Attributes.style "height" cellHeight ]
-                (List.map (\text ->
+                [ Html.Attributes.style "height" "20px" ]
+                (List.indexedMap (\i text ->
                     Html.td
                     [ Html.Attributes.style "font-size" "60%"
                     , Html.Attributes.style "text-align" "center"
+                    , case hmmodel.selected of
+                        Just cellWithPosition ->
+                            if (cellWithPosition.column == i-1) then
+                                Html.Attributes.style "font-weight" "bold"
+                            else
+                                Html.Attributes.style "font-weight" "normal"
+                        Nothing ->
+                            Html.Attributes.style "font-weight" "normal"
                     ]
                     [ Html.text text ])
                 ("" :: labels))
@@ -191,13 +203,21 @@ drawCells quadHeatMapCells hmmodel =
             [ Html.td
                 [ Html.Attributes.style "font-size" "60%"
                 , Html.Attributes.style "text-align" "right"
+                , case hmmodel.selected of
+                    Just cellWithPosition ->
+                        if (cellWithPosition.row == rowIndex) then
+                            Html.Attributes.style "font-weight" "bold"
+                        else
+                            Html.Attributes.style "font-weight" "normal"
+                    Nothing ->
+                        Html.Attributes.style "font-weight" "normal"
                 ]
-                [ Html.text labelText ]
+                [ Html.text labelText ] 
             ]
 
         toTableRow rowIndex cellList =
             Html.tr
-                [ Html.Attributes.style "height" cellHeight ]
+                [ Html.Attributes.style "height" "20px" ]
                 (firstColumn rowIndex
                     ++ List.indexedMap
                         (\col ->
