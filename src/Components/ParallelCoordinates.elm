@@ -37,7 +37,7 @@ import TypedSvg.Core exposing (Svg, text)
 import TypedSvg.Types exposing (AnchorAlignment(..), Paint(..), Transform(..), px)
 import Html.Events as Events
 
-
+import Model exposing (Msg(..))
 -- PUBLIC TYPES
 
 
@@ -57,7 +57,6 @@ type alias ViewConfig =
     { width : Float
     , height : Float
     , padding : Float
-    , ranking : Bool
     }
 
 
@@ -135,8 +134,8 @@ toSeriesFromModelData rankedMedals popByCountry gdpByCountry axes =
 -- VIEW
 
 
-view : ViewConfig -> List Axis -> List Series -> Maybe String -> (Maybe String -> msg) -> Svg msg
-view cfg axes seriesList hoveredName onHover =
+view : ViewConfig -> List Axis -> List Series -> Maybe String  -> Svg Msg
+view cfg axes seriesList hoveredName =
     let
         -- Anzahl Dimensionen und gemeinsame x-Skala (0..dimCount-1)
         dimCount = max 2 (List.length axes)
@@ -153,19 +152,6 @@ view cfg axes seriesList hoveredName onHover =
                 |> List.filterMap (\s ->
                     s.values |> List.filter (\( id, _ ) -> id == aid) |> List.head |> Maybe.map Tuple.second
                 )
-
-        -- Daten-Extent (lo,hi) mit kleiner Ausdehnung bei konstanten Werten
-        extent : List Float -> ( Float, Float )
-        extent vals =
-            case ( List.minimum vals, List.maximum vals ) of
-                ( Just lo, Just hi ) ->
-                    if lo == hi then
-                        ( lo - 1, hi + 1 )
-                    else
-                        ( lo, hi )
-
-                _ ->
-                    ( 0, 1 )
 
         -- Ranking-Unterstützung
         -- Für Nicht-Medaillenachsen: Wert -> Rang (1 = größter Wert oben)
@@ -199,18 +185,8 @@ view cfg axes seriesList hoveredName onHover =
         yScales =
             axes
                 |> List.map (\a ->
-                    if cfg.ranking then
-                        -- Gleiche Rang-Domain fuer alle Achsen: [globalMaxRank .. 1]
-                        ( a.id
-                        , Scale.linear ( cfg.height - cfg.padding, cfg.padding ) ( globalMaxRank, 1 )
-                        )
-                    else
-                        if a.id == "medals" then
-                            -- Medaillenspiegel zeigt immer Platzierungen: 1 oben
-                            ( a.id, Scale.linear ( cfg.height - cfg.padding, cfg.padding ) ( maxRank a.id, 1 ) )
-                        else
-                            let ( lo, hi ) = extent (valuesForAxis a.id) in
-                            ( a.id, Scale.linear ( cfg.height - cfg.padding, cfg.padding ) ( lo, hi ) )
+                    -- Gleiche Rang-Domain fuer alle Achsen: [globalMaxRank .. 1]
+                    ( a.id , Scale.linear ( cfg.height - cfg.padding, cfg.padding ) ( globalMaxRank, 1 ) )
                 )
 
         -- y-Skala zu einer Achsen-ID nachschlagen (Fallback [0..1])
@@ -225,35 +201,6 @@ view cfg axes seriesList hoveredName onHover =
         axisPositions : List ( Int, Axis )
         axisPositions = axes |> List.indexedMap Tuple.pair
 
-        -- Kurze Tick-Labels: Pop/GDP mit K/M/B/T, Age & Default als Ganzzahl
-        formatTick axisId v =
-            case axisId of
-                "pop" ->
-                    if v >= 1.0e9 then
-                        String.fromFloat (toFloat (round (v / 1.0e8)) / 10) ++ "B"
-                    else if v >= 1.0e6 then
-                        String.fromFloat (toFloat (round (v / 1.0e5)) / 10) ++ "M"
-                    else if v >= 1.0e3 then
-                        String.fromFloat (toFloat (round (v / 1.0e2)) / 10) ++ "K"
-                    else
-                        String.fromInt (round v)
-
-                "gdp" ->
-                    if v >= 1.0e12 then
-                        String.fromFloat (toFloat (round (v / 1.0e11)) / 10) ++ "T"
-                    else if v >= 1.0e9 then
-                        String.fromFloat (toFloat (round (v / 1.0e8)) / 10) ++ "B"
-                    else if v >= 1.0e6 then
-                        String.fromFloat (toFloat (round (v / 1.0e5)) / 10) ++ "M"
-                    else
-                        String.fromInt (round v)
-
-                "age" ->
-                    String.fromInt (round v)
-
-                _ ->
-                    String.fromInt (round v)
-
         -- Zeichnet eine einzelne Achse mit Ticks und Label
         axisSvg ( i, a ) =
             let
@@ -262,10 +209,8 @@ view cfg axes seriesList hoveredName onHover =
                 yBot = cfg.height - cfg.padding
                 -- Vorberechnungen: y-Scale, Rang-Achse, Ticks und Label-Formatter
                 ys = yScaleFor a.id
-                isRankAxis = cfg.ranking || a.id == "medals"
                 ticks = Scale.ticks ys 5
                 yAt t = Scale.convert ys t
-                tickLabel t = if isRankAxis then String.fromInt (round t) else formatTick a.id t
             in
             g [ transform [ Translate xPos 0 ] ]
                 [ rect [ x -1, y yTop, width 2, height (yBot - yTop), fill (Paint (Color.rgb255 200 200 200)) ] []
@@ -275,7 +220,7 @@ view cfg axes seriesList hoveredName onHover =
                                 let yy = yAt t in
                                 g []
                                     [ line [ x1 -4, y1 yy, x2 4, y2 yy, stroke (Paint (Color.rgb255 180 180 180)), strokeWidth (px 1) ] []
-                                    , text_ [ x 8, y (yy + 3), textAnchor AnchorStart, fontSize (px 10) ] [ text (tickLabel t) ]
+                                    , text_ [ x 8, y (yy + 3), textAnchor AnchorStart, fontSize (px 10) ] [ text (String.fromInt (round t)) ]
                                     ]
                             )
                         )
@@ -348,19 +293,13 @@ view cfg axes seriesList hoveredName onHover =
 
                 -- Wert in plottbaren Wert umrechnen (Rang- oder Datenwert)
                 toPlottable a v0 =
-                    if cfg.ranking then
-                        if a.id == "medals" then
-                            clamp 1 globalMaxRank v0
-                        else
-                            Dict.get v0 (ranksForAxis a.id)
-                                |> Maybe.map (\r -> clamp 1 globalMaxRank r)
-                                |> Maybe.withDefault 1
-                    else if a.id == "medals" then
-                        -- bereits Rang, Domain in non-ranking: [maxRank..1]
-                        clamp 1 (maxRank a.id) v0
+                    if a.id == "medals" then
+                        clamp 1 globalMaxRank v0
                     else
-                        v0
-
+                        Dict.get v0 (ranksForAxis a.id)
+                            |> Maybe.map (\r -> clamp 1 globalMaxRank r)
+                            |> Maybe.withDefault 1
+                
                 xAt i = Scale.convert xScale (toFloat i)
                 yAt aid v = Scale.convert (yScaleFor aid) v
 
@@ -384,12 +323,13 @@ view cfg axes seriesList hoveredName onHover =
             in
             path
                 ([ d (Path.toString builder)
-                 , stroke (Paint col)
-                 , strokeWidth (px (if isHovered then 3 else 1.2))
-                 , strokeOpacity (TypedSvg.Types.Opacity (if faded then 0.15 else 1))
-                 , fill PaintNone
-                 , Events.on "mouseenter" (Decode.succeed (onHover (Just s.name)))
-                 , Events.on "mouseleave" (Decode.succeed (onHover Nothing))
+                , stroke (Paint col)
+                , strokeWidth (px (if isHovered then 3 else 1.2))
+                , strokeOpacity (TypedSvg.Types.Opacity (if faded then 0.15 else 1))
+                , fill PaintNone
+                , Events.onMouseEnter (SetPcHover (Just s.name))
+                , Events.onMouseLeave (SetPcHover Nothing)
+                , Events.onClick (PcClick (Just s.name))
                  ]
                 )
                 []
@@ -413,12 +353,7 @@ view cfg axes seriesList hoveredName onHover =
                                 lastAxis = axes |> List.drop lastIndex |> List.head |> Maybe.withDefault { id = "", label = "" }
                                 v0 = s.values |> List.filter (\( id, _ ) -> id == lastAxis.id) |> List.head |> Maybe.map Tuple.second |> Maybe.withDefault 0
                                 vPlot =
-                                    if cfg.ranking then
-                                        if lastAxis.id == "medals" then clamp 1 globalMaxRank v0 else (Dict.get v0 (ranksForAxis lastAxis.id) |> Maybe.withDefault 1)
-                                    else if lastAxis.id == "medals" then
-                                        clamp 1 (maxRank lastAxis.id) v0
-                                    else
-                                        v0
+                                    if lastAxis.id == "medals" then clamp 1 globalMaxRank v0 else (Dict.get v0 (ranksForAxis lastAxis.id) |> Maybe.withDefault 1)
                                 -- Linksbuendiges Hover-Label: Abstand zur letzten Achse
                                 gapRight = 22
                                 xLast = Scale.convert xScale (toFloat (dimCount - 1))

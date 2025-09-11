@@ -44,7 +44,6 @@ type alias PCModel =
     { axes : List PCAxis
     , series : List PCSeries
     , hovered : Maybe String
-    , ranking : Bool
     }
 
 
@@ -87,16 +86,14 @@ type alias Model =
     , populationByCountry : Dict String { population : Int, medianAge : Int }
     , gdpByCountry : Dict String Float
     , sbmodel : SBModel
-    , sbcountry : String
+    , selectedCountry : String
     , hoverTable : Maybe String
     , tableCriterion : String
     , axisOrder : List String
     , draggingAxis : Maybe String
     , dropTargetAxis : Maybe String
-    , ranking : Bool
-    , useRelative : Bool
-    , showPcDebug : Bool
     , pcHover : Maybe String
+    , pcCountry: Maybe String
     , pcmodel : PCModel
     , heatmapmodel : HMModel
     , loading : Bool
@@ -109,19 +106,16 @@ type Msg
     | GdpReceived (Result Http.Error String)
     | OlympiaHistroyReceived (Result Http.Error String)
     | HoverSB (Maybe { sequence : List String, percentage : Float })
-    | ChangeSBCountry String
+    | ChangeselectedCountry String
     | HoverMedalTable (Maybe String)
     | CollapseMedalTable
     | SelectCountryFromTable String
-    | NoOp
     | SetTableCriterion String
     | StartDragAxis String
     | DragOverAxis String
     | DropAxis String
-    | ToggleRanking Bool
-    | TogglePcMode Bool
-    | TogglePcDebug Bool
     | SetPcHover (Maybe String)
+    | PcClick (Maybe String)
     | OnHoverHeatMap Cell
     | OnLeaveHeatMap
 
@@ -133,17 +127,15 @@ init =
       , populationByCountry = Dict.empty
       , gdpByCountry = Dict.empty
       , sbmodel = { layout = [], total = 0, hovered = Nothing }
-      , sbcountry = ""
+      , selectedCountry = ""
       , hoverTable = Nothing
       , tableCriterion = "medals"
       , axisOrder = [ "medals", "pop", "gdp", "age" ]
       , draggingAxis = Nothing
       , dropTargetAxis = Nothing
-      , ranking = True
-    , useRelative = False
-      , showPcDebug = False
       , pcHover = Nothing
-      , pcmodel = { axes = [], series = [], hovered = Nothing, ranking = False }
+      , pcCountry = Nothing
+      , pcmodel = { axes = [], series = [], hovered = Nothing }
       , heatmapmodel = { data = [], columnLabels = [], rowLabels = [], selected = Nothing}
       , loading = True
       , error = Nothing
@@ -636,23 +628,15 @@ toPCModel model =
 
         getValue : String -> String -> Float
         getValue axisId country =
-            if model.useRelative then
-                let
-                    total_medals = Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.second |> toFloat
-                in
-                case axisId of
-                    "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
-                    "pop" -> safeDiv total_medals (Dict.get country popBy |> Maybe.withDefault 0)
-                    "gdp" -> safeDiv total_medals (Dict.get country gdpBy |> Maybe.withDefault 0)
-                    "age" -> safeDiv total_medals (Dict.get country ageBy |> Maybe.withDefault 0)
-                    _ -> 0
-            else
-                case axisId of
-                    "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
-                    "pop" -> Dict.get country popBy |> Maybe.withDefault 0
-                    "gdp" -> Dict.get country gdpBy |> Maybe.withDefault 0
-                    "age" -> Dict.get country ageBy |> Maybe.withDefault 0
-                    _ -> 0
+            let
+                total_medals = Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.second |> toFloat
+            in
+            case axisId of
+                "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
+                "pop" -> safeDiv total_medals (Dict.get country popBy |> Maybe.withDefault 0)
+                "gdp" -> safeDiv total_medals (Dict.get country gdpBy |> Maybe.withDefault 0)
+                "age" -> safeDiv total_medals (Dict.get country ageBy |> Maybe.withDefault 0)
+                _ -> 0
 
         countries : List String
         countries =
@@ -672,7 +656,6 @@ toPCModel model =
     { axes = axes
     , series = series
     , hovered = model.pcHover
-    , ranking = model.ranking
     }
 
 

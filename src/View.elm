@@ -458,10 +458,10 @@ medaillenverteilungSection model =
                 div [style "display" "flex", style "flex-direction" "row", style "justify-content" "space-between"] [
                     div [ style "display" "flex", style "gap" "8px", style "align-items" "center" ] [
                         text "Dargestelltes Land:"
-                        , select [style "width" "180px", onInput ChangeSBCountry ]
+                        , select [style "width" "180px", onInput ChangeselectedCountry ]
                         ( countries
                             |> List.map (\( noc, name ) ->
-                                if noc == model.sbcountry then
+                                if noc == model.selectedCountry then
                                     option [ selected True, value noc ] [ text name ]
                                 else
                                     option [ value noc ] [ text name ]
@@ -475,7 +475,7 @@ medaillenverteilungSection model =
                         div [ style "max-width" "950px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
                             [ text "Tip: More details will be displayed when you hover over the category" ]
                     else div [] []
-                    , sunburst model.sbmodel model.sbcountry
+                    , sunburst model.sbmodel model.selectedCountry
                 ]
             ]
         ]
@@ -493,8 +493,10 @@ parallelekoordinatensection model =
 
             series = model.pcmodel.series
 
+            highlighted = if (model.pcCountry == Nothing) then model.pcHover else model.pcCountry
+
             cfg =
-                { width = 950, height = 520, padding = 50, ranking = model.pcmodel.ranking }
+                { width = 950, height = 520, padding = 50 }
           in
           div []
             [ div [ style "display" "flex", style "justify-content" "center", style "gap" "8px", style "margin-bottom" "8px" ]
@@ -544,182 +546,23 @@ parallelekoordinatensection model =
             [ p [] [ text "Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop)." ]
             , p [] [ text "Tip: Click any axis label above to jump to the medal table and set that criterion." ]
             ]
-
-            , div [ style "display" "flex", style "justify-content" "center", style "margin-bottom" "12px", style "gap" "8px", style "align-items" "center" ]
-                [ span [] [ text "Ranking" ]
-                , input [ type_ "checkbox", checked model.ranking, onCheck ToggleRanking ] []
-                , span [ style "margin-left" "16px" ] [ text "Relative (Medaillen / Pop, GDP, Age)" ]
-                , input [ type_ "checkbox", checked model.useRelative, onCheck TogglePcMode ] []
-                , span [ style "margin-left" "16px" ] [ text "Tabelle" ]
-                , input [ type_ "checkbox", checked model.showPcDebug, onCheck TogglePcDebug ] []
-                ]
-            , div [ style "display" "flex", style "justify-content" "center" ]
-                [ PC.view cfg axes series model.pcHover SetPcHover ]
-            , div [ style "max-width" "750px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
-                [ p [] [ text "Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Therefore, there are no values for population, GDP or age, which is why they are not included in this ranking." ] ]
-            -- Hilfstabelle
-            , if model.showPcDebug then
-                let
-                    -- 1) Platzierungen und Medaillen-Summen je Land vorbereiten
-                    placementBy : Dict.Dict String Int
-                    placementBy =
-                        series
-                            |> List.filterMap (\s ->
-                                s.values
-                                    |> List.filter (\( id, _ ) -> id == "medals")
-                                    |> List.head
-                                    |> Maybe.map (\(_, v) -> ( s.name, round v ))
-                            )
-                            |> Dict.fromList
-
-                    medalSumBy : Dict.Dict String Int
-                    medalSumBy =
-                        model.medalTable
-                            |> List.map (\r -> ( r.country, r.total ))
-                            |> Dict.fromList
-
-                    -- 2) Werte je Achse vorab in Dicts legen: axisId -> (country -> value)
-                    axisValuesBy : Dict.Dict String (Dict.Dict String Float)
-                    axisValuesBy =
-                        axes
-                            |> List.map (\a ->
-                                ( a.id
-                                , series
-                                    |> List.filterMap (\s ->
-                                        s.values
-                                            |> List.filter (\( id, _ ) -> id == a.id)
-                                            |> List.head
-                                            |> Maybe.map (\(_, v) -> ( s.name, v ))
-                                    )
-                                    |> Dict.fromList
-                                )
-                            )
-                            |> Dict.fromList
-
-                    nonMedalAxes = axes |> List.filter (\a -> a.id /= "medals")
-
-                    -- 3) Rang-Maps pro Nicht-Medaillenachse: axisId -> (value -> rank)
-                    rankDictByAxis : Dict.Dict String (Dict.Dict Float Int)
-                    rankDictByAxis =
-                        nonMedalAxes
-                            |> List.map (\a ->
-                                let
-                                    vals =
-                                        axisValuesBy
-                                            |> Dict.get a.id
-                                            |> Maybe.withDefault Dict.empty
-                                            |> Dict.values
-                                            |> List.sort
-                                            |> List.reverse
-                                    uniques = ListExtra.unique vals
-                                    dict = uniques |> List.indexedMap (\i v -> ( v, i + 1 )) |> Dict.fromList
-                                in
-                                ( a.id, dict )
-                            )
-                            |> Dict.fromList
-
-                    -- 4) Länder nach Platz sortieren
-                    rows =
-                        series
-                            |> List.map .name
-                            |> List.sortWith (\a b ->
-                                compare (Dict.get a placementBy |> Maybe.withDefault 9999)
-                                        (Dict.get b placementBy |> Maybe.withDefault 9999)
-                            )
-
-                    -- Headerzellen
-                    headerCells =
-                        let
-                            valueHeaders =
-                                axes
-                                    |> List.concatMap (\a ->
-                                        if a.id == "medals" then
-                                            [ th [ style "text-align" "center", style "padding" "6px" ] [ text "Medaillenspiegel" ]
-                                            , th [ style "text-align" "center", style "padding" "6px" ] [ text "Medaillen" ]
-                                            ]
-                                        else
-                                            let
-                                                labelSuffix =
-                                                    if model.useRelative then
-                                                        case a.id of
-                                                            "pop" -> " (pro 1M)"
-                                                            "gdp" -> " (pro $1B)"
-                                                            "age" -> " (rel.)"
-                                                            _ -> " (rel.)"
-                                                    else
-                                                        " (Wert)"
-                                            in
-                                            [ th [ style "text-align" "center", style "padding" "6px" ] [ text (a.label ++ labelSuffix) ] ]
-                                    )
-
-                            rankHeaders =
-                                nonMedalAxes
-                                    |> List.map (\a -> th [ style "text-align" "center", style "padding" "6px" ] [ text (a.label ++ " (Rang)") ])
-                        in
-                        th [ style "text-align" "left", style "padding" "6px" ] [ text "Land" ]
-                            :: (valueHeaders ++ rankHeaders)
-                in
-                div [ style "max-width" "1000px", style "margin" "16px auto", style "font-size" "12px" ]
-                    [ table [ style "width" "100%", style "border-collapse" "collapse" ]
-                        ([ thead [] [ tr [] headerCells ]
-                         , tbody []
-                            (rows
-                                |> List.map (\name ->
-                                    let
-                                        valueTds =
-                                            axes
-                                                |> List.concatMap (\a ->
-                                                    case a.id of
-                                                        "medals" ->
-                                                            [ td [ style "padding" "4px", style "text-align" "center" ] [ text (Dict.get name placementBy |> Maybe.withDefault 0 |> String.fromInt) ]
-                                                            , td [ style "padding" "4px", style "text-align" "center" ] [ text (Dict.get name medalSumBy |> Maybe.withDefault 0 |> String.fromInt) ]
-                                                            ]
-                                                        _ ->
-                                                            let
-                                                                vVal =
-                                                                    axisValuesBy
-                                                                        |> Dict.get a.id
-                                                                        |> Maybe.withDefault Dict.empty
-                                                                        |> Dict.get name
-                                                                        |> Maybe.withDefault 0
-                                                            in
-                                                            [ td [ style "padding" "4px", style "text-align" "center" ] [ text (formatPcValue model.useRelative a.id vVal) ] ]
-                                                            -- [ td [ style "padding" "4px", style "text-align" "center" ] [ text (String.fromFloat vVal) ] ]
-                                                )
-
-                                        rankTds =
-                                            nonMedalAxes
-                                                |> List.map (\a ->
-                                                    let
-                                                        v =
-                                                            axisValuesBy
-                                                                |> Dict.get a.id
-                                                                |> Maybe.withDefault Dict.empty
-                                                                |> Dict.get name
-                                                                |> Maybe.withDefault 0
-                                                        r =
-                                                            rankDictByAxis
-                                                                |> Dict.get a.id
-                                                                |> Maybe.withDefault Dict.empty
-                                                                |> Dict.get v
-                                                                |> Maybe.withDefault 0
-                                                    in
-                                                    td [ style "padding" "4px", style "text-align" "center" ] [ text (String.fromInt r) ]
-                                                )
-                                    in
-                                    tr [ style "border-bottom" "1px solid #eee" ]
-                                        ( td [ style "padding" "4px", style "text-align" "left" ] [ text name ]
-                                            :: (valueTds ++ rankTds)
-                                        )
-                                )
-                            )
-                         ]
-                        )
-                    ]
-              else
-                text ""
+        , div [ style "display" "inline-block"
+            , style "padding" "10px 16px"
+            , style "background-color" "#007cba"
+            , style "color" "#fff"
+            , style "border-radius" "4px"
+            , style "text-decoration" "none"
+            , if (model.pcCountry == Nothing) then style "opacity" "0.4" else style "opacity" "1.0"
+            , if (model.pcCountry == Nothing) then style "pointer-event" "none" else style "pointer-event" "all"
+            , if (model.pcCountry == Nothing) then style "cursor" "not-allowed" else style "cursor" "pointer"
+            , Events.onClick (PcClick Nothing)
             ]
-
+            [ text "Fokus lösen" ]
+        , div [ style "display" "flex", style "justify-content" "center" ]
+            [ PC.view cfg axes series highlighted ]
+        , div [ style "max-width" "750px", style "margin" "8px auto 0", style "text-align" "center", style "color" "#555", style "font-size" "12px" ]
+            [ p [] [ text "Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Therefore, there are no values for population, GDP or age, which is why they are not included in this ranking." ] ]   
+        ]
     , div [ style "text-align" "right" ] [ linkToTop ]
         ]
 
