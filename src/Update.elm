@@ -22,8 +22,8 @@ update msg model =
                                     { model
                                         | participations = filteredParts
                                         , medalTable = mt
-                                        , sbcountry = if model.sbcountry == "" then "GER" else model.sbcountry
-                                        , sbmodel = toSBModel filteredParts (if model.sbcountry == "" then "GER" else model.sbcountry)
+                                        , selectedCountry = if model.selectedCountry == "" then "GER" else model.selectedCountry
+                                        , sbmodel = toSBModel filteredParts (if model.selectedCountry == "" then "GER" else model.selectedCountry)
                                         , loading = False
                                         , error = Nothing
                                     }
@@ -33,7 +33,7 @@ update msg model =
                             ( { model | loading = False, error = Just decodeErr }, Cmd.none )
 
                 Err httpErr ->
-                    ( { model | loading = False, error = Just (httpErrorToString httpErr) }, Cmd.none )    
+                    ( { model | loading = False, error = Just (httpErrorToString httpErr) }, Cmd.none )
 
         PopulationReceived result ->
             case result of
@@ -84,17 +84,17 @@ update msg model =
                     case decodeOlyHistroyCsv body of
                         Ok rows ->
                             let
-                                allMTrows = 
+                                allMTrows =
                                     model.medalTable ++ rows
                                     |> List.filter (\row -> row.country /= "Refugee Olympic Team" && row.country /= "Individual Neutral Athletes")
-                                nocs =
+                                countries =
                                     allMTrows
                                         |> List.map (.country)
-                                        |> List.map nocToCountry
+                                        |> List.map normalizeCountry
                                         |> ListExtra.unique
-                                        |> List.filter (\noc -> noc /= "EOR" && noc /= "AIN")
+                                        |> List.filter (\country -> country /= "Refugee Olympic Team" && country /= "Individual Neutral Athletes")
                             in
-                            ( { model | heatmapmodel = toHMModel allMTrows nocs }, Cmd.none )
+                            ( { model | heatmapmodel = toHMModel allMTrows countries }, Cmd.none )
                         Err decodeErr ->
                             ( { model | loading = False, error = Just decodeErr }, Cmd.none )
 
@@ -106,9 +106,9 @@ update msg model =
                 updateSBData = { modelSB | hovered = hover }
             in
             ( { model | sbmodel = updateSBData }, Cmd.none )
-        ChangeSBCountry nocCode ->
+        ChangeselectedCountry nocCode ->
             -- Dropdown liefert bereits NOC-Code
-            ( { model | sbcountry = nocCode, sbmodel = toSBModel model.participations nocCode }, Cmd.none )
+            ( { model | selectedCountry = nocCode, sbmodel = toSBModel model.participations nocCode, pcCountry = Just (Helpers.countryFromNoc nocCode) }, Cmd.none )
         SelectCountryFromTable countryName ->
             let
                 -- Versuche aus dem angeklickten Ländernamen (englisch) den NOC zu finden
@@ -119,11 +119,11 @@ update msg model =
                         |> Maybe.map .noc
                         |> Maybe.withDefault countryName
             in
-            ( { model | sbcountry = resolvedNoc, sbmodel = toSBModel model.participations resolvedNoc }, Cmd.none )
+            ( { model | selectedCountry = resolvedNoc, sbmodel = toSBModel model.participations resolvedNoc, pcCountry = Just countryName }, Cmd.none )
         HoverMedalTable name ->
             ( { model | hoverTable = name }, Cmd.none )
-        NoOp ->
-            ( model, Cmd.none )
+        CollapseMedalTable ->
+            ( { model | collapseMedalTable = not model.collapseMedalTable }, Cmd.none )
         SetTableCriterion crit ->
             ( { model | tableCriterion = crit }, Cmd.none )
         StartDragAxis axisId ->
@@ -165,14 +165,13 @@ update msg model =
                                     before ++ (src :: after)
             in
             ( recomputePcModel { model | axisOrder = newOrder, draggingAxis = Nothing, dropTargetAxis = Nothing }, Cmd.none )
-        ToggleRanking on ->
-            ( recomputePcModel { model | ranking = on }, Cmd.none )
-        TogglePcMode on ->
-            ( recomputePcModel { model | useRelative = on }, Cmd.none )
-        TogglePcDebug on ->
-            ( { model | showPcDebug = on }, Cmd.none )
         SetPcHover name ->
             ( { model | pcHover = name }, Cmd.none )
+        PcClick name ->
+            if (name == Nothing) then
+                ( { model | pcHover = name, pcCountry = name }, Cmd.none)
+            else
+                ( { model | pcHover = name, pcCountry = name, selectedCountry = (Maybe.withDefault "" name) }, Cmd.none)
         OnHoverHeatMap value ->
             let
                 state = model.heatmapmodel
@@ -183,6 +182,12 @@ update msg model =
              let
                 state = model.heatmapmodel
                 newHeatMapModel = ( { state | selected = Nothing })
+            in
+            ( { model | heatmapmodel = newHeatMapModel }, Cmd.none )
+        ChangeHeatMapSorting ->
+            let
+                state = model.heatmapmodel
+                newHeatMapModel = ( { state | sortByMedalTable = not model.heatmapmodel.sortByMedalTable })
             in
             ( { model | heatmapmodel = newHeatMapModel }, Cmd.none )
 

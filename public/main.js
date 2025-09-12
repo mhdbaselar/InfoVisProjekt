@@ -5375,7 +5375,7 @@ var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
 var $author$project$Model$gdpCsvUrl = '/data/world_data_2023.csv';
-var $author$project$Model$olympiaCsvUrl = '/data/olympics_dataset.csv';
+var $author$project$Model$olympia2024CsvUrl = '/data/medals2024.csv';
 var $author$project$Model$populationCsvUrl = '/data/world_population_data.csv';
 var $author$project$Model$GdpReceived = function (a) {
 	return {$: 'GdpReceived', a: a};
@@ -6167,7 +6167,7 @@ var $author$project$Model$requestGdpCsv = function (url) {
 var $author$project$Model$OlympiaReceived = function (a) {
 	return {$: 'OlympiaReceived', a: a};
 };
-var $author$project$Model$requestOlympiaCsv = function (url) {
+var $author$project$Model$requestOly2024Csv = function (url) {
 	return $elm$http$Http$get(
 		{
 			expect: $elm$http$Http$expectString($author$project$Model$OlympiaReceived),
@@ -6188,34 +6188,516 @@ var $author$project$Model$init = _Utils_Tuple2(
 	{
 		axisOrder: _List_fromArray(
 			['medals', 'pop', 'gdp', 'age']),
+		collapseMedalTable: true,
 		draggingAxis: $elm$core$Maybe$Nothing,
 		dropTargetAxis: $elm$core$Maybe$Nothing,
 		error: $elm$core$Maybe$Nothing,
 		gdpByCountry: $elm$core$Dict$empty,
-		heatmapmodel: {columnLabels: _List_Nil, data: _List_Nil, rowLabels: _List_Nil, selected: $elm$core$Maybe$Nothing},
+		heatmapmodel: {columnLabels: _List_Nil, data: _List_Nil, rowLabels: _List_Nil, selected: $elm$core$Maybe$Nothing, sortByMedalTable: true},
 		hoverTable: $elm$core$Maybe$Nothing,
 		loading: true,
 		medalTable: _List_Nil,
 		participations: _List_Nil,
+		pcCountry: $elm$core$Maybe$Nothing,
 		pcHover: $elm$core$Maybe$Nothing,
-		pcmodel: {axes: _List_Nil, hovered: $elm$core$Maybe$Nothing, ranking: false, series: _List_Nil},
+		pcmodel: {axes: _List_Nil, hovered: $elm$core$Maybe$Nothing, series: _List_Nil},
 		populationByCountry: $elm$core$Dict$empty,
-		ranking: true,
-		sbcountry: '',
 		sbmodel: {hovered: $elm$core$Maybe$Nothing, layout: _List_Nil, total: 0},
-		showPcDebug: false,
-		tableCriterion: 'medals',
-		useRelative: false
+		selectedCountry: '',
+		tableCriterion: 'medals'
 	},
 	$elm$core$Platform$Cmd$batch(
 		_List_fromArray(
 			[
-				$author$project$Model$requestOlympiaCsv($author$project$Model$olympiaCsvUrl),
+				$author$project$Model$requestOly2024Csv($author$project$Model$olympia2024CsvUrl),
 				$author$project$Model$requestPopulationCsv($author$project$Model$populationCsvUrl),
 				$author$project$Model$requestGdpCsv($author$project$Model$gdpCsvUrl)
 			])));
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $elm$core$String$toUpper = _String_toUpper;
+var $author$project$Helpers$nocToCountry = function (code) {
+	var _v0 = $elm$core$String$toUpper(code);
+	switch (_v0) {
+		case 'AIN':
+			return 'Individual Neutral Athletes';
+		case 'ANZ':
+			return 'Australasia';
+		case 'AHO':
+			return 'Netherlands Antilles';
+		case 'BOH':
+			return 'Bohemia';
+		case 'COR':
+			return 'Korea Team';
+		case 'CRT':
+			return 'Crete';
+		case 'EOR':
+			return 'Refugee Olympic Team';
+		case 'EUA':
+			return 'United Team of Germany';
+		case 'EUN':
+			return 'Unified Team';
+		case 'FRG':
+			return 'West Germany';
+		case 'GDR':
+			return 'East Germany';
+		case 'IOA':
+			return 'Independent Olympic Athletes';
+		case 'LIB':
+			return 'Lebanon';
+		case 'MAL':
+			return 'Malaya';
+		case 'MIX':
+			return 'Mixed team';
+		case 'NFL':
+			return 'Newfoundland';
+		case 'NBO':
+			return 'North Borneo';
+		case 'ROC':
+			return 'Russian Olympic Committee';
+		case 'ROT':
+			return 'Refugee Olympic Athletes';
+		case 'RHO':
+			return 'Rhodesia';
+		case 'SAA':
+			return 'Saar';
+		case 'SCG':
+			return 'Serbia and Montenegro';
+		case 'TCH':
+			return 'Czechoslovakia';
+		case 'UAR':
+			return 'United Arab Republic';
+		case 'UNK':
+			return 'Unknown';
+		case 'URS':
+			return 'Soviet Union';
+		case 'VNM':
+			return 'South Vietnam';
+		case 'WIF':
+			return 'West Indies Federation';
+		case 'YAR':
+			return 'North Yemen';
+		case 'YMD':
+			return 'South Yemen';
+		case 'YUG':
+			return 'Yugoslavia';
+		case 'AFG':
+			return 'Afghanistan';
+		case 'ALB':
+			return 'Albania';
+		case 'ALG':
+			return 'Algeria';
+		case 'AND':
+			return 'Andorra';
+		case 'ANG':
+			return 'Angola';
+		case 'ANT':
+			return 'Antigua and Barbuda';
+		case 'ARG':
+			return 'Argentina';
+		case 'ARM':
+			return 'Armenia';
+		case 'ARU':
+			return 'Aruba';
+		case 'ASA':
+			return 'American Samoa';
+		case 'AUS':
+			return 'Australia';
+		case 'AUT':
+			return 'Austria';
+		case 'AZE':
+			return 'Azerbaijan';
+		case 'BAH':
+			return 'Bahamas';
+		case 'BAN':
+			return 'Bangladesh';
+		case 'BAR':
+			return 'Barbados';
+		case 'BDI':
+			return 'Burundi';
+		case 'BEL':
+			return 'Belgium';
+		case 'BEN':
+			return 'Benin';
+		case 'BER':
+			return 'Bermuda';
+		case 'BHU':
+			return 'Bhutan';
+		case 'BIH':
+			return 'Bosnia and Herzegovina';
+		case 'BIZ':
+			return 'Belize';
+		case 'BLR':
+			return 'Belarus';
+		case 'BOL':
+			return 'Bolivia';
+		case 'BOT':
+			return 'Botswana';
+		case 'BRA':
+			return 'Brazil';
+		case 'BRN':
+			return 'Bahrain';
+		case 'BRU':
+			return 'Brunei';
+		case 'BUL':
+			return 'Bulgaria';
+		case 'BUR':
+			return 'Burkina Faso';
+		case 'CAF':
+			return 'Central African Republic';
+		case 'CAM':
+			return 'Cambodia';
+		case 'CAN':
+			return 'Canada';
+		case 'CAY':
+			return 'Cayman Islands';
+		case 'CGO':
+			return 'Republic of the Congo';
+		case 'CHA':
+			return 'Chad';
+		case 'CHI':
+			return 'Chile';
+		case 'CHN':
+			return 'China';
+		case 'CIV':
+			return 'Côte d\'Ivoire';
+		case 'CMR':
+			return 'Cameroon';
+		case 'COD':
+			return 'Democratic Republic of the Congo';
+		case 'COK':
+			return 'Cook Islands';
+		case 'COL':
+			return 'Colombia';
+		case 'COM':
+			return 'Comoros';
+		case 'CPV':
+			return 'Cape Verde';
+		case 'CRC':
+			return 'Costa Rica';
+		case 'CRO':
+			return 'Croatia';
+		case 'CUB':
+			return 'Cuba';
+		case 'CYP':
+			return 'Cyprus';
+		case 'CZE':
+			return 'Czechia';
+		case 'DEN':
+			return 'Denmark';
+		case 'DJI':
+			return 'Djibouti';
+		case 'DMA':
+			return 'Dominica';
+		case 'DOM':
+			return 'Dominican Republic';
+		case 'ECU':
+			return 'Ecuador';
+		case 'EGY':
+			return 'Egypt';
+		case 'ERI':
+			return 'Eritrea';
+		case 'ESA':
+			return 'El Salvador';
+		case 'ESP':
+			return 'Spain';
+		case 'EST':
+			return 'Estonia';
+		case 'ETH':
+			return 'Ethiopia';
+		case 'FIJ':
+			return 'Fiji';
+		case 'FIN':
+			return 'Finland';
+		case 'FRA':
+			return 'France';
+		case 'FSM':
+			return 'Micronesia';
+		case 'GAB':
+			return 'Gabon';
+		case 'GAM':
+			return 'Gambia';
+		case 'GBR':
+			return 'United Kingdom';
+		case 'GBS':
+			return 'Guinea-Bissau';
+		case 'GEO':
+			return 'Georgia';
+		case 'GEQ':
+			return 'Equatorial Guinea';
+		case 'GER':
+			return 'Germany';
+		case 'GHA':
+			return 'Ghana';
+		case 'GRE':
+			return 'Greece';
+		case 'GRN':
+			return 'Grenada';
+		case 'GUA':
+			return 'Guatemala';
+		case 'GUI':
+			return 'Guinea';
+		case 'GUM':
+			return 'Guam';
+		case 'GUY':
+			return 'Guyana';
+		case 'HAI':
+			return 'Haiti';
+		case 'HKG':
+			return 'Hong Kong';
+		case 'HON':
+			return 'Honduras';
+		case 'HUN':
+			return 'Hungary';
+		case 'INA':
+			return 'Indonesia';
+		case 'IND':
+			return 'India';
+		case 'IRI':
+			return 'Iran';
+		case 'IRL':
+			return 'Ireland';
+		case 'IRQ':
+			return 'Iraq';
+		case 'ISL':
+			return 'Iceland';
+		case 'ISR':
+			return 'Israel';
+		case 'ISV':
+			return 'Virgin Islands';
+		case 'ITA':
+			return 'Italy';
+		case 'IVB':
+			return 'British Virgin Islands';
+		case 'JAM':
+			return 'Jamaica';
+		case 'JOR':
+			return 'Jordan';
+		case 'JPN':
+			return 'Japan';
+		case 'KAZ':
+			return 'Kazakhstan';
+		case 'KEN':
+			return 'Kenya';
+		case 'KGZ':
+			return 'Kyrgyzstan';
+		case 'KIR':
+			return 'Kiribati';
+		case 'KOR':
+			return 'South Korea';
+		case 'KOS':
+			return 'Kosovo';
+		case 'KSA':
+			return 'Saudi Arabia';
+		case 'KUW':
+			return 'Kuwait';
+		case 'LAO':
+			return 'Laos';
+		case 'LAT':
+			return 'Latvia';
+		case 'LBA':
+			return 'Libya';
+		case 'LBN':
+			return 'Lebanon';
+		case 'LBR':
+			return 'Liberia';
+		case 'LCA':
+			return 'Saint Lucia';
+		case 'LES':
+			return 'Lesotho';
+		case 'LIE':
+			return 'Liechtenstein';
+		case 'LTU':
+			return 'Lithuania';
+		case 'LUX':
+			return 'Luxembourg';
+		case 'MAD':
+			return 'Madagascar';
+		case 'MAR':
+			return 'Morocco';
+		case 'MAS':
+			return 'Malaysia';
+		case 'MAW':
+			return 'Malawi';
+		case 'MDA':
+			return 'Moldova';
+		case 'MDV':
+			return 'Maldives';
+		case 'MEX':
+			return 'Mexico';
+		case 'MGL':
+			return 'Mongolia';
+		case 'MHL':
+			return 'Marshall Islands';
+		case 'MKD':
+			return 'North Macedonia';
+		case 'MLI':
+			return 'Mali';
+		case 'MLT':
+			return 'Malta';
+		case 'MNE':
+			return 'Montenegro';
+		case 'MON':
+			return 'Monaco';
+		case 'MOZ':
+			return 'Mozambique';
+		case 'MRI':
+			return 'Mauritius';
+		case 'MTN':
+			return 'Mauritania';
+		case 'MYA':
+			return 'Myanmar';
+		case 'NAM':
+			return 'Namibia';
+		case 'NCA':
+			return 'Nicaragua';
+		case 'NED':
+			return 'Netherlands';
+		case 'NEP':
+			return 'Nepal';
+		case 'NGR':
+			return 'Nigeria';
+		case 'NIG':
+			return 'Niger';
+		case 'NOR':
+			return 'Norway';
+		case 'NRU':
+			return 'Nauru';
+		case 'NZL':
+			return 'New Zealand';
+		case 'OMA':
+			return 'Oman';
+		case 'PAK':
+			return 'Pakistan';
+		case 'PAN':
+			return 'Panama';
+		case 'PAR':
+			return 'Paraguay';
+		case 'PER':
+			return 'Peru';
+		case 'PHI':
+			return 'Philippines';
+		case 'PLE':
+			return 'Palestine';
+		case 'PLW':
+			return 'Palau';
+		case 'PNG':
+			return 'Papua New Guinea';
+		case 'POL':
+			return 'Poland';
+		case 'POR':
+			return 'Portugal';
+		case 'PRK':
+			return 'North Korea';
+		case 'PUR':
+			return 'Puerto Rico';
+		case 'QAT':
+			return 'Qatar';
+		case 'ROU':
+			return 'Romania';
+		case 'RSA':
+			return 'South Africa';
+		case 'RUS':
+			return 'Russia';
+		case 'RWA':
+			return 'Rwanda';
+		case 'SAM':
+			return 'Samoa';
+		case 'SEN':
+			return 'Senegal';
+		case 'SEY':
+			return 'Seychelles';
+		case 'SGP':
+			return 'Singapore';
+		case 'SKN':
+			return 'Saint Kitts and Nevis';
+		case 'SLE':
+			return 'Sierra Leone';
+		case 'SLO':
+			return 'Slovenia';
+		case 'SMR':
+			return 'San Marino';
+		case 'SOL':
+			return 'Solomon Islands';
+		case 'SOM':
+			return 'Somalia';
+		case 'SRB':
+			return 'Serbia';
+		case 'SRI':
+			return 'Sri Lanka';
+		case 'SSD':
+			return 'South Sudan';
+		case 'STP':
+			return 'São Tomé and Príncipe';
+		case 'SUD':
+			return 'Sudan';
+		case 'SUI':
+			return 'Switzerland';
+		case 'SUR':
+			return 'Suriname';
+		case 'SVK':
+			return 'Slovakia';
+		case 'SWE':
+			return 'Sweden';
+		case 'SWZ':
+			return 'Eswatini';
+		case 'SYR':
+			return 'Syria';
+		case 'TAN':
+			return 'Tanzania';
+		case 'TGA':
+			return 'Tonga';
+		case 'THA':
+			return 'Thailand';
+		case 'TJK':
+			return 'Tajikistan';
+		case 'TKM':
+			return 'Turkmenistan';
+		case 'TLS':
+			return 'Timor-Leste';
+		case 'TOG':
+			return 'Togo';
+		case 'TPE':
+			return 'Taiwan';
+		case 'TTO':
+			return 'Trinidad and Tobago';
+		case 'TUN':
+			return 'Tunisia';
+		case 'TUR':
+			return 'Turkey';
+		case 'TUV':
+			return 'Tuvalu';
+		case 'UAE':
+			return 'United Arab Emirates';
+		case 'UGA':
+			return 'Uganda';
+		case 'UKR':
+			return 'Ukraine';
+		case 'URU':
+			return 'Uruguay';
+		case 'USA':
+			return 'United States';
+		case 'UZB':
+			return 'Uzbekistan';
+		case 'VAN':
+			return 'Vanuatu';
+		case 'VEN':
+			return 'Venezuela';
+		case 'VIE':
+			return 'Vietnam';
+		case 'VIN':
+			return 'Saint Vincent and the Grenadines';
+		case 'YEM':
+			return 'Yemen';
+		case 'ZAM':
+			return 'Zambia';
+		case 'ZIM':
+			return 'Zimbabwe';
+		default:
+			return code;
+	}
+};
+var $author$project$Helpers$countryFromNoc = $author$project$Helpers$nocToCountry;
 var $BrianHicks$elm_csv$Csv$Decode$FieldNamesFromFirstRow = {$: 'FieldNamesFromFirstRow'};
 var $BrianHicks$elm_csv$Csv$Decode$ParsingError = function (a) {
 	return {$: 'ParsingError', a: a};
@@ -6954,13 +7436,23 @@ var $author$project$Model$normalizeCountry = function (name) {
 			return 'Côte d\'Ivoire';
 		case 'DPR Korea':
 			return 'North Korea';
+		case 'Democratic People\'s Republic of Korea':
+			return 'North Korea';
+		case 'Republic of Korea':
+			return 'South Korea';
 		case 'Korea':
 			return 'South Korea';
 		case 'IR Iran':
 			return 'Iran';
+		case 'Islamic Republic of Iran':
+			return 'Iran';
 		case 'Czech Republic':
 			return 'Czechia';
 		case 'Czech Republic (Czechia)':
+			return 'Czechia';
+		case 'Bohemia':
+			return 'Czechia';
+		case 'Czechoslovakia':
 			return 'Czechia';
 		case 'Republic of Ireland':
 			return 'Ireland';
@@ -6974,6 +7466,38 @@ var $author$project$Model$normalizeCountry = function (name) {
 			return 'Moldova';
 		case 'Great Britain':
 			return 'United Kingdom';
+		case 'Russian Federation':
+			return 'Russia';
+		case 'Russian Olympic Committee':
+			return 'Russia';
+		case 'ROC':
+			return 'Russia';
+		case 'Soviet Union':
+			return 'Russia';
+		case 'Unified Team':
+			return 'Russia';
+		case 'East Germany':
+			return 'Germany';
+		case 'West Germany':
+			return 'Germany';
+		case 'People\'s Republic of China':
+			return 'China';
+		case 'United Arab Republic':
+			return 'Egypt';
+		case 'Syrian Arab Republic':
+			return 'Syria';
+		case 'Kingdom of Saudi Arabia':
+			return 'Saudi Arabia';
+		case 'United Republic of Tanzania':
+			return 'Tanzania';
+		case 'The Bahamas':
+			return 'Bahamas';
+		case 'Netherlands Antilles':
+			return 'Netherlands';
+		case 'West Indies Federation':
+			return 'Jamaica';
+		case 'Australasia':
+			return 'Australia';
 		default:
 			return name;
 	}
@@ -7236,77 +7760,106 @@ var $BrianHicks$elm_csv$Csv$Decode$int = $BrianHicks$elm_csv$Csv$Decode$fromStri
 				$BrianHicks$elm_csv$Csv$Decode$ExpectedInt(value));
 		}
 	});
-var $author$project$Model$participationDecoder = A2(
+var $author$project$Model$decoderHistory = A2(
 	$BrianHicks$elm_csv$Csv$Decode$pipeline,
-	A2($BrianHicks$elm_csv$Csv$Decode$field, 'Medal', $BrianHicks$elm_csv$Csv$Decode$string),
+	A2($BrianHicks$elm_csv$Csv$Decode$field, 'total', $BrianHicks$elm_csv$Csv$Decode$int),
 	A2(
 		$BrianHicks$elm_csv$Csv$Decode$pipeline,
-		A2($BrianHicks$elm_csv$Csv$Decode$field, 'Event', $BrianHicks$elm_csv$Csv$Decode$string),
+		A2($BrianHicks$elm_csv$Csv$Decode$field, 'bronze', $BrianHicks$elm_csv$Csv$Decode$int),
 		A2(
 			$BrianHicks$elm_csv$Csv$Decode$pipeline,
-			A2($BrianHicks$elm_csv$Csv$Decode$field, 'Sport', $BrianHicks$elm_csv$Csv$Decode$string),
+			A2($BrianHicks$elm_csv$Csv$Decode$field, 'silver', $BrianHicks$elm_csv$Csv$Decode$int),
 			A2(
 				$BrianHicks$elm_csv$Csv$Decode$pipeline,
-				A2($BrianHicks$elm_csv$Csv$Decode$field, 'City', $BrianHicks$elm_csv$Csv$Decode$string),
+				A2($BrianHicks$elm_csv$Csv$Decode$field, 'gold', $BrianHicks$elm_csv$Csv$Decode$int),
 				A2(
 					$BrianHicks$elm_csv$Csv$Decode$pipeline,
-					A2($BrianHicks$elm_csv$Csv$Decode$field, 'Season', $BrianHicks$elm_csv$Csv$Decode$string),
+					A2($BrianHicks$elm_csv$Csv$Decode$field, 'country', $BrianHicks$elm_csv$Csv$Decode$string),
 					A2(
 						$BrianHicks$elm_csv$Csv$Decode$pipeline,
-						A2($BrianHicks$elm_csv$Csv$Decode$field, 'Year', $BrianHicks$elm_csv$Csv$Decode$int),
+						A2($BrianHicks$elm_csv$Csv$Decode$field, 'year', $BrianHicks$elm_csv$Csv$Decode$int),
 						A2(
 							$BrianHicks$elm_csv$Csv$Decode$pipeline,
-							A2($BrianHicks$elm_csv$Csv$Decode$field, 'NOC', $BrianHicks$elm_csv$Csv$Decode$string),
-							A2(
-								$BrianHicks$elm_csv$Csv$Decode$pipeline,
-								A2($BrianHicks$elm_csv$Csv$Decode$field, 'Team', $BrianHicks$elm_csv$Csv$Decode$string),
-								A2(
-									$BrianHicks$elm_csv$Csv$Decode$pipeline,
-									A2($BrianHicks$elm_csv$Csv$Decode$field, 'Sex', $BrianHicks$elm_csv$Csv$Decode$string),
-									A2(
-										$BrianHicks$elm_csv$Csv$Decode$pipeline,
-										A2($BrianHicks$elm_csv$Csv$Decode$field, 'Name', $BrianHicks$elm_csv$Csv$Decode$string),
-										A2(
-											$BrianHicks$elm_csv$Csv$Decode$pipeline,
-											A2($BrianHicks$elm_csv$Csv$Decode$field, 'player_id', $BrianHicks$elm_csv$Csv$Decode$int),
-											$BrianHicks$elm_csv$Csv$Decode$into(
-												function (playerId) {
-													return function (name) {
-														return function (sex) {
-															return function (team) {
-																return function (noc) {
-																	return function (year) {
-																		return function (season) {
-																			return function (city) {
-																				return function (sport) {
-																					return function (event) {
-																						return function (medal) {
-																							return {
-																								city: city,
-																								event: event,
-																								medal: medal,
-																								name: name,
-																								noc: noc,
-																								playerId: playerId,
-																								season: season,
-																								sex: sex,
-																								sport: sport,
-																								team: $author$project$Model$normalizeCountry(team),
-																								year: year
-																							};
-																						};
-																					};
-																				};
-																			};
-																		};
-																	};
-																};
-															};
-														};
-													};
-												}))))))))))));
+							A2($BrianHicks$elm_csv$Csv$Decode$field, 'edition', $BrianHicks$elm_csv$Csv$Decode$string),
+							$BrianHicks$elm_csv$Csv$Decode$into(
+								F7(
+									function (edition, year, country, gold, silver, bronze, total) {
+										return {
+											bronze: bronze,
+											country: $author$project$Model$normalizeCountry(country),
+											edition: edition,
+											gold: gold,
+											placement: 0,
+											silver: silver,
+											total: total,
+											year: year
+										};
+									})))))))));
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$String$toLower = _String_toLower;
+var $author$project$Model$decodeOlyHistroyCsv = function (body) {
+	var _v0 = A3($BrianHicks$elm_csv$Csv$Decode$decodeCsv, $BrianHicks$elm_csv$Csv$Decode$FieldNamesFromFirstRow, $author$project$Model$decoderHistory, body);
+	if (_v0.$ === 'Ok') {
+		var rows = _v0.a;
+		return $elm$core$Result$Ok(
+			A2(
+				$elm$core$List$map,
+				function (row) {
+					return {
+						bronze: row.bronze,
+						country: $author$project$Model$normalizeCountry(row.country),
+						gold: row.gold,
+						placement: row.placement,
+						silver: row.silver,
+						total: row.total,
+						year: row.year
+					};
+				},
+				A2(
+					$elm$core$List$filter,
+					function (row) {
+						return A2(
+							$elm$core$String$contains,
+							'summer',
+							$elm$core$String$toLower(row.edition));
+					},
+					rows)));
+	} else {
+		return $elm$core$Result$Err('CSV decode error');
+	}
+};
+var $author$project$Model$decoder2024 = A2(
+	$BrianHicks$elm_csv$Csv$Decode$pipeline,
+	A2($BrianHicks$elm_csv$Csv$Decode$field, 'country_code', $BrianHicks$elm_csv$Csv$Decode$string),
+	A2(
+		$BrianHicks$elm_csv$Csv$Decode$pipeline,
+		A2($BrianHicks$elm_csv$Csv$Decode$field, 'event', $BrianHicks$elm_csv$Csv$Decode$string),
+		A2(
+			$BrianHicks$elm_csv$Csv$Decode$pipeline,
+			A2($BrianHicks$elm_csv$Csv$Decode$field, 'discipline', $BrianHicks$elm_csv$Csv$Decode$string),
+			A2(
+				$BrianHicks$elm_csv$Csv$Decode$pipeline,
+				A2($BrianHicks$elm_csv$Csv$Decode$field, 'name', $BrianHicks$elm_csv$Csv$Decode$string),
+				A2(
+					$BrianHicks$elm_csv$Csv$Decode$pipeline,
+					A2($BrianHicks$elm_csv$Csv$Decode$field, 'medal_type', $BrianHicks$elm_csv$Csv$Decode$string),
+					$BrianHicks$elm_csv$Csv$Decode$into(
+						F5(
+							function (medal_type, name, discipline, event, country_code) {
+								return {event: event, medal: medal_type, name: name, noc: country_code, sport: discipline, year: 2024};
+							})))))));
 var $author$project$Model$decodeOlympiaCsv = function (body) {
-	var _v0 = A3($BrianHicks$elm_csv$Csv$Decode$decodeCsv, $BrianHicks$elm_csv$Csv$Decode$FieldNamesFromFirstRow, $author$project$Model$participationDecoder, body);
+	var _v0 = A3($BrianHicks$elm_csv$Csv$Decode$decodeCsv, $BrianHicks$elm_csv$Csv$Decode$FieldNamesFromFirstRow, $author$project$Model$decoder2024, body);
 	if (_v0.$ === 'Ok') {
 		var rows = _v0.a;
 		return $elm$core$Result$Ok(rows);
@@ -7381,17 +7934,6 @@ var $elm_community$list_extra$List$Extra$elemIndex = function (x) {
 	return $elm_community$list_extra$List$Extra$findIndex(
 		$elm$core$Basics$eq(x));
 };
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $author$project$Model$filterByYear = F2(
 	function (year, participations) {
 		return A2(
@@ -7489,499 +8031,19 @@ var $elm$core$Maybe$map = F2(
 		}
 	});
 var $elm$core$Basics$neq = _Utils_notEqual;
-var $elm$core$String$toUpper = _String_toUpper;
-var $author$project$Helpers$nocToCountry = function (code) {
-	var _v0 = $elm$core$String$toUpper(code);
-	switch (_v0) {
-		case 'AIN':
-			return 'Individual Neutral Athletes';
-		case 'ANZ':
-			return 'Australasia';
-		case 'AHO':
-			return 'Netherlands Antilles';
-		case 'BOH':
-			return 'Bohemia';
-		case 'COR':
-			return 'Korea Team';
-		case 'CRT':
-			return 'Crete';
-		case 'EOR':
-			return 'Refugee Olympic Team';
-		case 'EUA':
-			return 'United Team of Germany';
-		case 'EUN':
-			return 'Unified Team';
-		case 'FRG':
-			return 'West Germany';
-		case 'GDR':
-			return 'East Germany';
-		case 'IOA':
-			return 'Independent Olympic Athletes';
-		case 'LIB':
-			return 'Lebanon';
-		case 'MAL':
-			return 'Malaya';
-		case 'MIX':
-			return 'Mixed team';
-		case 'NFL':
-			return 'Newfoundland';
-		case 'NBO':
-			return 'North Borneo';
-		case 'ROC':
-			return 'Russian Olympic Committee';
-		case 'ROT':
-			return 'Refugee Olympic Athletes';
-		case 'RHO':
-			return 'Rhodesia';
-		case 'SAA':
-			return 'Saar';
-		case 'SCG':
-			return 'Serbia and Montenegro';
-		case 'TCH':
-			return 'Czechoslovakia';
-		case 'UAR':
-			return 'United Arab Republic';
-		case 'UNK':
-			return 'Unknown';
-		case 'URS':
-			return 'Soviet Union';
-		case 'VNM':
-			return 'South Vietnam';
-		case 'WIF':
-			return 'West Indies Federation';
-		case 'YAR':
-			return 'North Yemen';
-		case 'YMD':
-			return 'South Yemen';
-		case 'YUG':
-			return 'Yugoslavia';
-		case 'AFG':
-			return 'Afghanistan';
-		case 'ALB':
-			return 'Albania';
-		case 'ALG':
-			return 'Algeria';
-		case 'AND':
-			return 'Andorra';
-		case 'ANG':
-			return 'Angola';
-		case 'ANT':
-			return 'Antigua and Barbuda';
-		case 'ARG':
-			return 'Argentina';
-		case 'ARM':
-			return 'Armenia';
-		case 'ARU':
-			return 'Aruba';
-		case 'ASA':
-			return 'American Samoa';
-		case 'AUS':
-			return 'Australia';
-		case 'AUT':
-			return 'Austria';
-		case 'AZE':
-			return 'Azerbaijan';
-		case 'BAH':
-			return 'Bahamas';
-		case 'BAN':
-			return 'Bangladesh';
-		case 'BAR':
-			return 'Barbados';
-		case 'BDI':
-			return 'Burundi';
-		case 'BEL':
-			return 'Belgium';
-		case 'BEN':
-			return 'Benin';
-		case 'BER':
-			return 'Bermuda';
-		case 'BHU':
-			return 'Bhutan';
-		case 'BIH':
-			return 'Bosnia and Herzegovina';
-		case 'BIZ':
-			return 'Belize';
-		case 'BLR':
-			return 'Belarus';
-		case 'BOL':
-			return 'Bolivia';
-		case 'BOT':
-			return 'Botswana';
-		case 'BRA':
-			return 'Brazil';
-		case 'BRN':
-			return 'Bahrain';
-		case 'BRU':
-			return 'Brunei';
-		case 'BUL':
-			return 'Bulgaria';
-		case 'BUR':
-			return 'Burkina Faso';
-		case 'CAF':
-			return 'Central African Republic';
-		case 'CAM':
-			return 'Cambodia';
-		case 'CAN':
-			return 'Canada';
-		case 'CAY':
-			return 'Cayman Islands';
-		case 'CGO':
-			return 'Republic of the Congo';
-		case 'CHA':
-			return 'Chad';
-		case 'CHI':
-			return 'Chile';
-		case 'CHN':
-			return 'China';
-		case 'CIV':
-			return 'Côte d\'Ivoire';
-		case 'CMR':
-			return 'Cameroon';
-		case 'COD':
-			return 'Democratic Republic of the Congo';
-		case 'COK':
-			return 'Cook Islands';
-		case 'COL':
-			return 'Colombia';
-		case 'COM':
-			return 'Comoros';
-		case 'CPV':
-			return 'Cape Verde';
-		case 'CRC':
-			return 'Costa Rica';
-		case 'CRO':
-			return 'Croatia';
-		case 'CUB':
-			return 'Cuba';
-		case 'CYP':
-			return 'Cyprus';
-		case 'CZE':
-			return 'Czechia';
-		case 'DEN':
-			return 'Denmark';
-		case 'DJI':
-			return 'Djibouti';
-		case 'DMA':
-			return 'Dominica';
-		case 'DOM':
-			return 'Dominican Republic';
-		case 'ECU':
-			return 'Ecuador';
-		case 'EGY':
-			return 'Egypt';
-		case 'ERI':
-			return 'Eritrea';
-		case 'ESA':
-			return 'El Salvador';
-		case 'ESP':
-			return 'Spain';
-		case 'EST':
-			return 'Estonia';
-		case 'ETH':
-			return 'Ethiopia';
-		case 'FIJ':
-			return 'Fiji';
-		case 'FIN':
-			return 'Finland';
-		case 'FRA':
-			return 'France';
-		case 'FSM':
-			return 'Micronesia';
-		case 'GAB':
-			return 'Gabon';
-		case 'GAM':
-			return 'Gambia';
-		case 'GBR':
-			return 'United Kingdom';
-		case 'GBS':
-			return 'Guinea-Bissau';
-		case 'GEO':
-			return 'Georgia';
-		case 'GEQ':
-			return 'Equatorial Guinea';
-		case 'GER':
-			return 'Germany';
-		case 'GHA':
-			return 'Ghana';
-		case 'GRE':
-			return 'Greece';
-		case 'GRN':
-			return 'Grenada';
-		case 'GUA':
-			return 'Guatemala';
-		case 'GUI':
-			return 'Guinea';
-		case 'GUM':
-			return 'Guam';
-		case 'GUY':
-			return 'Guyana';
-		case 'HAI':
-			return 'Haiti';
-		case 'HKG':
-			return 'Hong Kong';
-		case 'HON':
-			return 'Honduras';
-		case 'HUN':
-			return 'Hungary';
-		case 'INA':
-			return 'Indonesia';
-		case 'IND':
-			return 'India';
-		case 'IRI':
-			return 'Iran';
-		case 'IRL':
-			return 'Ireland';
-		case 'IRQ':
-			return 'Iraq';
-		case 'ISL':
-			return 'Iceland';
-		case 'ISR':
-			return 'Israel';
-		case 'ISV':
-			return 'Virgin Islands';
-		case 'ITA':
-			return 'Italy';
-		case 'IVB':
-			return 'British Virgin Islands';
-		case 'JAM':
-			return 'Jamaica';
-		case 'JOR':
-			return 'Jordan';
-		case 'JPN':
-			return 'Japan';
-		case 'KAZ':
-			return 'Kazakhstan';
-		case 'KEN':
-			return 'Kenya';
-		case 'KGZ':
-			return 'Kyrgyzstan';
-		case 'KIR':
-			return 'Kiribati';
-		case 'KOR':
-			return 'South Korea';
-		case 'KOS':
-			return 'Kosovo';
-		case 'KSA':
-			return 'Saudi Arabia';
-		case 'KUW':
-			return 'Kuwait';
-		case 'LAO':
-			return 'Laos';
-		case 'LAT':
-			return 'Latvia';
-		case 'LBA':
-			return 'Libya';
-		case 'LBN':
-			return 'Lebanon';
-		case 'LBR':
-			return 'Liberia';
-		case 'LCA':
-			return 'Saint Lucia';
-		case 'LES':
-			return 'Lesotho';
-		case 'LIE':
-			return 'Liechtenstein';
-		case 'LTU':
-			return 'Lithuania';
-		case 'LUX':
-			return 'Luxembourg';
-		case 'MAD':
-			return 'Madagascar';
-		case 'MAR':
-			return 'Morocco';
-		case 'MAS':
-			return 'Malaysia';
-		case 'MAW':
-			return 'Malawi';
-		case 'MDA':
-			return 'Moldova';
-		case 'MDV':
-			return 'Maldives';
-		case 'MEX':
-			return 'Mexico';
-		case 'MGL':
-			return 'Mongolia';
-		case 'MHL':
-			return 'Marshall Islands';
-		case 'MKD':
-			return 'North Macedonia';
-		case 'MLI':
-			return 'Mali';
-		case 'MLT':
-			return 'Malta';
-		case 'MNE':
-			return 'Montenegro';
-		case 'MON':
-			return 'Monaco';
-		case 'MOZ':
-			return 'Mozambique';
-		case 'MRI':
-			return 'Mauritius';
-		case 'MTN':
-			return 'Mauritania';
-		case 'MYA':
-			return 'Myanmar';
-		case 'NAM':
-			return 'Namibia';
-		case 'NCA':
-			return 'Nicaragua';
-		case 'NED':
-			return 'Netherlands';
-		case 'NEP':
-			return 'Nepal';
-		case 'NGR':
-			return 'Nigeria';
-		case 'NIG':
-			return 'Niger';
-		case 'NOR':
-			return 'Norway';
-		case 'NRU':
-			return 'Nauru';
-		case 'NZL':
-			return 'New Zealand';
-		case 'OMA':
-			return 'Oman';
-		case 'PAK':
-			return 'Pakistan';
-		case 'PAN':
-			return 'Panama';
-		case 'PAR':
-			return 'Paraguay';
-		case 'PER':
-			return 'Peru';
-		case 'PHI':
-			return 'Philippines';
-		case 'PLE':
-			return 'Palestine';
-		case 'PLW':
-			return 'Palau';
-		case 'PNG':
-			return 'Papua New Guinea';
-		case 'POL':
-			return 'Poland';
-		case 'POR':
-			return 'Portugal';
-		case 'PRK':
-			return 'North Korea';
-		case 'PUR':
-			return 'Puerto Rico';
-		case 'QAT':
-			return 'Qatar';
-		case 'ROU':
-			return 'Romania';
-		case 'RSA':
-			return 'South Africa';
-		case 'RUS':
-			return 'Russia';
-		case 'RWA':
-			return 'Rwanda';
-		case 'SAM':
-			return 'Samoa';
-		case 'SEN':
-			return 'Senegal';
-		case 'SEY':
-			return 'Seychelles';
-		case 'SGP':
-			return 'Singapore';
-		case 'SKN':
-			return 'Saint Kitts and Nevis';
-		case 'SLE':
-			return 'Sierra Leone';
-		case 'SLO':
-			return 'Slovenia';
-		case 'SMR':
-			return 'San Marino';
-		case 'SOL':
-			return 'Solomon Islands';
-		case 'SOM':
-			return 'Somalia';
-		case 'SRB':
-			return 'Serbia';
-		case 'SRI':
-			return 'Sri Lanka';
-		case 'SSD':
-			return 'South Sudan';
-		case 'STP':
-			return 'São Tomé and Príncipe';
-		case 'SUD':
-			return 'Sudan';
-		case 'SUI':
-			return 'Switzerland';
-		case 'SUR':
-			return 'Suriname';
-		case 'SVK':
-			return 'Slovakia';
-		case 'SWE':
-			return 'Sweden';
-		case 'SWZ':
-			return 'Eswatini';
-		case 'SYR':
-			return 'Syria';
-		case 'TAN':
-			return 'Tanzania';
-		case 'TGA':
-			return 'Tonga';
-		case 'THA':
-			return 'Thailand';
-		case 'TJK':
-			return 'Tajikistan';
-		case 'TKM':
-			return 'Turkmenistan';
-		case 'TLS':
-			return 'Timor-Leste';
-		case 'TOG':
-			return 'Togo';
-		case 'TPE':
-			return 'Taiwan';
-		case 'TTO':
-			return 'Trinidad and Tobago';
-		case 'TUN':
-			return 'Tunisia';
-		case 'TUR':
-			return 'Turkey';
-		case 'TUV':
-			return 'Tuvalu';
-		case 'UAE':
-			return 'United Arab Emirates';
-		case 'UGA':
-			return 'Uganda';
-		case 'UKR':
-			return 'Ukraine';
-		case 'URU':
-			return 'Uruguay';
-		case 'USA':
-			return 'United States';
-		case 'UZB':
-			return 'Uzbekistan';
-		case 'VAN':
-			return 'Vanuatu';
-		case 'VEN':
-			return 'Venezuela';
-		case 'VIE':
-			return 'Vietnam';
-		case 'VIN':
-			return 'Saint Vincent and the Grenadines';
-		case 'YEM':
-			return 'Yemen';
-		case 'ZAM':
-			return 'Zambia';
-		case 'ZIM':
-			return 'Zimbabwe';
-		default:
-			return code;
-	}
-};
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
+var $elm$core$Basics$not = _Basics_not;
+var $author$project$Model$olympiaHistoryCsvUrl = '/data/medalsHistory.csv';
 var $author$project$Model$axisLabel = function (aid) {
 	switch (aid) {
 		case 'medals':
-			return 'Medaillenspiegel';
+			return 'Anzahl Medaillen';
 		case 'pop':
-			return 'Einwohner';
+			return 'Medaillen pro Einwohner';
 		case 'gdp':
-			return 'BIP';
+			return 'Medaillen pro BIP';
 		case 'age':
-			return 'Median-Alter';
+			return 'Medaillen pro Median-Alter';
 		default:
 			return aid;
 	}
@@ -8017,7 +8079,7 @@ var $author$project$Model$toPCModel = function (model) {
 	var popBy = A2(
 		$elm$core$Dict$map,
 		F2(
-			function (_v3, v) {
+			function (_v2, v) {
 				return v.population;
 			}),
 		model.populationByCountry);
@@ -8058,75 +8120,48 @@ var $author$project$Model$toPCModel = function (model) {
 	var ageBy = A2(
 		$elm$core$Dict$map,
 		F2(
-			function (_v2, v) {
+			function (_v1, v) {
 				return v.medianAge;
 			}),
 		model.populationByCountry);
 	var getValue = F2(
 		function (axisId, country) {
-			if (model.useRelative) {
-				var total_medals = A2(
-					$elm$core$Maybe$withDefault,
-					_Utils_Tuple2(9999, 0),
-					A2($elm$core$Dict$get, country, placementBy)).b;
-				switch (axisId) {
-					case 'medals':
-						return A2(
-							$elm$core$Maybe$withDefault,
-							_Utils_Tuple2(9999, 0),
-							A2($elm$core$Dict$get, country, placementBy)).a;
-					case 'pop':
-						return A2(
-							safeDiv,
-							total_medals,
-							A2(
-								$elm$core$Maybe$withDefault,
-								0,
-								A2($elm$core$Dict$get, country, popBy)));
-					case 'gdp':
-						return A2(
-							safeDiv,
-							total_medals,
-							A2(
-								$elm$core$Maybe$withDefault,
-								0,
-								A2($elm$core$Dict$get, country, gdpBy)));
-					case 'age':
-						return A2(
-							safeDiv,
-							total_medals,
-							A2(
-								$elm$core$Maybe$withDefault,
-								0,
-								A2($elm$core$Dict$get, country, ageBy)));
-					default:
-						return 0;
-				}
-			} else {
-				switch (axisId) {
-					case 'medals':
-						return A2(
-							$elm$core$Maybe$withDefault,
-							_Utils_Tuple2(9999, 0),
-							A2($elm$core$Dict$get, country, placementBy)).a;
-					case 'pop':
-						return A2(
+			var total_medals = A2(
+				$elm$core$Maybe$withDefault,
+				_Utils_Tuple2(9999, 0),
+				A2($elm$core$Dict$get, country, placementBy)).b;
+			switch (axisId) {
+				case 'medals':
+					return A2(
+						$elm$core$Maybe$withDefault,
+						_Utils_Tuple2(9999, 0),
+						A2($elm$core$Dict$get, country, placementBy)).a;
+				case 'pop':
+					return A2(
+						safeDiv,
+						total_medals,
+						A2(
 							$elm$core$Maybe$withDefault,
 							0,
-							A2($elm$core$Dict$get, country, popBy));
-					case 'gdp':
-						return A2(
+							A2($elm$core$Dict$get, country, popBy)));
+				case 'gdp':
+					return A2(
+						safeDiv,
+						total_medals,
+						A2(
 							$elm$core$Maybe$withDefault,
 							0,
-							A2($elm$core$Dict$get, country, gdpBy));
-					case 'age':
-						return A2(
+							A2($elm$core$Dict$get, country, gdpBy)));
+				case 'age':
+					return A2(
+						safeDiv,
+						total_medals,
+						A2(
 							$elm$core$Maybe$withDefault,
 							0,
-							A2($elm$core$Dict$get, country, ageBy));
-					default:
-						return 0;
-				}
+							A2($elm$core$Dict$get, country, ageBy)));
+				default:
+					return 0;
 			}
 		});
 	var seriesFor = function (country) {
@@ -8143,13 +8178,23 @@ var $author$project$Model$toPCModel = function (model) {
 		};
 	};
 	var series = A2($elm$core$List$map, seriesFor, countries);
-	return {axes: axes, hovered: model.pcHover, ranking: model.ranking, series: series};
+	return {axes: axes, hovered: model.pcHover, series: series};
 };
 var $author$project$Model$recomputePcModel = function (m) {
 	return _Utils_update(
 		m,
 		{
 			pcmodel: $author$project$Model$toPCModel(m)
+		});
+};
+var $author$project$Model$OlympiaHistroyReceived = function (a) {
+	return {$: 'OlympiaHistroyReceived', a: a};
+};
+var $author$project$Model$requestOlyHistoryCsv = function (url) {
+	return $elm$http$Http$get(
+		{
+			expect: $elm$http$Http$expectString($author$project$Model$OlympiaHistroyReceived),
+			url: url
 		});
 };
 var $elm$core$List$takeReverse = F3(
@@ -8284,6 +8329,10 @@ var $elm_community$list_extra$List$Extra$splitAt = F2(
 			A2($elm$core$List$take, n, xs),
 			A2($elm$core$List$drop, n, xs));
 	});
+var $elm$core$List$sortBy = _List_sortBy;
+var $elm$core$List$sort = function (xs) {
+	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
+};
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -8314,10 +8363,6 @@ var $elm$core$List$member = F2(
 			},
 			xs);
 	});
-var $elm$core$List$sortBy = _List_sortBy;
-var $elm$core$List$sort = function (xs) {
-	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
-};
 var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
 	function (f, existing, remaining, accumulator) {
 		uniqueHelp:
@@ -8356,13 +8401,7 @@ var $elm_community$list_extra$List$Extra$unique = function (list) {
 	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, _List_Nil, list, _List_Nil);
 };
 var $author$project$Model$toHMModel = F2(
-	function (parts, teams) {
-		var medalEntries = A2(
-			$elm$core$List$filter,
-			function (p) {
-				return (p.medal !== 'No medal') && (p.medal !== 'NA');
-			},
-			$author$project$Model$filterSportsEventMedal(parts));
+	function (rows, teams) {
 		var allYears = $elm_community$list_extra$List$Extra$unique(
 			$elm$core$List$sort(
 				A2(
@@ -8370,26 +8409,19 @@ var $author$project$Model$toHMModel = F2(
 					function ($) {
 						return $.year;
 					},
-					medalEntries)));
-		var addCount = F2(
+					rows)));
+		var addRow = F2(
 			function (p, dict) {
-				var country = $author$project$Model$normalizeCountry(
-					$author$project$Helpers$nocToCountry(p.noc));
-				if (($elm$core$String$length(country) <= 600) && (A2($elm$core$List$member, p.year, allYears) && ((country !== 'Refugee Olympic Team') && (country !== 'Individual Neutral Athletes')))) {
-					var key = _Utils_Tuple2(country, p.year);
-					return A3(
-						$elm$core$Dict$update,
-						key,
-						function (m) {
-							return $elm$core$Maybe$Just(
-								A2($elm$core$Maybe$withDefault, 0, m) + 1);
-						},
-						dict);
-				} else {
-					return dict;
-				}
+				var country = $author$project$Model$normalizeCountry(p.country);
+				return ((country !== 'Refugee Olympic Team') && (country !== 'Individual Neutral Athletes')) ? A3(
+					$elm$core$Dict$update,
+					_Utils_Tuple2(country, p.year),
+					function (_v0) {
+						return $elm$core$Maybe$Just(p.total);
+					},
+					dict) : dict;
 			});
-		var countsBy = A3($elm$core$List$foldl, addCount, $elm$core$Dict$empty, medalEntries);
+		var countsBy = A3($elm$core$List$foldl, addRow, $elm$core$Dict$empty, rows);
 		var dataMatrix = A2(
 			$elm$core$List$map,
 			function (team) {
@@ -8411,7 +8443,8 @@ var $author$project$Model$toHMModel = F2(
 			columnLabels: A2($elm$core$List$map, $elm$core$String$fromInt, allYears),
 			data: dataMatrix,
 			rowLabels: teams,
-			selected: $elm$core$Maybe$Nothing
+			selected: $elm$core$Maybe$Nothing,
+			sortByMedalTable: true
 		};
 	});
 var $elm$core$Tuple$pair = F2(
@@ -8436,7 +8469,7 @@ var $author$project$Model$toMedalTable = function (participations) {
 					return _Utils_eq(prevTriple, triple) ? prevRank : (idx + 1);
 				}
 			}();
-			var row = {bronze: c.bronze, country: c.country, gold: c.gold, placement: rank, silver: c.silver, total: (c.gold + c.silver) + c.bronze};
+			var row = {bronze: c.bronze, country: c.country, gold: c.gold, placement: rank, silver: c.silver, total: (c.gold + c.silver) + c.bronze, year: 2024};
 			return _Utils_Tuple3(
 				$elm$core$Maybe$Just(triple),
 				rank,
@@ -8452,11 +8485,11 @@ var $author$project$Model$toMedalTable = function (participations) {
 			var s = _v6.b;
 			var b = _v6.c;
 			switch (medal) {
-				case 'Gold':
+				case 'Gold Medal':
 					return _Utils_Tuple3(g + 1, s, b);
-				case 'Silver':
+				case 'Silver Medal':
 					return _Utils_Tuple3(g, s + 1, b);
-				case 'Bronze':
+				case 'Bronze Medal':
 					return _Utils_Tuple3(g, s, b + 1);
 				default:
 					return _Utils_Tuple3(g, s, b);
@@ -8466,7 +8499,7 @@ var $author$project$Model$toMedalTable = function (participations) {
 		$elm$core$List$foldl,
 		F2(
 			function (p, dict) {
-				if ((p.medal === 'Gold') || ((p.medal === 'Silver') || (p.medal === 'Bronze'))) {
+				if ((p.medal === 'Gold Medal') || ((p.medal === 'Silver Medal') || (p.medal === 'Bronze Medal'))) {
 					var country = $author$project$Model$normalizeCountry(
 						getCountry(p));
 					var old = A2(
@@ -8524,6 +8557,27 @@ var $author$project$Model$toMedalTable = function (participations) {
 			_Utils_Tuple3($elm$core$Maybe$Nothing, 0, _List_Nil),
 			A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, sorted)));
 };
+var $elm_community$list_extra$List$Extra$find = F2(
+	function (predicate, list) {
+		find:
+		while (true) {
+			if (!list.b) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var first = list.a;
+				var rest = list.b;
+				if (predicate(first)) {
+					return $elm$core$Maybe$Just(first);
+				} else {
+					var $temp$predicate = predicate,
+						$temp$list = rest;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue find;
+				}
+			}
+		}
+	});
 var $elm_community$list_extra$List$Extra$inits = A2(
 	$elm$core$List$foldr,
 	F2(
@@ -8538,6 +8592,24 @@ var $elm_community$list_extra$List$Extra$inits = A2(
 		}),
 	_List_fromArray(
 		[_List_Nil]));
+var $elm$core$List$intersperse = F2(
+	function (sep, xs) {
+		if (!xs.b) {
+			return _List_Nil;
+		} else {
+			var hd = xs.a;
+			var tl = xs.b;
+			var step = F2(
+				function (x, rest) {
+					return A2(
+						$elm$core$List$cons,
+						sep,
+						A2($elm$core$List$cons, x, rest));
+				});
+			var spersed = A3($elm$core$List$foldr, step, _List_Nil, tl);
+			return A2($elm$core$List$cons, hd, spersed);
+		}
+	});
 var $gampleman$elm_rosetree$Tree$label = function (_v0) {
 	var v = _v0.a;
 	return v;
@@ -9002,6 +9074,82 @@ var $gampleman$elm_rosetree$Tree$sortWith = F2(
 			_Utils_Tuple0,
 			t).b;
 	});
+var $author$project$Model$sportsToCategory = F2(
+	function (sport, event) {
+		switch (sport) {
+			case 'Swimming':
+				return _List_fromArray(
+					['Aquatics', 'Swimming', event]);
+			case 'Artistic Swimming':
+				return _List_fromArray(
+					['Aquatics', 'Artistic Swimming', event]);
+			case 'Water Polo':
+				return _List_fromArray(
+					['Aquatics', 'Water Polo', event]);
+			case 'Diving':
+				return _List_fromArray(
+					['Aquatics', 'Diving', event]);
+			case 'Marathon Swimming':
+				return _List_fromArray(
+					['Aquatics', 'Marathon Swimming', event]);
+			case '3x3 Basketball':
+				return _List_fromArray(
+					['Basketball', '3x3', event]);
+			case 'Basketball':
+				return _List_fromArray(
+					['Basketball', 'Basketball', event]);
+			case 'Canoe Slalom':
+				return _List_fromArray(
+					['Canoe', 'Slalom', event]);
+			case 'Canoe Sprint':
+				return _List_fromArray(
+					['Canoe', 'Sprint', event]);
+			case 'Cycling Road':
+				return _List_fromArray(
+					['Cycling', 'Road', event]);
+			case 'Cycling Track':
+				return _List_fromArray(
+					['Cycling', 'Track', event]);
+			case 'Cycling Mountain Bike':
+				return _List_fromArray(
+					['Cycling', 'Mountain Bike', event]);
+			case 'Cycling BMX Freestyle':
+				return _List_fromArray(
+					['Cycling', 'BMX Freestyle', event]);
+			case 'Cycling BMX Racing':
+				return _List_fromArray(
+					['Cycling', 'BMX Racing', event]);
+			case 'Equestrian':
+				return A2(
+					$elm$core$List$cons,
+					'Equestrian',
+					A2($elm$core$String$split, ' ', event));
+			case 'Field Hockey':
+				return _List_fromArray(
+					['Hockey', event]);
+			case 'Artistic Gymnastics':
+				return _List_fromArray(
+					['Gymnastics', 'Artistic', event]);
+			case 'Rhythmic Gymnastics':
+				return _List_fromArray(
+					['Gymnastics', 'Rhythmic', event]);
+			case 'Trampoline Gymnastics':
+				return _List_fromArray(
+					['Gymnastics', 'Trampoline', event]);
+			case 'Rugby Sevens':
+				return _List_fromArray(
+					['Rugby', 'Sevens', event]);
+			case 'Volleyball':
+				return _List_fromArray(
+					['Volleyball', 'Indoor', event]);
+			case 'Beach Volleyball':
+				return _List_fromArray(
+					['Volleyball', 'Beach', event]);
+			default:
+				return _List_fromArray(
+					[sport, event]);
+		}
+	});
 var $gampleman$elm_rosetree$Tree$children = function (_v0) {
 	var c = _v0.b;
 	return c;
@@ -9375,10 +9523,6 @@ var $gampleman$elm_rosetree$Tree$foldr = F3(
 var $gampleman$elm_rosetree$Tree$toList = function (t) {
 	return A3($gampleman$elm_rosetree$Tree$foldr, $elm$core$List$cons, _List_Nil, t);
 };
-var $elm_community$list_extra$List$Extra$uniqueBy = F2(
-	function (f, list) {
-		return A4($elm_community$list_extra$List$Extra$uniqueHelp, f, _List_Nil, list, _List_Nil);
-	});
 var $elm$core$Result$withDefault = F2(
 	function (def, result) {
 		if (result.$ === 'Ok') {
@@ -9390,22 +9534,46 @@ var $elm$core$Result$withDefault = F2(
 	});
 var $author$project$Model$toSBModel = F2(
 	function (parts, country) {
-		var recordData = A2(
-			$elm_community$list_extra$List$Extra$uniqueBy,
-			function (r) {
-				return r.sequence;
-			},
+		var recordData = A3(
+			$elm$core$List$foldl,
+			F2(
+				function (item, acc) {
+					var _v1 = A2(
+						$elm_community$list_extra$List$Extra$find,
+						function (r) {
+							return _Utils_eq(r.sequence, item.sequence);
+						},
+						acc);
+					if (_v1.$ === 'Just') {
+						var found = _v1.a;
+						return _Utils_ap(
+							A2(
+								$elm$core$List$filter,
+								function (r) {
+									return !_Utils_eq(r.sequence, item.sequence);
+								},
+								acc),
+							_List_fromArray(
+								[
+									{
+									medalCount: item.medalCount + 1,
+									medals: _Utils_ap(found.medals, item.medals),
+									sequence: item.sequence
+								}
+								]));
+					} else {
+						return A2($elm$core$List$cons, item, acc);
+					}
+				}),
+			_List_Nil,
 			A2(
 				$elm$core$List$map,
 				function (p) {
 					return {
 						medalCount: 1,
-						sequence: A2(
-							$elm$core$List$append,
-							_List_fromArray(
-								[p.sport]),
-							_List_fromArray(
-								[p.event]))
+						medals: _List_fromArray(
+							[p.medal]),
+						sequence: A2($author$project$Model$sportsToCategory, p.sport, p.event)
 					};
 				},
 				A2(
@@ -9426,13 +9594,26 @@ var $author$project$Model$toSBModel = F2(
 			A2(
 				$gampleman$elm_rosetree$Tree$map,
 				function (node) {
+					var seq = $elm$core$String$concat(
+						A2(
+							$elm$core$List$intersperse,
+							', ',
+							A2(
+								$elm$core$List$map,
+								function (s) {
+									return A2(
+										$elm$core$Maybe$withDefault,
+										'',
+										$elm$core$List$head(
+											A2($elm$core$String$split, ' ', s)));
+								},
+								node.medals)));
 					return {
-						category: A2(
-							$elm$core$Maybe$withDefault,
-							'end',
-							$elm_community$list_extra$List$Extra$last(node.sequence)),
 						medalCount: node.medalCount,
-						sequence: node.sequence
+						sequence: _Utils_ap(
+							node.sequence,
+							_List_fromArray(
+								[seq]))
 					};
 				},
 				A3(
@@ -9457,6 +9638,7 @@ var $author$project$Model$toSBModel = F2(
 						$gampleman$elm_rosetree$Tree$singleton(
 							{
 								medalCount: 0,
+								medals: _List_Nil,
 								sequence: _List_fromArray(
 									['Tree error'])
 							}),
@@ -9466,6 +9648,7 @@ var $author$project$Model$toSBModel = F2(
 								createMissingNode: function (path) {
 									return {
 										medalCount: 0,
+										medals: _List_Nil,
 										sequence: A2(
 											$elm$core$Maybe$withDefault,
 											_List_Nil,
@@ -9548,46 +9731,22 @@ var $author$project$Update$update = F2(
 						var filteredParts = $author$project$Model$filterSportsEventMedal(
 							A2($author$project$Model$filterByYear, 2024, parts));
 						var mt = $author$project$Model$toMedalTable(filteredParts);
-						var nocs2024 = A2(
-							$elm$core$List$filter,
-							function (noc) {
-								return (noc !== 'EOR') && (noc !== 'AIN');
-							},
-							$elm_community$list_extra$List$Extra$unique(
-								_Utils_ap(
-									A2(
-										$elm$core$List$map,
-										function ($) {
-											return $.country;
-										},
-										mt),
-									$elm_community$list_extra$List$Extra$unique(
-										A2(
-											$elm$core$List$map,
-											$author$project$Helpers$nocToCountry,
-											A2(
-												$elm$core$List$map,
-												function ($) {
-													return $.noc;
-												},
-												parts))))));
 						var base = _Utils_update(
 							model,
 							{
 								error: $elm$core$Maybe$Nothing,
-								heatmapmodel: A2($author$project$Model$toHMModel, parts, nocs2024),
 								loading: false,
 								medalTable: mt,
 								participations: filteredParts,
-								sbcountry: (model.sbcountry === '') ? 'GER' : model.sbcountry,
 								sbmodel: A2(
 									$author$project$Model$toSBModel,
 									filteredParts,
-									(model.sbcountry === '') ? 'GER' : model.sbcountry)
+									(model.selectedCountry === '') ? 'GER' : model.selectedCountry),
+								selectedCountry: (model.selectedCountry === '') ? 'GER' : model.selectedCountry
 							});
 						return _Utils_Tuple2(
 							$author$project$Model$recomputePcModel(base),
-							$elm$core$Platform$Cmd$none);
+							$author$project$Model$requestOlyHistoryCsv($author$project$Model$olympiaHistoryCsvUrl));
 					} else {
 						var decodeErr = _v2.a;
 						return _Utils_Tuple2(
@@ -9697,6 +9856,64 @@ var $author$project$Update$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				}
+			case 'OlympiaHistroyReceived':
+				var result = msg.a;
+				if (result.$ === 'Ok') {
+					var body = result.a;
+					var _v8 = $author$project$Model$decodeOlyHistroyCsv(body);
+					if (_v8.$ === 'Ok') {
+						var rows = _v8.a;
+						var allMTrows = A2(
+							$elm$core$List$filter,
+							function (row) {
+								return (row.country !== 'Refugee Olympic Team') && (row.country !== 'Individual Neutral Athletes');
+							},
+							_Utils_ap(model.medalTable, rows));
+						var countries = A2(
+							$elm$core$List$filter,
+							function (country) {
+								return (country !== 'Refugee Olympic Team') && (country !== 'Individual Neutral Athletes');
+							},
+							$elm_community$list_extra$List$Extra$unique(
+								A2(
+									$elm$core$List$map,
+									$author$project$Model$normalizeCountry,
+									A2(
+										$elm$core$List$map,
+										function ($) {
+											return $.country;
+										},
+										allMTrows))));
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									heatmapmodel: A2($author$project$Model$toHMModel, allMTrows, countries)
+								}),
+							$elm$core$Platform$Cmd$none);
+					} else {
+						var decodeErr = _v8.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									error: $elm$core$Maybe$Just(decodeErr),
+									loading: false
+								}),
+							$elm$core$Platform$Cmd$none);
+					}
+				} else {
+					var httpErr = result.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								error: $elm$core$Maybe$Just(
+									$author$project$Update$httpErrorToString(httpErr)),
+								loading: false
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
 			case 'HoverSB':
 				var hover = msg.a;
 				var modelSB = model.sbmodel;
@@ -9708,14 +9925,16 @@ var $author$project$Update$update = F2(
 						model,
 						{sbmodel: updateSBData}),
 					$elm$core$Platform$Cmd$none);
-			case 'ChangeSBCountry':
+			case 'ChangeselectedCountry':
 				var nocCode = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							sbcountry: nocCode,
-							sbmodel: A2($author$project$Model$toSBModel, model.participations, nocCode)
+							pcCountry: $elm$core$Maybe$Just(
+								$author$project$Helpers$countryFromNoc(nocCode)),
+							sbmodel: A2($author$project$Model$toSBModel, model.participations, nocCode),
+							selectedCountry: nocCode
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'SelectCountryFromTable':
@@ -9741,8 +9960,9 @@ var $author$project$Update$update = F2(
 					_Utils_update(
 						model,
 						{
-							sbcountry: resolvedNoc,
-							sbmodel: A2($author$project$Model$toSBModel, model.participations, resolvedNoc)
+							pcCountry: $elm$core$Maybe$Just(countryName),
+							sbmodel: A2($author$project$Model$toSBModel, model.participations, resolvedNoc),
+							selectedCountry: resolvedNoc
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'HoverMedalTable':
@@ -9752,8 +9972,12 @@ var $author$project$Update$update = F2(
 						model,
 						{hoverTable: name}),
 					$elm$core$Platform$Cmd$none);
-			case 'NoOp':
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			case 'CollapseMedalTable':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{collapseMedalTable: !model.collapseMedalTable}),
+					$elm$core$Platform$Cmd$none);
 			case 'SetTableCriterion':
 				var crit = msg.a;
 				return _Utils_Tuple2(
@@ -9782,11 +10006,11 @@ var $author$project$Update$update = F2(
 			case 'DropAxis':
 				var targetId = msg.a;
 				var newOrder = function () {
-					var _v7 = model.draggingAxis;
-					if (_v7.$ === 'Nothing') {
+					var _v9 = model.draggingAxis;
+					if (_v9.$ === 'Nothing') {
 						return model.axisOrder;
 					} else {
-						var src = _v7.a;
+						var src = _v9.a;
 						if (_Utils_eq(src, targetId)) {
 							return model.axisOrder;
 						} else {
@@ -9816,9 +10040,9 @@ var $author$project$Update$update = F2(
 										0,
 										A2($elm_community$list_extra$List$Extra$elemIndex, targetId, model.axisOrder));
 									var insertionIndex = (_Utils_cmp(srcIndex, targetIndexOriginal) < 0) ? (targetIndexWithout + 1) : targetIndexWithout;
-									var _v8 = A2($elm_community$list_extra$List$Extra$splitAt, insertionIndex, without);
-									var before = _v8.a;
-									var after = _v8.b;
+									var _v10 = A2($elm_community$list_extra$List$Extra$splitAt, insertionIndex, without);
+									var before = _v10.a;
+									var after = _v10.b;
 									return _Utils_ap(
 										before,
 										A2($elm$core$List$cons, src, after));
@@ -9833,35 +10057,27 @@ var $author$project$Update$update = F2(
 							model,
 							{axisOrder: newOrder, draggingAxis: $elm$core$Maybe$Nothing, dropTargetAxis: $elm$core$Maybe$Nothing})),
 					$elm$core$Platform$Cmd$none);
-			case 'ToggleRanking':
-				var on = msg.a;
-				return _Utils_Tuple2(
-					$author$project$Model$recomputePcModel(
-						_Utils_update(
-							model,
-							{ranking: on})),
-					$elm$core$Platform$Cmd$none);
-			case 'TogglePcMode':
-				var on = msg.a;
-				return _Utils_Tuple2(
-					$author$project$Model$recomputePcModel(
-						_Utils_update(
-							model,
-							{useRelative: on})),
-					$elm$core$Platform$Cmd$none);
-			case 'TogglePcDebug':
-				var on = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{showPcDebug: on}),
-					$elm$core$Platform$Cmd$none);
 			case 'SetPcHover':
 				var name = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{pcHover: name}),
+					$elm$core$Platform$Cmd$none);
+			case 'PcClick':
+				var name = msg.a;
+				return _Utils_eq(name, $elm$core$Maybe$Nothing) ? _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{pcCountry: name, pcHover: name}),
+					$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							pcCountry: name,
+							pcHover: name,
+							selectedCountry: A2($elm$core$Maybe$withDefault, '', name)
+						}),
 					$elm$core$Platform$Cmd$none);
 			case 'OnHoverHeatMap':
 				var value = msg.a;
@@ -9876,11 +10092,21 @@ var $author$project$Update$update = F2(
 						model,
 						{heatmapmodel: newHeatMapModel}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'OnLeaveHeatMap':
 				var state = model.heatmapmodel;
 				var newHeatMapModel = _Utils_update(
 					state,
 					{selected: $elm$core$Maybe$Nothing});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{heatmapmodel: newHeatMapModel}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var state = model.heatmapmodel;
+				var newHeatMapModel = _Utils_update(
+					state,
+					{sortByMedalTable: !model.heatmapmodel.sortByMedalTable});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -9924,7 +10150,8 @@ var $author$project$View$headerSection = A2(
 		[
 			A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
 			A2($elm$html$Html$Attributes$style, 'padding', '20px'),
-			A2($elm$html$Html$Attributes$style, 'background-color', '#f8f9fa')
+			A2($elm$html$Html$Attributes$style, 'background-color', '#f8f9fa'),
+			A2($elm$html$Html$Attributes$style, 'id', 'top')
 		]),
 	_List_fromArray(
 		[
@@ -10049,19 +10276,12 @@ var $author$project$View$headerSection = A2(
 						]))
 				]))
 		]));
+var $author$project$Model$ChangeHeatMapSorting = {$: 'ChangeHeatMapSorting'};
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $author$project$Model$OnHoverHeatMap = function (a) {
 	return {$: 'OnHoverHeatMap', a: a};
 };
 var $author$project$Model$OnLeaveHeatMap = {$: 'OnLeaveHeatMap'};
-var $elm$core$Basics$not = _Basics_not;
-var $elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			$elm$core$List$any,
-			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
-			list);
-	});
 var $elm$html$Html$col = _VirtualDom_node('col');
 var $elm$html$Html$colgroup = _VirtualDom_node('colgroup');
 var $avh4$elm_color$Color$RgbaSpace = F4(
@@ -10254,10 +10474,6 @@ var $avh4$elm_color$Color$toCssString = function (_v0) {
 				')'
 			]));
 };
-var $elm$core$String$foldr = _String_foldr;
-var $elm$core$String$toList = function (string) {
-	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
-};
 var $avh4$elm_color$Color$toRgba = function (_v0) {
 	var r = _v0.a;
 	var g = _v0.b;
@@ -10266,24 +10482,53 @@ var $avh4$elm_color$Color$toRgba = function (_v0) {
 	return {alpha: a, blue: b, green: g, red: r};
 };
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$Components$HeatMap$drawCells = F2(
-	function (quadHeatMapCells, hmmodel) {
+var $author$project$Components$HeatMap$drawCells = F3(
+	function (quadHeatMapCells, hmmodel, sortedRows) {
 		var maxRowLength = A2(
 			$elm$core$Maybe$withDefault,
 			1,
 			$elm$core$List$maximum(
 				A2($elm$core$List$map, $elm$core$List$length, quadHeatMapCells)));
+		var firstRowLabels = function (labels) {
+			return A2(
+				$elm$html$Html$tr,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'height', '20px')
+					]),
+				A2(
+					$elm$core$List$indexedMap,
+					F2(
+						function (i, text) {
+							return A2(
+								$elm$html$Html$td,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'font-size', '60%'),
+										A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+										function () {
+										var _v3 = hmmodel.selected;
+										if (_v3.$ === 'Just') {
+											var cellWithPosition = _v3.a;
+											return _Utils_eq(cellWithPosition.column, i - 1) ? A2($elm$html$Html$Attributes$style, 'font-weight', 'bold') : A2($elm$html$Html$Attributes$style, 'font-weight', 'normal');
+										} else {
+											return A2($elm$html$Html$Attributes$style, 'font-weight', 'normal');
+										}
+									}()
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(text)
+									]));
+						}),
+					A2($elm$core$List$cons, '', labels)));
+		};
 		var firstColumn = function (rowIndex) {
 			var rawLabel = A2(
 				$elm$core$Maybe$withDefault,
 				'',
 				$elm$core$List$head(
-					A2($elm$core$List$drop, rowIndex, hmmodel.rowLabels)));
-			var isAllUpper = function (s) {
-				var chars = $elm$core$String$toList(s);
-				return A2($elm$core$List$all, $elm$core$Char$isUpper, chars);
-			};
-			var labelText = (($elm$core$String$length(rawLabel) === 3) && isAllUpper(rawLabel)) ? $author$project$Helpers$nocToCountry(rawLabel) : rawLabel;
+					A2($elm$core$List$drop, rowIndex, sortedRows)));
 			return _List_fromArray(
 				[
 					A2(
@@ -10291,11 +10536,20 @@ var $author$project$Components$HeatMap$drawCells = F2(
 					_List_fromArray(
 						[
 							A2($elm$html$Html$Attributes$style, 'font-size', '60%'),
-							A2($elm$html$Html$Attributes$style, 'text-align', 'right')
+							A2($elm$html$Html$Attributes$style, 'text-align', 'right'),
+							function () {
+							var _v2 = hmmodel.selected;
+							if (_v2.$ === 'Just') {
+								var cellWithPosition = _v2.a;
+								return _Utils_eq(cellWithPosition.row, rowIndex) ? A2($elm$html$Html$Attributes$style, 'font-weight', 'bold') : A2($elm$html$Html$Attributes$style, 'font-weight', 'normal');
+							} else {
+								return A2($elm$html$Html$Attributes$style, 'font-weight', 'normal');
+							}
+						}()
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text(labelText)
+							$elm$html$Html$text(rawLabel)
 						]))
 				]);
 		};
@@ -10309,10 +10563,16 @@ var $author$project$Components$HeatMap$drawCells = F2(
 							var cellWithPosition = _v1.a;
 							if (_Utils_eq(row, cellWithPosition.row) && _Utils_eq(col, cellWithPosition.column)) {
 								var rgb = $avh4$elm_color$Color$toRgba(color);
-								var darkConst = 0.75;
+								var darkConst = 0.65;
 								return A3($avh4$elm_color$Color$rgb, rgb.red * darkConst, rgb.green * darkConst, rgb.blue * darkConst);
 							} else {
-								return color;
+								if (_Utils_eq(row, cellWithPosition.row) || _Utils_eq(col, cellWithPosition.column)) {
+									var rgb = $avh4$elm_color$Color$toRgba(color);
+									var darkConst = 0.85;
+									return A3($avh4$elm_color$Color$rgb, rgb.red * darkConst, rgb.green * darkConst, rgb.blue * darkConst);
+								} else {
+									return color;
+								}
 							}
 						} else {
 							return color;
@@ -10320,34 +10580,6 @@ var $author$project$Components$HeatMap$drawCells = F2(
 					}());
 			});
 		var cellWidth = $elm$core$String$fromFloat(75 / maxRowLength) + '%';
-		var cellHeight = function (hei) {
-			return $elm$core$String$fromFloat(100 / hei) + '%';
-		}(
-			1 + $elm$core$List$length(quadHeatMapCells));
-		var firstRowLabels = function (labels) {
-			return A2(
-				$elm$html$Html$tr,
-				_List_fromArray(
-					[
-						A2($elm$html$Html$Attributes$style, 'height', cellHeight)
-					]),
-				A2(
-					$elm$core$List$map,
-					function (text) {
-						return A2(
-							$elm$html$Html$td,
-							_List_fromArray(
-								[
-									A2($elm$html$Html$Attributes$style, 'font-size', '60%'),
-									A2($elm$html$Html$Attributes$style, 'text-align', 'center')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(text)
-								]));
-					},
-					A2($elm$core$List$cons, '', labels)));
-		};
 		var cellAttributes = F3(
 			function (row, col, cell) {
 				return _List_fromArray(
@@ -10370,7 +10602,7 @@ var $author$project$Components$HeatMap$drawCells = F2(
 					$elm$html$Html$tr,
 					_List_fromArray(
 						[
-							A2($elm$html$Html$Attributes$style, 'height', cellHeight)
+							A2($elm$html$Html$Attributes$style, 'height', '20px')
 						]),
 					_Utils_ap(
 						firstColumn(rowIndex),
@@ -10449,6 +10681,7 @@ var $author$project$Components$HeatMap$drawCells = F2(
 					rows)
 				]));
 	});
+var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $author$project$Components$HeatMap$legend = function (_v0) {
 	var swatch = function (_v1) {
 		var v = _v1.a;
@@ -10477,8 +10710,8 @@ var $author$project$Components$HeatMap$legend = function (_v0) {
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							A2($elm$html$Html$Attributes$style, 'width', '28px'),
-							A2($elm$html$Html$Attributes$style, 'height', '14px'),
+							A2($elm$html$Html$Attributes$style, 'width', '20px'),
+							A2($elm$html$Html$Attributes$style, 'height', '16px'),
 							A2($elm$html$Html$Attributes$style, 'border', '1px solid #ccc'),
 							A2(
 							$elm$html$Html$Attributes$style,
@@ -10501,7 +10734,10 @@ var $author$project$Components$HeatMap$legend = function (_v0) {
 	};
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'max-width', '55px')
+			]),
 		_List_fromArray(
 			[
 				A2(
@@ -10510,18 +10746,29 @@ var $author$project$Components$HeatMap$legend = function (_v0) {
 					[
 						A2($elm$html$Html$Attributes$style, 'font-size', '12px'),
 						A2($elm$html$Html$Attributes$style, 'color', '#555'),
-						A2($elm$html$Html$Attributes$style, 'margin-bottom', '4px')
+						A2($elm$html$Html$Attributes$style, 'margin-bottom', '4px'),
+						A2($elm$html$Html$Attributes$style, 'text-align', 'center')
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('Legende: Medaillen (diskrete Stufen)')
+						A2(
+						$elm$html$Html$h3,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'margin-bottom', '0')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Legende')
+							])),
+						$elm$html$Html$text('Anzahl Medaillen (diskrete Stufen)')
 					])),
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
 						A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-						A2($elm$html$Html$Attributes$style, 'align-items', 'flex-end'),
+						A2($elm$html$Html$Attributes$style, 'justify-content', 'center'),
 						A2($elm$html$Html$Attributes$style, 'gap', '4px'),
 						A2($elm$html$Html$Attributes$style, 'flex-wrap', 'wrap')
 					]),
@@ -10529,6 +10776,30 @@ var $author$project$Components$HeatMap$legend = function (_v0) {
 			]));
 };
 var $author$project$Components$HeatMap$heatmap = function (hmmodel) {
+	var sortedData = hmmodel.sortByMedalTable ? A3(
+		$elm$core$List$map2,
+		F2(
+			function (a, b) {
+				return _Utils_Tuple2(a, b);
+			}),
+		hmmodel.rowLabels,
+		hmmodel.data) : $elm$core$List$reverse(
+		A2(
+			$elm$core$List$sortWith,
+			F2(
+				function (a, b) {
+					var sumB = $elm$core$List$sum(b.b);
+					var sumA = $elm$core$List$sum(a.b);
+					return (_Utils_cmp(sumA, sumB) < 0) ? $elm$core$Basics$LT : ((_Utils_cmp(sumA, sumB) > 0) ? $elm$core$Basics$GT : $elm$core$Basics$EQ);
+				}),
+			A3(
+				$elm$core$List$map2,
+				F2(
+					function (a, b) {
+						return _Utils_Tuple2(a, b);
+					}),
+				hmmodel.rowLabels,
+				hmmodel.data)));
 	var maxRowLength = A2(
 		$elm$core$Maybe$withDefault,
 		1,
@@ -10555,7 +10826,13 @@ var $author$project$Components$HeatMap$heatmap = function (hmmodel) {
 							value: v
 						});
 				}),
-			hmmodel.data));
+			A2(
+				$elm$core$List$map,
+				function (_v1) {
+					var b = _v1.b;
+					return b;
+				},
+				sortedData)));
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -10566,36 +10843,101 @@ var $author$project$Components$HeatMap$heatmap = function (hmmodel) {
 				A2($elm$html$Html$Attributes$style, 'padding', '8px'),
 				A2($elm$html$Html$Attributes$style, 'box-sizing', 'border-box'),
 				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
+				A2($elm$html$Html$Attributes$style, 'flex-direction', 'row'),
 				A2($elm$html$Html$Attributes$style, 'gap', '8px'),
 				A2($elm$html$Html$Attributes$style, 'overflow-x', 'auto')
 			]),
 		_List_fromArray(
 			[
-				$author$project$Components$HeatMap$legend(hmmodel),
-				A2($author$project$Components$HeatMap$drawCells, quadHeatMapCells, hmmodel)
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						A2($elm$html$Html$Attributes$style, 'height', '80vh'),
+						A2($elm$html$Html$Attributes$style, 'overflow-y', 'scroll'),
+						A2($elm$html$Html$Attributes$style, 'padding-right', '10px')
+					]),
+				_List_fromArray(
+					[
+						A3(
+						$author$project$Components$HeatMap$drawCells,
+						quadHeatMapCells,
+						hmmodel,
+						A2(
+							$elm$core$List$map,
+							function (_v0) {
+								var a = _v0.a;
+								return a;
+							},
+							sortedData))
+					])),
+				$author$project$Components$HeatMap$legend(hmmodel)
 			]));
 };
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $author$project$View$nextLink = function (target) {
-	return A2(
-		$elm$html$Html$a,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$href(target),
-				A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
-				A2($elm$html$Html$Attributes$style, 'padding', '10px 16px'),
-				A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
-				A2($elm$html$Html$Attributes$style, 'color', '#fff'),
-				A2($elm$html$Html$Attributes$style, 'border-radius', '4px'),
-				A2($elm$html$Html$Attributes$style, 'text-decoration', 'none')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text('Weiter')
-			]));
+var $author$project$View$linkToTop = A2(
+	$elm$html$Html$a,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$href('#top'),
+			A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
+			A2($elm$html$Html$Attributes$style, 'padding', '10px 16px'),
+			A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
+			A2($elm$html$Html$Attributes$style, 'color', '#fff'),
+			A2($elm$html$Html$Attributes$style, 'border-radius', '4px'),
+			A2($elm$html$Html$Attributes$style, 'text-decoration', 'none')
+		]),
+	_List_fromArray(
+		[
+			$elm$html$Html$text('Nach Oben')
+		]));
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
 };
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$html$Html$select = _VirtualDom_node('select');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$View$heatmapSection = function (model) {
+	var selectedOption = model.heatmapmodel.sortByMedalTable;
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -10655,6 +10997,43 @@ var $author$project$View$heatmapSection = function (model) {
 							}
 						}
 					}(),
+						$elm$html$Html$text('Sortieren nach '),
+						A2(
+						$elm$html$Html$select,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+								A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+								$elm$html$Html$Events$onInput(
+								function (_v1) {
+									return $author$project$Model$ChangeHeatMapSorting;
+								})
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$option,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$selected(!selectedOption),
+										$elm$html$Html$Attributes$value('overall')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Overall-Ranking')
+									])),
+								A2(
+								$elm$html$Html$option,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$selected(selectedOption),
+										$elm$html$Html$Attributes$value('medaltable')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Medaillen-Spiegel 2024')
+									]))
+							])),
 						A2(
 						$elm$html$Html$div,
 						_List_fromArray(
@@ -10666,7 +11045,6 @@ var $author$project$View$heatmapSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$author$project$Components$HeatMap$heatmap(model.heatmapmodel),
 								A2(
 								$elm$html$Html$div,
 								_List_fromArray(
@@ -10676,8 +11054,9 @@ var $author$project$View$heatmapSection = function (model) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Tip: Hover cells to see values. Only the last 7 Olympics and countries with ≤6 letters are shown for performance.')
-									]))
+										$elm$html$Html$text('Tip: Hover cells to see values.')
+									])),
+								$author$project$Components$HeatMap$heatmap(model.heatmapmodel)
 							]))
 					])),
 				A2(
@@ -10689,11 +11068,10 @@ var $author$project$View$heatmapSection = function (model) {
 						A2($elm$html$Html$Attributes$style, 'margin', '10px auto 0')
 					]),
 				_List_fromArray(
-					[
-						$author$project$View$nextLink('#medaillenspiegel')
-					]))
+					[$author$project$View$linkToTop]))
 			]));
 };
+var $author$project$Model$CollapseMedalTable = {$: 'CollapseMedalTable'};
 var $author$project$Model$HoverMedalTable = function (a) {
 	return {$: 'HoverMedalTable', a: a};
 };
@@ -10731,6 +11109,10 @@ var $elm_community$list_extra$List$Extra$dropWhile = F2(
 		}
 	});
 var $elm$core$String$fromList = _String_fromList;
+var $elm$core$String$foldr = _String_foldr;
+var $elm$core$String$toList = function (string) {
+	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
+};
 var $author$project$View$trimFloat = function (s) {
 	if (A2($elm$core$String$contains, '.', s)) {
 		var noZeros = $elm$core$String$fromList(
@@ -10833,59 +11215,14 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
 var $elm$html$Html$Events$onMouseEnter = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
 		'mouseenter',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$option = _VirtualDom_node('option');
-var $elm$html$Html$select = _VirtualDom_node('select');
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$View$medaillenspiegelSection = function (model) {
 	var selectedId = model.tableCriterion;
 	var relHeader = function () {
@@ -10902,8 +11239,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(
-								$author$project$Model$axisLabel('pop') + ' (Wert)')
+								$elm$html$Html$text('Einwohner (Wert)')
 							])),
 						A2(
 						$elm$html$Html$th,
@@ -10929,8 +11265,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(
-								$author$project$Model$axisLabel('gdp') + ' (Wert)')
+								$elm$html$Html$text('BIP (Wert)')
 							])),
 						A2(
 						$elm$html$Html$th,
@@ -10956,8 +11291,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(
-								$author$project$Model$axisLabel('age') + ' (Wert)')
+								$elm$html$Html$text('Median-Alter (Wert)')
 							])),
 						A2(
 						$elm$html$Html$th,
@@ -11104,6 +11438,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 						A2($elm$core$Dict$get, a.country, relByCountry)));
 			}),
 		model.medalTable);
+	var limitedRows = model.collapseMedalTable ? A2($elm$core$List$take, 10, sortedRows) : sortedRows;
 	var absByCountry = function () {
 		switch (selectedId) {
 			case 'pop':
@@ -11146,26 +11481,6 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 						_List_fromArray(
 							[
 								$elm$html$Html$text('1. Medaillenspiegel')
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'max-width', '950px'),
-								A2($elm$html$Html$Attributes$style, 'margin', '8px auto 0'),
-								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-								A2($elm$html$Html$Attributes$style, 'color', '#555'),
-								A2($elm$html$Html$Attributes$style, 'font-size', '12px')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$p,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Tip: Click any table row to select the country and jump to its medal distribution below.')
-									]))
 							])),
 						A2(
 						$elm$html$Html$div,
@@ -11243,7 +11558,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Vergleiche Kriterien')
+										$elm$html$Html$text('Vergleiche Rankings')
 									]))
 							])),
 						function () {
@@ -11274,6 +11589,26 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 							}
 						}
 					}(),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'max-width', '950px'),
+								A2($elm$html$Html$Attributes$style, 'margin', '8px auto 0'),
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+								A2($elm$html$Html$Attributes$style, 'color', '#555'),
+								A2($elm$html$Html$Attributes$style, 'font-size', '12px')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$p,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Tip: Click any table row to select the country and jump to its medal distribution below.')
+									]))
+							])),
 						A2(
 						$elm$html$Html$table,
 						_List_fromArray(
@@ -11765,7 +12100,36 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 													}
 												}()));
 									},
-									sortedRows))
+									limitedRows))
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+								A2($elm$html$Html$Attributes$style, 'max-width', '900px'),
+								A2($elm$html$Html$Attributes$style, 'margin', '10px auto 0')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
+										A2($elm$html$Html$Attributes$style, 'padding', '10px 16px'),
+										A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
+										A2($elm$html$Html$Attributes$style, 'color', '#fff'),
+										A2($elm$html$Html$Attributes$style, 'border-radius', '4px'),
+										A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+										A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+										$elm$html$Html$Events$onClick($author$project$Model$CollapseMedalTable)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										model.collapseMedalTable ? 'Alle anzeigen' : 'Weniger anzeigen')
+									]))
 							]))
 					])),
 				A2(
@@ -11777,18 +12141,15 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 						A2($elm$html$Html$Attributes$style, 'margin', '10px auto 0')
 					]),
 				_List_fromArray(
-					[
-						$author$project$View$nextLink('#medaillenverteilung')
-					]))
+					[$author$project$View$linkToTop]))
 			]));
 };
-var $author$project$Model$ChangeSBCountry = function (a) {
-	return {$: 'ChangeSBCountry', a: a};
+var $author$project$Model$ChangeselectedCountry = function (a) {
+	return {$: 'ChangeselectedCountry', a: a};
 };
 var $elm$core$Set$fromList = function (list) {
 	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
 };
-var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $elm_community$typed_svg$TypedSvg$Types$AnchorMiddle = {$: 'AnchorMiddle'};
 var $elm_community$typed_svg$TypedSvg$Types$Paint = function (a) {
 	return {$: 'Paint', a: a};
@@ -12747,8 +13108,8 @@ var $gampleman$elm_visualization$Shape$Pie$arc = function (arcData) {
 	}
 };
 var $gampleman$elm_visualization$Shape$arc = $gampleman$elm_visualization$Shape$Pie$arc;
-var $author$project$Components$Sunburst$sb_h = 450;
-var $author$project$Components$Sunburst$sb_w = 500;
+var $author$project$Components$Sunburst$sb_h = 550;
+var $author$project$Components$Sunburst$sb_w = 600;
 var $author$project$Components$Sunburst$radius = A2($elm$core$Basics$min, $author$project$Components$Sunburst$sb_w, $author$project$Components$Sunburst$sb_h) / 2;
 var $author$project$Components$Sunburst$arc = function (s) {
 	return $gampleman$elm_visualization$Shape$arc(
@@ -12762,92 +13123,6 @@ var $author$project$Components$Sunburst$arc = function (s) {
 			startAngle: s.x
 		});
 };
-var $avh4$elm_color$Color$black = A4($avh4$elm_color$Color$RgbaSpace, 0 / 255, 0 / 255, 0 / 255, 1.0);
-var $gampleman$elm_visualization$Scale$Scale = function (a) {
-	return {$: 'Scale', a: a};
-};
-var $gampleman$elm_visualization$Scale$Ordinal$convertHelp = F4(
-	function (d, r, used, needle) {
-		convertHelp:
-		while (true) {
-			var _v0 = _Utils_Tuple2(d, r);
-			if (!_v0.a.b) {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				if (!_v0.b.b) {
-					var _v1 = _v0.a;
-					var $temp$d = d,
-						$temp$r = $elm$core$List$reverse(used),
-						$temp$used = _List_Nil,
-						$temp$needle = needle;
-					d = $temp$d;
-					r = $temp$r;
-					used = $temp$used;
-					needle = $temp$needle;
-					continue convertHelp;
-				} else {
-					var _v2 = _v0.a;
-					var x = _v2.a;
-					var xs = _v2.b;
-					var _v3 = _v0.b;
-					var y = _v3.a;
-					var ys = _v3.b;
-					if (_Utils_eq(x, needle)) {
-						return $elm$core$Maybe$Just(y);
-					} else {
-						var $temp$d = xs,
-							$temp$r = ys,
-							$temp$used = A2($elm$core$List$cons, y, used),
-							$temp$needle = needle;
-						d = $temp$d;
-						r = $temp$r;
-						used = $temp$used;
-						needle = $temp$needle;
-						continue convertHelp;
-					}
-				}
-			}
-		}
-	});
-var $gampleman$elm_visualization$Scale$Ordinal$convert = F3(
-	function (domain, range, val) {
-		if (!range.b) {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			return A4($gampleman$elm_visualization$Scale$Ordinal$convertHelp, domain, range, _List_Nil, val);
-		}
-	});
-var $gampleman$elm_visualization$Scale$ordinal = F2(
-	function (range_, domain_) {
-		return $gampleman$elm_visualization$Scale$Scale(
-			{convert: $gampleman$elm_visualization$Scale$Ordinal$convert, domain: domain_, range: range_});
-	});
-var $gampleman$elm_visualization$Scale$Color$tableau10 = _List_fromArray(
-	[
-		A3($avh4$elm_color$Color$rgb255, 78, 121, 167),
-		A3($avh4$elm_color$Color$rgb255, 242, 142, 44),
-		A3($avh4$elm_color$Color$rgb255, 225, 87, 89),
-		A3($avh4$elm_color$Color$rgb255, 118, 183, 178),
-		A3($avh4$elm_color$Color$rgb255, 89, 161, 79),
-		A3($avh4$elm_color$Color$rgb255, 237, 201, 73),
-		A3($avh4$elm_color$Color$rgb255, 175, 122, 161),
-		A3($avh4$elm_color$Color$rgb255, 255, 157, 167),
-		A3($avh4$elm_color$Color$rgb255, 156, 117, 95),
-		A3($avh4$elm_color$Color$rgb255, 186, 176, 171)
-	]);
-var $author$project$Components$Sunburst$colorScale = A2(
-	$gampleman$elm_visualization$Scale$ordinal,
-	A2(
-		$elm$core$List$cons,
-		A3($avh4$elm_color$Color$rgb, 0.5, 0.5, 0.5),
-		$gampleman$elm_visualization$Scale$Color$tableau10),
-	_List_fromArray(
-		['Swimming', 'Athletics']));
-var $gampleman$elm_visualization$Scale$convert = F2(
-	function (_v0, value) {
-		var scale = _v0.a;
-		return A3(scale.convert, scale.domain, scale.range, value);
-	});
 var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var $elm$svg$Svg$path = $elm$svg$Svg$trustedNode('path');
@@ -13504,6 +13779,494 @@ var $elm_community$typed_svg$TypedSvg$Core$node = $elm$virtual_dom$VirtualDom$no
 var $elm_community$typed_svg$TypedSvg$g = $elm_community$typed_svg$TypedSvg$Core$node('g');
 var $elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
 var $elm$svg$Svg$Lazy$lazy2 = $elm$virtual_dom$VirtualDom$lazy2;
+var $avh4$elm_color$Color$black = A4($avh4$elm_color$Color$RgbaSpace, 0 / 255, 0 / 255, 0 / 255, 1.0);
+var $gampleman$elm_visualization$Scale$convert = F2(
+	function (_v0, value) {
+		var scale = _v0.a;
+		return A3(scale.convert, scale.domain, scale.range, value);
+	});
+var $gampleman$elm_visualization$Scale$Scale = function (a) {
+	return {$: 'Scale', a: a};
+};
+var $gampleman$elm_visualization$Scale$Ordinal$convertHelp = F4(
+	function (d, r, used, needle) {
+		convertHelp:
+		while (true) {
+			var _v0 = _Utils_Tuple2(d, r);
+			if (!_v0.a.b) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				if (!_v0.b.b) {
+					var _v1 = _v0.a;
+					var $temp$d = d,
+						$temp$r = $elm$core$List$reverse(used),
+						$temp$used = _List_Nil,
+						$temp$needle = needle;
+					d = $temp$d;
+					r = $temp$r;
+					used = $temp$used;
+					needle = $temp$needle;
+					continue convertHelp;
+				} else {
+					var _v2 = _v0.a;
+					var x = _v2.a;
+					var xs = _v2.b;
+					var _v3 = _v0.b;
+					var y = _v3.a;
+					var ys = _v3.b;
+					if (_Utils_eq(x, needle)) {
+						return $elm$core$Maybe$Just(y);
+					} else {
+						var $temp$d = xs,
+							$temp$r = ys,
+							$temp$used = A2($elm$core$List$cons, y, used),
+							$temp$needle = needle;
+						d = $temp$d;
+						r = $temp$r;
+						used = $temp$used;
+						needle = $temp$needle;
+						continue convertHelp;
+					}
+				}
+			}
+		}
+	});
+var $gampleman$elm_visualization$Scale$Ordinal$convert = F3(
+	function (domain, range, val) {
+		if (!range.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			return A4($gampleman$elm_visualization$Scale$Ordinal$convertHelp, domain, range, _List_Nil, val);
+		}
+	});
+var $gampleman$elm_visualization$Scale$ordinal = F2(
+	function (range_, domain_) {
+		return $gampleman$elm_visualization$Scale$Scale(
+			{convert: $gampleman$elm_visualization$Scale$Ordinal$convert, domain: domain_, range: range_});
+	});
+var $rtfeldman$elm_hex$Hex$fromStringHelp = F3(
+	function (position, chars, accumulated) {
+		fromStringHelp:
+		while (true) {
+			if (!chars.b) {
+				return $elm$core$Result$Ok(accumulated);
+			} else {
+				var _char = chars.a;
+				var rest = chars.b;
+				switch (_char.valueOf()) {
+					case '0':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated;
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case '1':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + A2($elm$core$Basics$pow, 16, position);
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case '2':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (2 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case '3':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (3 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case '4':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (4 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case '5':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (5 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case '6':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (6 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case '7':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (7 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case '8':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (8 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case '9':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (9 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case 'a':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (10 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case 'b':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (11 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case 'c':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (12 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case 'd':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (13 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case 'e':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (14 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					case 'f':
+						var $temp$position = position - 1,
+							$temp$chars = rest,
+							$temp$accumulated = accumulated + (15 * A2($elm$core$Basics$pow, 16, position));
+						position = $temp$position;
+						chars = $temp$chars;
+						accumulated = $temp$accumulated;
+						continue fromStringHelp;
+					default:
+						var nonHex = _char;
+						return $elm$core$Result$Err(
+							$elm$core$String$fromChar(nonHex) + ' is not a valid hexadecimal character.');
+				}
+			}
+		}
+	});
+var $rtfeldman$elm_hex$Hex$fromString = function (str) {
+	if ($elm$core$String$isEmpty(str)) {
+		return $elm$core$Result$Err('Empty strings are not valid hexadecimal strings.');
+	} else {
+		var result = function () {
+			if (A2($elm$core$String$startsWith, '-', str)) {
+				var list = A2(
+					$elm$core$Maybe$withDefault,
+					_List_Nil,
+					$elm$core$List$tail(
+						$elm$core$String$toList(str)));
+				return A2(
+					$elm$core$Result$map,
+					$elm$core$Basics$negate,
+					A3(
+						$rtfeldman$elm_hex$Hex$fromStringHelp,
+						$elm$core$List$length(list) - 1,
+						list,
+						0));
+			} else {
+				return A3(
+					$rtfeldman$elm_hex$Hex$fromStringHelp,
+					$elm$core$String$length(str) - 1,
+					$elm$core$String$toList(str),
+					0);
+			}
+		}();
+		var formatError = function (err) {
+			return A2(
+				$elm$core$String$join,
+				' ',
+				_List_fromArray(
+					['\"' + (str + '\"'), 'is not a valid hexadecimal string because', err]));
+		};
+		return A2($elm$core$Result$mapError, formatError, result);
+	}
+};
+var $gampleman$elm_visualization$Scale$Color$hexToColor = function (hex) {
+	return function (s) {
+		var r = A2(
+			$elm$core$Result$withDefault,
+			0,
+			$rtfeldman$elm_hex$Hex$fromString(
+				A3($elm$core$String$slice, 0, 2, s)));
+		var g = A2(
+			$elm$core$Result$withDefault,
+			0,
+			$rtfeldman$elm_hex$Hex$fromString(
+				A3($elm$core$String$slice, 2, 4, s)));
+		var b = A2(
+			$elm$core$Result$withDefault,
+			0,
+			$rtfeldman$elm_hex$Hex$fromString(
+				A3($elm$core$String$slice, 4, 6, s)));
+		return A3($avh4$elm_color$Color$rgb255, r, g, b);
+	}(
+		A2($elm$core$String$dropLeft, 1, hex));
+};
+var $elm$core$Basics$clamp = F3(
+	function (low, high, number) {
+		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
+	});
+var $elm$core$Array$fromListHelp = F3(
+	function (list, nodeList, nodeListSize) {
+		fromListHelp:
+		while (true) {
+			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
+			var jsArray = _v0.a;
+			var remainingItems = _v0.b;
+			if (_Utils_cmp(
+				$elm$core$Elm$JsArray$length(jsArray),
+				$elm$core$Array$branchFactor) < 0) {
+				return A2(
+					$elm$core$Array$builderToArray,
+					true,
+					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
+			} else {
+				var $temp$list = remainingItems,
+					$temp$nodeList = A2(
+					$elm$core$List$cons,
+					$elm$core$Array$Leaf(jsArray),
+					nodeList),
+					$temp$nodeListSize = nodeListSize + 1;
+				list = $temp$list;
+				nodeList = $temp$nodeList;
+				nodeListSize = $temp$nodeListSize;
+				continue fromListHelp;
+			}
+		}
+	});
+var $elm$core$Array$fromList = function (list) {
+	if (!list.b) {
+		return $elm$core$Array$empty;
+	} else {
+		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
+	}
+};
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var $gampleman$elm_visualization$Interpolation$piecewise = F3(
+	function (makeInterpolator, head, tail) {
+		var n = $elm$core$List$length(tail);
+		var interpolators = $elm$core$Array$fromList(
+			$elm$core$List$reverse(
+				A3(
+					$elm$core$List$foldl,
+					F2(
+						function (item, _v0) {
+							var prev = _v0.a;
+							var accu = _v0.b;
+							return _Utils_Tuple2(
+								item,
+								A2(
+									$elm$core$List$cons,
+									A2(makeInterpolator, prev, item),
+									accu));
+						}),
+					_Utils_Tuple2(head, _List_Nil),
+					tail).b));
+		return function (t) {
+			var tn = t * n;
+			var i = A3(
+				$elm$core$Basics$clamp,
+				0,
+				n - 1,
+				$elm$core$Basics$floor(tn));
+			return A2(
+				$elm$core$Maybe$withDefault,
+				head,
+				A2(
+					$elm$core$Maybe$map,
+					function (fn) {
+						return fn(tn - i);
+					},
+					A2($elm$core$Array$get, i, interpolators)));
+		};
+	});
+var $gampleman$elm_visualization$Interpolation$float = F2(
+	function (a, to) {
+		var b = to - a;
+		return function (t) {
+			return a + (b * t);
+		};
+	});
+var $gampleman$elm_visualization$Interpolation$gammaCorrected = F3(
+	function (gamma, from, to) {
+		if (gamma === 1) {
+			return A2($gampleman$elm_visualization$Interpolation$float, from, to);
+		} else {
+			var y = 1 / gamma;
+			var a = A2($elm$core$Basics$pow, from, gamma);
+			var b = A2($elm$core$Basics$pow, to, gamma) - a;
+			return function (t) {
+				return A2($elm$core$Basics$pow, a + (t * b), y);
+			};
+		}
+	});
+var $gampleman$elm_visualization$Interpolation$map4 = F5(
+	function (fn, a, b, c, d) {
+		return function (t) {
+			return A4(
+				fn,
+				a(t),
+				b(t),
+				c(t),
+				d(t));
+		};
+	});
+var $avh4$elm_color$Color$rgba = F4(
+	function (r, g, b, a) {
+		return A4($avh4$elm_color$Color$RgbaSpace, r, g, b, a);
+	});
+var $gampleman$elm_visualization$Interpolation$rgbWithGamma = F3(
+	function (gamma, from, to) {
+		var start = $avh4$elm_color$Color$toRgba(from);
+		var end = $avh4$elm_color$Color$toRgba(to);
+		var c = $gampleman$elm_visualization$Interpolation$gammaCorrected(gamma);
+		return A5(
+			$gampleman$elm_visualization$Interpolation$map4,
+			$avh4$elm_color$Color$rgba,
+			A2(c, start.red, end.red),
+			A2(c, start.green, end.green),
+			A2(c, start.blue, end.blue),
+			A2($gampleman$elm_visualization$Interpolation$float, start.alpha, end.alpha));
+	});
+var $gampleman$elm_visualization$Interpolation$rgb = $gampleman$elm_visualization$Interpolation$rgbWithGamma(1.0);
+var $gampleman$elm_visualization$Scale$Color$toHexColorStrings = function (palette) {
+	var n = $elm$core$Basics$round(
+		$elm$core$String$length(palette) / 6);
+	var f = function (i) {
+		return '#' + A3($elm$core$String$slice, i * 6, (i + 1) * 6, palette);
+	};
+	return $elm$core$Array$toList(
+		A2($elm$core$Array$initialize, n, f));
+};
+var $gampleman$elm_visualization$Scale$Color$mkPiecewiseInterpolator = function (values) {
+	var hexColors = $gampleman$elm_visualization$Scale$Color$toHexColorStrings(values);
+	var tail = A2(
+		$elm$core$List$map,
+		$gampleman$elm_visualization$Scale$Color$hexToColor,
+		A2(
+			$elm$core$Maybe$withDefault,
+			_List_Nil,
+			$elm$core$List$tail(hexColors)));
+	var head = $gampleman$elm_visualization$Scale$Color$hexToColor(
+		A2(
+			$elm$core$Maybe$withDefault,
+			'#fff',
+			$elm$core$List$head(hexColors)));
+	return A3($gampleman$elm_visualization$Interpolation$piecewise, $gampleman$elm_visualization$Interpolation$rgb, head, tail);
+};
+var $gampleman$elm_visualization$Scale$Color$rainbowInterpolator = $gampleman$elm_visualization$Scale$Color$mkPiecewiseInterpolator('6e40aa883eb1a43db3bf3cafd83fa4ee4395fe4b83ff576eff6659ff7847ff8c38f3a130e2b72fcfcc36bee044aff05b8ff4576ff65b52f6673af27828ea8d1ddfa319d0b81cbecb23abd82f96e03d82e14c6edb5a5dd0664dbf6e40aa');
+var $author$project$Components$Sunburst$mapColor = F2(
+	function (data, range) {
+		var darkConst = (9 - $elm$core$List$length(data.sequence)) * 0.125;
+		var colors = A2(
+			$elm$core$List$map,
+			function (i) {
+				return $gampleman$elm_visualization$Scale$Color$rainbowInterpolator(
+					i / $elm$core$List$length(range));
+			},
+			A2(
+				$elm$core$List$range,
+				0,
+				$elm$core$List$length(range)));
+		var color = $avh4$elm_color$Color$toRgba(
+			A2(
+				$elm$core$Maybe$withDefault,
+				$avh4$elm_color$Color$black,
+				A2(
+					$gampleman$elm_visualization$Scale$convert,
+					A2($gampleman$elm_visualization$Scale$ordinal, colors, range),
+					A2(
+						$elm$core$Maybe$withDefault,
+						'',
+						$elm$core$List$head(data.sequence)))));
+		return A3($avh4$elm_color$Color$rgb, color.red * darkConst, color.green * darkConst, color.blue * darkConst);
+	});
 var $author$project$Model$HoverSB = function (a) {
 	return {$: 'HoverSB', a: a};
 };
@@ -13555,7 +14318,13 @@ var $author$project$Components$Sunburst$mouseInteractionArcs = F2(
 								$elm_community$typed_svg$TypedSvg$Events$onMouseEnter(
 								$author$project$Model$HoverSB(
 									$elm$core$Maybe$Just(
-										{percentage: (100 * item.value) / total, sequence: item.node.sequence})))
+										{
+											percentage: function (n) {
+												return n / 100;
+											}(
+												$elm$core$Basics$round((10000 * item.value) / total)),
+											sequence: item.node.sequence
+										})))
 							]));
 				},
 				segments));
@@ -13683,126 +14452,162 @@ var $elm_community$typed_svg$TypedSvg$Attributes$InPx$y = function (value) {
 	return $elm_community$typed_svg$TypedSvg$Attributes$y(
 		$elm_community$typed_svg$TypedSvg$Types$px(value));
 };
-var $author$project$Components$Sunburst$sunburst = function (sbmodel) {
-	var format = function (f) {
+var $author$project$Components$Sunburst$sunburst = F2(
+	function (sbmodel, country) {
+		var range = $elm_community$list_extra$List$Extra$unique(
+			A2(
+				$elm$core$List$map,
+				function (l) {
+					return A2(
+						$elm$core$Maybe$withDefault,
+						'',
+						$elm$core$List$head(l.node.sequence));
+				},
+				sbmodel.layout));
+		var format = function (f) {
+			return A2(
+				$elm$core$String$left,
+				5,
+				$elm$core$String$fromFloat(f)) + '%';
+		};
 		return A2(
-			$elm$core$String$left,
-			5,
-			$elm$core$String$fromFloat(f)) + '%';
-	};
-	var _v0 = function () {
-		var _v1 = sbmodel.hovered;
-		if (_v1.$ === 'Just') {
-			var sequence = _v1.a.sequence;
-			return $elm$core$Set$fromList(
-				$elm_community$list_extra$List$Extra$inits(sequence));
-		} else {
-			return $elm$core$Set$empty;
-		}
-	}();
-	return A2(
-		$elm_community$typed_svg$TypedSvg$svg,
-		_List_fromArray(
-			[
-				A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, $author$project$Components$Sunburst$sb_w, $author$project$Components$Sunburst$sb_h)
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm_community$typed_svg$TypedSvg$g,
-				_List_fromArray(
-					[
-						$elm_community$typed_svg$TypedSvg$Attributes$transform(
-						_List_fromArray(
-							[
-								A2($elm_community$typed_svg$TypedSvg$Types$Translate, $author$project$Components$Sunburst$radius, $author$project$Components$Sunburst$radius)
-							]))
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm_community$typed_svg$TypedSvg$g,
-						_List_Nil,
-						(!sbmodel.total) ? _List_fromArray(
-							[
-								A2(
-								$elm_community$typed_svg$TypedSvg$text_,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm_community$typed_svg$TypedSvg$Core$text('Keine Medaillen gewonnen')
-									]))
-							]) : A2(
-							$elm$core$List$map,
-							function (item) {
+			$elm_community$typed_svg$TypedSvg$svg,
+			_List_fromArray(
+				[
+					A4($elm_community$typed_svg$TypedSvg$Attributes$viewBox, 0, 0, $author$project$Components$Sunburst$sb_w, $author$project$Components$Sunburst$sb_h)
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm_community$typed_svg$TypedSvg$g,
+					_List_fromArray(
+						[
+							$elm_community$typed_svg$TypedSvg$Attributes$transform(
+							_List_fromArray(
+								[
+									A2($elm_community$typed_svg$TypedSvg$Types$Translate, $author$project$Components$Sunburst$sb_w / 2, 200)
+								]))
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm_community$typed_svg$TypedSvg$g,
+							_List_Nil,
+							A2(
+								$elm$core$List$map,
+								function (item) {
+									return A2(
+										$folkertdev$one_true_path_experiment$Path$element,
+										$author$project$Components$Sunburst$arc(item),
+										_List_fromArray(
+											[
+												$elm_community$typed_svg$TypedSvg$Attributes$fill(
+												$elm_community$typed_svg$TypedSvg$Types$Paint(
+													A2($author$project$Components$Sunburst$mapColor, item.node, range)))
+											]));
+								},
+								sbmodel.layout)),
+							A3($elm$svg$Svg$Lazy$lazy2, $author$project$Components$Sunburst$mouseInteractionArcs, sbmodel.layout, sbmodel.total),
+							function () {
+							var _v0 = sbmodel.hovered;
+							if (_v0.$ === 'Just') {
+								var percentage = _v0.a.percentage;
+								var sequence = _v0.a.sequence;
 								return A2(
-									$folkertdev$one_true_path_experiment$Path$element,
-									$author$project$Components$Sunburst$arc(item),
+									$elm_community$typed_svg$TypedSvg$g,
 									_List_fromArray(
 										[
+											$elm_community$typed_svg$TypedSvg$Attributes$textAnchor($elm_community$typed_svg$TypedSvg$Types$AnchorMiddle),
+											$elm_community$typed_svg$TypedSvg$Attributes$fontFamily(
+											_List_fromArray(
+												['sans-serif'])),
 											$elm_community$typed_svg$TypedSvg$Attributes$fill(
 											$elm_community$typed_svg$TypedSvg$Types$Paint(
-												A2(
-													$elm$core$Maybe$withDefault,
-													$avh4$elm_color$Color$black,
-													A2($gampleman$elm_visualization$Scale$convert, $author$project$Components$Sunburst$colorScale, item.node.category))))
+												A3($avh4$elm_color$Color$rgb, 0.5, 0.5, 0.5)))
+										]),
+									A2(
+										$elm$core$List$cons,
+										A2(
+											$elm_community$typed_svg$TypedSvg$text_,
+											_List_fromArray(
+												[
+													$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(28),
+													$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(-20)
+												]),
+											_List_fromArray(
+												[
+													$elm_community$typed_svg$TypedSvg$Core$text(
+													format(percentage))
+												])),
+										A2(
+											$elm$core$List$indexedMap,
+											F2(
+												function (i, s) {
+													return A2(
+														$elm_community$typed_svg$TypedSvg$text_,
+														_List_fromArray(
+															[
+																$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(18 - (i * 4)),
+																$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(i * 20)
+															]),
+														_List_fromArray(
+															[
+																$elm_community$typed_svg$TypedSvg$Core$text(s)
+															]));
+												}),
+											sequence)));
+							} else {
+								return A2(
+									$elm_community$typed_svg$TypedSvg$g,
+									_List_fromArray(
+										[
+											$elm_community$typed_svg$TypedSvg$Attributes$textAnchor($elm_community$typed_svg$TypedSvg$Types$AnchorMiddle),
+											$elm_community$typed_svg$TypedSvg$Attributes$fontFamily(
+											_List_fromArray(
+												['sans-serif'])),
+											$elm_community$typed_svg$TypedSvg$Attributes$fill(
+											$elm_community$typed_svg$TypedSvg$Types$Paint(
+												A3($avh4$elm_color$Color$rgb, 0.5, 0.5, 0.5)))
+										]),
+									(!sbmodel.total) ? _List_fromArray(
+										[
+											A2(
+											$elm_community$typed_svg$TypedSvg$text_,
+											_List_fromArray(
+												[
+													$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(15),
+													$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(15)
+												]),
+											_List_fromArray(
+												[
+													$elm_community$typed_svg$TypedSvg$Core$text(
+													$elm$core$String$concat(
+														_List_fromArray(
+															[
+																$author$project$Helpers$nocToCountry(country),
+																' hat keine Medaillen gewonnen'
+															])))
+												]))
+										]) : _List_fromArray(
+										[
+											A2(
+											$elm_community$typed_svg$TypedSvg$text_,
+											_List_fromArray(
+												[
+													$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(20),
+													$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(10)
+												]),
+											_List_fromArray(
+												[
+													$elm_community$typed_svg$TypedSvg$Core$text(
+													$author$project$Helpers$nocToCountry(country))
+												]))
 										]));
-							},
-							sbmodel.layout)),
-						A3($elm$svg$Svg$Lazy$lazy2, $author$project$Components$Sunburst$mouseInteractionArcs, sbmodel.layout, sbmodel.total),
-						function () {
-						var _v2 = sbmodel.hovered;
-						if (_v2.$ === 'Just') {
-							var percentage = _v2.a.percentage;
-							var sequence = _v2.a.sequence;
-							return A2(
-								$elm_community$typed_svg$TypedSvg$g,
-								_List_fromArray(
-									[
-										$elm_community$typed_svg$TypedSvg$Attributes$textAnchor($elm_community$typed_svg$TypedSvg$Types$AnchorMiddle),
-										$elm_community$typed_svg$TypedSvg$Attributes$fontFamily(
-										_List_fromArray(
-											['sans-serif'])),
-										$elm_community$typed_svg$TypedSvg$Attributes$fill(
-										$elm_community$typed_svg$TypedSvg$Types$Paint(
-											A3($avh4$elm_color$Color$rgb, 0.5, 0.5, 0.5)))
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm_community$typed_svg$TypedSvg$text_,
-										_List_fromArray(
-											[
-												$elm_community$typed_svg$TypedSvg$Attributes$InPx$fontSize(28),
-												$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(-15)
-											]),
-										_List_fromArray(
-											[
-												$elm_community$typed_svg$TypedSvg$Core$text(
-												format(percentage))
-											])),
-										A2(
-										$elm_community$typed_svg$TypedSvg$text_,
-										_List_fromArray(
-											[
-												$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(15)
-											]),
-										_List_fromArray(
-											[
-												$elm_community$typed_svg$TypedSvg$Core$text(
-												A2(
-													$elm$core$Maybe$withDefault,
-													'',
-													$elm_community$list_extra$List$Extra$last(sequence)))
-											]))
-									]));
-						} else {
-							return $elm_community$typed_svg$TypedSvg$Core$text('');
-						}
-					}()
-					]))
-			]));
-};
+							}
+						}()
+						]))
+				]));
+	});
 var $author$project$View$medaillenverteilungSection = function (model) {
 	var countries = A2(
 		$elm$core$List$map,
@@ -13880,67 +14685,97 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 					}(),
 						A2(
 						$elm$html$Html$div,
+						_List_Nil,
 						_List_fromArray(
 							[
-								A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-								A2($elm$html$Html$Attributes$style, 'flex-direction', 'row'),
-								A2($elm$html$Html$Attributes$style, 'align-items', 'flex-start')
-							]),
-						_List_fromArray(
-							[
-								$author$project$Components$Sunburst$sunburst(model.sbmodel),
 								A2(
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										A2($elm$html$Html$Attributes$style, 'width', '300px'),
 										A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-										A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
-										A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+										A2($elm$html$Html$Attributes$style, 'flex-direction', 'row'),
+										A2($elm$html$Html$Attributes$style, 'justify-content', 'space-between')
 									]),
 								_List_fromArray(
 									[
 										A2(
-										$elm$html$Html$h3,
-										_List_Nil,
+										$elm$html$Html$div,
 										_List_fromArray(
 											[
-												$elm$html$Html$text('Selected Country')
-											])),
-										A2(
-										$elm$html$Html$select,
-										_List_fromArray(
-											[
-												A2($elm$html$Html$Attributes$style, 'width', '180px'),
-												$elm$html$Html$Events$onInput($author$project$Model$ChangeSBCountry)
+												A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+												A2($elm$html$Html$Attributes$style, 'gap', '8px'),
+												A2($elm$html$Html$Attributes$style, 'align-items', 'center')
 											]),
-										A2(
-											$elm$core$List$map,
-											function (_v1) {
-												var noc = _v1.a;
-												var name = _v1.b;
-												return _Utils_eq(noc, model.sbcountry) ? A2(
-													$elm$html$Html$option,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$selected(true),
-															$elm$html$Html$Attributes$value(noc)
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text(name)
-														])) : A2(
-													$elm$html$Html$option,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$value(noc)
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text(name)
-														]));
-											},
-											countries))
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Dargestelltes Land:'),
+												A2(
+												$elm$html$Html$select,
+												_List_fromArray(
+													[
+														A2($elm$html$Html$Attributes$style, 'width', '180px'),
+														$elm$html$Html$Events$onInput($author$project$Model$ChangeselectedCountry)
+													]),
+												A2(
+													$elm$core$List$map,
+													function (_v1) {
+														var noc = _v1.a;
+														var name = _v1.b;
+														return _Utils_eq(noc, model.selectedCountry) ? A2(
+															$elm$html$Html$option,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$selected(true),
+																	$elm$html$Html$Attributes$value(noc)
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(name)
+																])) : A2(
+															$elm$html$Html$option,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$value(noc)
+																]),
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(name)
+																]));
+													},
+													countries))
+											])),
+										$elm$html$Html$text(
+										$elm$core$String$concat(
+											_List_fromArray(
+												[
+													'Anzahl Medaillen: ',
+													$elm$core$String$fromFloat(model.sbmodel.total)
+												])))
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										A2($elm$html$Html$Attributes$style, 'width', '100%'),
+										A2($elm$html$Html$Attributes$style, 'height', '100%')
+									]),
+								_List_fromArray(
+									[
+										(model.sbmodel.total > 0) ? A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												A2($elm$html$Html$Attributes$style, 'max-width', '950px'),
+												A2($elm$html$Html$Attributes$style, 'margin', '8px auto 0'),
+												A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+												A2($elm$html$Html$Attributes$style, 'color', '#555'),
+												A2($elm$html$Html$Attributes$style, 'font-size', '12px')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Tip: More details will be displayed when you hover over the category')
+											])) : A2($elm$html$Html$div, _List_Nil, _List_Nil),
+										A2($author$project$Components$Sunburst$sunburst, model.sbmodel, model.selectedCountry)
 									]))
 							]))
 					])),
@@ -13953,9 +14788,7 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 						A2($elm$html$Html$Attributes$style, 'margin', '10px auto 0')
 					]),
 				_List_fromArray(
-					[
-						$author$project$View$nextLink('#parallele-koordinaten')
-					]))
+					[$author$project$View$linkToTop]))
 			]));
 };
 var $author$project$Model$DragOverAxis = function (a) {
@@ -13964,41 +14797,13 @@ var $author$project$Model$DragOverAxis = function (a) {
 var $author$project$Model$DropAxis = function (a) {
 	return {$: 'DropAxis', a: a};
 };
-var $author$project$Model$SetPcHover = function (a) {
-	return {$: 'SetPcHover', a: a};
+var $author$project$Model$PcClick = function (a) {
+	return {$: 'PcClick', a: a};
 };
 var $author$project$Model$StartDragAxis = function (a) {
 	return {$: 'StartDragAxis', a: a};
 };
-var $author$project$Model$TogglePcDebug = function (a) {
-	return {$: 'TogglePcDebug', a: a};
-};
-var $author$project$Model$TogglePcMode = function (a) {
-	return {$: 'TogglePcMode', a: a};
-};
-var $author$project$Model$ToggleRanking = function (a) {
-	return {$: 'ToggleRanking', a: a};
-};
-var $elm$html$Html$Attributes$checked = $elm$html$Html$Attributes$boolProperty('checked');
-var $elm$core$List$concatMap = F2(
-	function (f, list) {
-		return $elm$core$List$concat(
-			A2($elm$core$List$map, f, list));
-	});
 var $elm$html$Html$Attributes$draggable = _VirtualDom_attribute('draggable');
-var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $elm$html$Html$Events$targetChecked = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'checked']),
-	$elm$json$Json$Decode$bool);
-var $elm$html$Html$Events$onCheck = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'change',
-		A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetChecked));
-};
 var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
 	return {$: 'MayPreventDefault', a: a};
 };
@@ -14009,17 +14814,15 @@ var $elm$html$Html$Events$preventDefaultOn = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
 	});
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $elm_community$typed_svg$TypedSvg$Types$AnchorStart = {$: 'AnchorStart'};
 var $elm_community$typed_svg$TypedSvg$Types$Opacity = function (a) {
 	return {$: 'Opacity', a: a};
 };
 var $noahzgordon$elm_color_extra$Color$Interpolate$RGB = {$: 'RGB'};
-var $elm$core$Basics$clamp = F3(
-	function (low, high, number) {
-		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
-	});
+var $author$project$Model$SetPcHover = function (a) {
+	return {$: 'SetPcHover', a: a};
+};
 var $elm_community$typed_svg$TypedSvg$Attributes$d = $elm_community$typed_svg$TypedSvg$Core$attribute('d');
 var $elm_community$list_extra$List$Extra$getAt = F2(
 	function (idx, xs) {
@@ -14131,13 +14934,6 @@ var $gampleman$elm_visualization$Scale$Continuous$convertTransform = F4(
 					transform(d1)),
 				range,
 				interpolate));
-	});
-var $gampleman$elm_visualization$Interpolation$float = F2(
-	function (a, to) {
-		var b = to - a;
-		return function (t) {
-			return a + (b * t);
-		};
 	});
 var $gampleman$elm_visualization$Scale$Continuous$invertTransform = F4(
 	function (transform, untransform, _v0, range) {
@@ -14286,7 +15082,6 @@ var $gampleman$elm_visualization$Statistics$tickStep = F3(
 			$elm$core$Basics$sqrt(2)) > -1) ? (step1 * 2) : step1));
 		return (_Utils_cmp(stop, start) < 0) ? (-step2) : step2;
 	});
-var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
 var $elm$core$String$repeatHelp = F3(
 	function (n, chunk, result) {
@@ -14538,10 +15333,6 @@ var $noahzgordon$elm_color_extra$Color$Convert$labToColor = A2($elm$core$Basics$
 var $noahzgordon$elm_color_extra$Color$Interpolate$linear = F3(
 	function (t, i1, i2) {
 		return i1 + ((i2 - i1) * t);
-	});
-var $avh4$elm_color$Color$rgba = F4(
-	function (r, g, b, a) {
-		return A4($avh4$elm_color$Color$RgbaSpace, r, g, b, a);
 	});
 var $avh4$elm_color$Color$toHsla = function (_v0) {
 	var r = _v0.a;
@@ -14822,8 +15613,8 @@ var $elm_community$typed_svg$TypedSvg$Attributes$InPx$y2 = function (value) {
 	return $elm_community$typed_svg$TypedSvg$Attributes$y2(
 		$elm_community$typed_svg$TypedSvg$Types$px(value));
 };
-var $author$project$Components$ParallelCoordinates$view = F5(
-	function (cfg, axes, seriesList, hoveredName, onHover) {
+var $author$project$Components$ParallelCoordinates$view = F4(
+	function (cfg, axes, seriesList, hoveredName) {
 		var valuesForAxis = function (aid) {
 			return A2(
 				$elm$core$List$filterMap,
@@ -14834,8 +15625,8 @@ var $author$project$Components$ParallelCoordinates$view = F5(
 						$elm$core$List$head(
 							A2(
 								$elm$core$List$filter,
-								function (_v11) {
-									var id = _v11.a;
+								function (_v8) {
+									var id = _v8.a;
 									return _Utils_eq(id, aid);
 								},
 								s.values)));
@@ -14881,8 +15672,8 @@ var $author$project$Components$ParallelCoordinates$view = F5(
 					$elm$core$List$head(
 						A2(
 							$elm$core$List$filter,
-							function (_v10) {
-								var id = _v10.a;
+							function (_v7) {
+								var id = _v7.a;
 								return id === 'medals';
 							},
 							s.values))));
@@ -14936,74 +15727,15 @@ var $author$project$Components$ParallelCoordinates$view = F5(
 						},
 						maxRank),
 					axes)));
-		var formatTick = F2(
-			function (axisId, v) {
-				switch (axisId) {
-					case 'pop':
-						return (v >= 1.0e9) ? ($elm$core$String$fromFloat(
-							$elm$core$Basics$round(v / 1.0e8) / 10) + 'B') : ((v >= 1.0e6) ? ($elm$core$String$fromFloat(
-							$elm$core$Basics$round(v / 1.0e5) / 10) + 'M') : ((v >= 1.0e3) ? ($elm$core$String$fromFloat(
-							$elm$core$Basics$round(v / 1.0e2) / 10) + 'K') : $elm$core$String$fromInt(
-							$elm$core$Basics$round(v))));
-					case 'gdp':
-						return (v >= 1.0e12) ? ($elm$core$String$fromFloat(
-							$elm$core$Basics$round(v / 1.0e11) / 10) + 'T') : ((v >= 1.0e9) ? ($elm$core$String$fromFloat(
-							$elm$core$Basics$round(v / 1.0e8) / 10) + 'B') : ((v >= 1.0e6) ? ($elm$core$String$fromFloat(
-							$elm$core$Basics$round(v / 1.0e5) / 10) + 'M') : $elm$core$String$fromInt(
-							$elm$core$Basics$round(v))));
-					case 'age':
-						return $elm$core$String$fromInt(
-							$elm$core$Basics$round(v));
-					default:
-						return $elm$core$String$fromInt(
-							$elm$core$Basics$round(v));
-				}
-			});
-		var extent = function (vals) {
-			var _v8 = _Utils_Tuple2(
-				$elm$core$List$minimum(vals),
-				$elm$core$List$maximum(vals));
-			if ((_v8.a.$ === 'Just') && (_v8.b.$ === 'Just')) {
-				var lo = _v8.a.a;
-				var hi = _v8.b.a;
-				return _Utils_eq(lo, hi) ? _Utils_Tuple2(lo - 1, hi + 1) : _Utils_Tuple2(lo, hi);
-			} else {
-				return _Utils_Tuple2(0, 1);
-			}
-		};
 		var yScales = A2(
 			$elm$core$List$map,
 			function (a) {
-				if (cfg.ranking) {
-					return _Utils_Tuple2(
-						a.id,
-						A2(
-							$gampleman$elm_visualization$Scale$linear,
-							_Utils_Tuple2(cfg.height - cfg.padding, cfg.padding),
-							_Utils_Tuple2(globalMaxRank, 1)));
-				} else {
-					if (a.id === 'medals') {
-						return _Utils_Tuple2(
-							a.id,
-							A2(
-								$gampleman$elm_visualization$Scale$linear,
-								_Utils_Tuple2(cfg.height - cfg.padding, cfg.padding),
-								_Utils_Tuple2(
-									maxRank(a.id),
-									1)));
-					} else {
-						var _v7 = extent(
-							valuesForAxis(a.id));
-						var lo = _v7.a;
-						var hi = _v7.b;
-						return _Utils_Tuple2(
-							a.id,
-							A2(
-								$gampleman$elm_visualization$Scale$linear,
-								_Utils_Tuple2(cfg.height - cfg.padding, cfg.padding),
-								_Utils_Tuple2(lo, hi)));
-					}
-				}
+				return _Utils_Tuple2(
+					a.id,
+					A2(
+						$gampleman$elm_visualization$Scale$linear,
+						_Utils_Tuple2(cfg.height - cfg.padding, cfg.padding),
+						_Utils_Tuple2(globalMaxRank, 1)));
 			},
 			axes);
 		var yScaleFor = function (aid) {
@@ -15070,17 +15802,13 @@ var $author$project$Components$ParallelCoordinates$view = F5(
 										return _Utils_eq(id, lastAxis.id);
 									},
 									s.values))));
-					var vPlot = cfg.ranking ? ((lastAxis.id === 'medals') ? A3($elm$core$Basics$clamp, 1, globalMaxRank, v0) : A2(
+					var vPlot = (lastAxis.id === 'medals') ? A3($elm$core$Basics$clamp, 1, globalMaxRank, v0) : A2(
 						$elm$core$Maybe$withDefault,
 						1,
 						A2(
 							$elm$core$Dict$get,
 							v0,
-							ranksForAxis(lastAxis.id)))) : ((lastAxis.id === 'medals') ? A3(
-						$elm$core$Basics$clamp,
-						1,
-						maxRank(lastAxis.id),
-						v0) : v0);
+							ranksForAxis(lastAxis.id)));
 					var rawTy = A2(
 						$gampleman$elm_visualization$Scale$convert,
 						yScaleFor(lastAxis.id),
@@ -15119,11 +15847,6 @@ var $author$project$Components$ParallelCoordinates$view = F5(
 			};
 			var xPos = A2($gampleman$elm_visualization$Scale$convert, xScale, i);
 			var ticks = A2($gampleman$elm_visualization$Scale$ticks, ys, 5);
-			var isRankAxis = cfg.ranking || (a.id === 'medals');
-			var tickLabel = function (t) {
-				return isRankAxis ? $elm$core$String$fromInt(
-					$elm$core$Basics$round(t)) : A2(formatTick, a.id, t);
-			};
 			return A2(
 				$elm_community$typed_svg$TypedSvg$g,
 				_List_fromArray(
@@ -15189,7 +15912,8 @@ var $author$project$Components$ParallelCoordinates$view = F5(
 											_List_fromArray(
 												[
 													$elm_community$typed_svg$TypedSvg$Core$text(
-													tickLabel(t))
+													$elm$core$String$fromInt(
+														$elm$core$Basics$round(t)))
 												]))
 										]));
 							},
@@ -15228,7 +15952,7 @@ var $author$project$Components$ParallelCoordinates$view = F5(
 			};
 			var toPlottable = F2(
 				function (a, v0) {
-					return cfg.ranking ? ((a.id === 'medals') ? A3($elm$core$Basics$clamp, 1, globalMaxRank, v0) : A2(
+					return (a.id === 'medals') ? A3($elm$core$Basics$clamp, 1, globalMaxRank, v0) : A2(
 						$elm$core$Maybe$withDefault,
 						1,
 						A2(
@@ -15239,11 +15963,7 @@ var $author$project$Components$ParallelCoordinates$view = F5(
 							A2(
 								$elm$core$Dict$get,
 								v0,
-								ranksForAxis(a.id))))) : ((a.id === 'medals') ? A3(
-						$elm$core$Basics$clamp,
-						1,
-						maxRank(a.id),
-						v0) : v0);
+								ranksForAxis(a.id))));
 				});
 			var ptFor = function (_v1) {
 				var i = _v1.a;
@@ -15291,17 +16011,14 @@ var $author$project$Components$ParallelCoordinates$view = F5(
 						$elm_community$typed_svg$TypedSvg$Types$Opacity(
 							faded ? 0.15 : 1)),
 						$elm_community$typed_svg$TypedSvg$Attributes$fill($elm_community$typed_svg$TypedSvg$Types$PaintNone),
-						A2(
-						$elm$html$Html$Events$on,
-						'mouseenter',
-						$elm$json$Json$Decode$succeed(
-							onHover(
-								$elm$core$Maybe$Just(s.name)))),
-						A2(
-						$elm$html$Html$Events$on,
-						'mouseleave',
-						$elm$json$Json$Decode$succeed(
-							onHover($elm$core$Maybe$Nothing)))
+						$elm$html$Html$Events$onMouseEnter(
+						$author$project$Model$SetPcHover(
+							$elm$core$Maybe$Just(s.name))),
+						$elm$html$Html$Events$onMouseLeave(
+						$author$project$Model$SetPcHover($elm$core$Maybe$Nothing)),
+						$elm$html$Html$Events$onClick(
+						$author$project$Model$PcClick(
+							$elm$core$Maybe$Just(s.name)))
 					]),
 				_List_Nil);
 		};
@@ -15349,7 +16066,8 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 					])),
 				function () {
 				var series = model.pcmodel.series;
-				var cfg = {height: 520, padding: 50, ranking: model.pcmodel.ranking, width: 950};
+				var highlighted = _Utils_eq(model.pcCountry, $elm$core$Maybe$Nothing) ? model.pcHover : model.pcCountry;
+				var cfg = {height: 520, padding: 50, width: 950};
 				var axes = model.pcmodel.axes;
 				return A2(
 					$elm$html$Html$div,
@@ -15574,68 +16292,21 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									A2($elm$html$Html$Attributes$style, 'display', 'flex'),
-									A2($elm$html$Html$Attributes$style, 'justify-content', 'center'),
-									A2($elm$html$Html$Attributes$style, 'margin-bottom', '12px'),
-									A2($elm$html$Html$Attributes$style, 'gap', '8px'),
-									A2($elm$html$Html$Attributes$style, 'align-items', 'center')
+									A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
+									A2($elm$html$Html$Attributes$style, 'padding', '10px 16px'),
+									A2($elm$html$Html$Attributes$style, 'background-color', '#007cba'),
+									A2($elm$html$Html$Attributes$style, 'color', '#fff'),
+									A2($elm$html$Html$Attributes$style, 'border-radius', '4px'),
+									A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+									_Utils_eq(model.pcCountry, $elm$core$Maybe$Nothing) ? A2($elm$html$Html$Attributes$style, 'opacity', '0.4') : A2($elm$html$Html$Attributes$style, 'opacity', '1.0'),
+									_Utils_eq(model.pcCountry, $elm$core$Maybe$Nothing) ? A2($elm$html$Html$Attributes$style, 'pointer-event', 'none') : A2($elm$html$Html$Attributes$style, 'pointer-event', 'all'),
+									_Utils_eq(model.pcCountry, $elm$core$Maybe$Nothing) ? A2($elm$html$Html$Attributes$style, 'cursor', 'not-allowed') : A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+									$elm$html$Html$Events$onClick(
+									$author$project$Model$PcClick($elm$core$Maybe$Nothing))
 								]),
 							_List_fromArray(
 								[
-									A2(
-									$elm$html$Html$span,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Ranking')
-										])),
-									A2(
-									$elm$html$Html$input,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$type_('checkbox'),
-											$elm$html$Html$Attributes$checked(model.ranking),
-											$elm$html$Html$Events$onCheck($author$project$Model$ToggleRanking)
-										]),
-									_List_Nil),
-									A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											A2($elm$html$Html$Attributes$style, 'margin-left', '16px')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Relative (Medaillen / Pop, GDP, Age)')
-										])),
-									A2(
-									$elm$html$Html$input,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$type_('checkbox'),
-											$elm$html$Html$Attributes$checked(model.useRelative),
-											$elm$html$Html$Events$onCheck($author$project$Model$TogglePcMode)
-										]),
-									_List_Nil),
-									A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											A2($elm$html$Html$Attributes$style, 'margin-left', '16px')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Tabelle')
-										])),
-									A2(
-									$elm$html$Html$input,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$type_('checkbox'),
-											$elm$html$Html$Attributes$checked(model.showPcDebug),
-											$elm$html$Html$Events$onCheck($author$project$Model$TogglePcDebug)
-										]),
-									_List_Nil)
+									$elm$html$Html$text('Fokus lösen')
 								])),
 							A2(
 							$elm$html$Html$div,
@@ -15646,7 +16317,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 								]),
 							_List_fromArray(
 								[
-									A5($author$project$Components$ParallelCoordinates$view, cfg, axes, series, model.pcHover, $author$project$Model$SetPcHover)
+									A4($author$project$Components$ParallelCoordinates$view, cfg, axes, series, highlighted)
 								])),
 							A2(
 							$elm$html$Html$div,
@@ -15667,379 +16338,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 										[
 											$elm$html$Html$text('Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Therefore, there are no values for population, GDP or age, which is why they are not included in this ranking.')
 										]))
-								])),
-							function () {
-							if (model.showPcDebug) {
-								var placementBy = $elm$core$Dict$fromList(
-									A2(
-										$elm$core$List$filterMap,
-										function (s) {
-											return A2(
-												$elm$core$Maybe$map,
-												function (_v11) {
-													var v = _v11.b;
-													return _Utils_Tuple2(
-														s.name,
-														$elm$core$Basics$round(v));
-												},
-												$elm$core$List$head(
-													A2(
-														$elm$core$List$filter,
-														function (_v10) {
-															var id = _v10.a;
-															return id === 'medals';
-														},
-														s.values)));
-										},
-										series));
-								var rows = A2(
-									$elm$core$List$sortWith,
-									F2(
-										function (a, b) {
-											return A2(
-												$elm$core$Basics$compare,
-												A2(
-													$elm$core$Maybe$withDefault,
-													9999,
-													A2($elm$core$Dict$get, a, placementBy)),
-												A2(
-													$elm$core$Maybe$withDefault,
-													9999,
-													A2($elm$core$Dict$get, b, placementBy)));
-										}),
-									A2(
-										$elm$core$List$map,
-										function ($) {
-											return $.name;
-										},
-										series));
-								var nonMedalAxes = A2(
-									$elm$core$List$filter,
-									function (a) {
-										return a.id !== 'medals';
-									},
-									axes);
-								var medalSumBy = $elm$core$Dict$fromList(
-									A2(
-										$elm$core$List$map,
-										function (r) {
-											return _Utils_Tuple2(r.country, r.total);
-										},
-										model.medalTable));
-								var headerCells = function () {
-									var valueHeaders = A2(
-										$elm$core$List$concatMap,
-										function (a) {
-											if (a.id === 'medals') {
-												return _List_fromArray(
-													[
-														A2(
-														$elm$html$Html$th,
-														_List_fromArray(
-															[
-																A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-																A2($elm$html$Html$Attributes$style, 'padding', '6px')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('Medaillenspiegel')
-															])),
-														A2(
-														$elm$html$Html$th,
-														_List_fromArray(
-															[
-																A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-																A2($elm$html$Html$Attributes$style, 'padding', '6px')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('Medaillen')
-															]))
-													]);
-											} else {
-												var labelSuffix = function () {
-													if (model.useRelative) {
-														var _v9 = a.id;
-														switch (_v9) {
-															case 'pop':
-																return ' (pro 1M)';
-															case 'gdp':
-																return ' (pro $1B)';
-															case 'age':
-																return ' (rel.)';
-															default:
-																return ' (rel.)';
-														}
-													} else {
-														return ' (Wert)';
-													}
-												}();
-												return _List_fromArray(
-													[
-														A2(
-														$elm$html$Html$th,
-														_List_fromArray(
-															[
-																A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-																A2($elm$html$Html$Attributes$style, 'padding', '6px')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text(
-																_Utils_ap(a.label, labelSuffix))
-															]))
-													]);
-											}
-										},
-										axes);
-									var rankHeaders = A2(
-										$elm$core$List$map,
-										function (a) {
-											return A2(
-												$elm$html$Html$th,
-												_List_fromArray(
-													[
-														A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-														A2($elm$html$Html$Attributes$style, 'padding', '6px')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text(a.label + ' (Rang)')
-													]));
-										},
-										nonMedalAxes);
-									return A2(
-										$elm$core$List$cons,
-										A2(
-											$elm$html$Html$th,
-											_List_fromArray(
-												[
-													A2($elm$html$Html$Attributes$style, 'text-align', 'left'),
-													A2($elm$html$Html$Attributes$style, 'padding', '6px')
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text('Land')
-												])),
-										_Utils_ap(valueHeaders, rankHeaders));
-								}();
-								var axisValuesBy = $elm$core$Dict$fromList(
-									A2(
-										$elm$core$List$map,
-										function (a) {
-											return _Utils_Tuple2(
-												a.id,
-												$elm$core$Dict$fromList(
-													A2(
-														$elm$core$List$filterMap,
-														function (s) {
-															return A2(
-																$elm$core$Maybe$map,
-																function (_v8) {
-																	var v = _v8.b;
-																	return _Utils_Tuple2(s.name, v);
-																},
-																$elm$core$List$head(
-																	A2(
-																		$elm$core$List$filter,
-																		function (_v7) {
-																			var id = _v7.a;
-																			return _Utils_eq(id, a.id);
-																		},
-																		s.values)));
-														},
-														series)));
-										},
-										axes));
-								var rankDictByAxis = $elm$core$Dict$fromList(
-									A2(
-										$elm$core$List$map,
-										function (a) {
-											var vals = $elm$core$List$reverse(
-												$elm$core$List$sort(
-													$elm$core$Dict$values(
-														A2(
-															$elm$core$Maybe$withDefault,
-															$elm$core$Dict$empty,
-															A2($elm$core$Dict$get, a.id, axisValuesBy)))));
-											var uniques = $elm_community$list_extra$List$Extra$unique(vals);
-											var dict = $elm$core$Dict$fromList(
-												A2(
-													$elm$core$List$indexedMap,
-													F2(
-														function (i, v) {
-															return _Utils_Tuple2(v, i + 1);
-														}),
-													uniques));
-											return _Utils_Tuple2(a.id, dict);
-										},
-										nonMedalAxes));
-								return A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											A2($elm$html$Html$Attributes$style, 'max-width', '1000px'),
-											A2($elm$html$Html$Attributes$style, 'margin', '16px auto'),
-											A2($elm$html$Html$Attributes$style, 'font-size', '12px')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											$elm$html$Html$table,
-											_List_fromArray(
-												[
-													A2($elm$html$Html$Attributes$style, 'width', '100%'),
-													A2($elm$html$Html$Attributes$style, 'border-collapse', 'collapse')
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$thead,
-													_List_Nil,
-													_List_fromArray(
-														[
-															A2($elm$html$Html$tr, _List_Nil, headerCells)
-														])),
-													A2(
-													$elm$html$Html$tbody,
-													_List_Nil,
-													A2(
-														$elm$core$List$map,
-														function (name) {
-															var valueTds = A2(
-																$elm$core$List$concatMap,
-																function (a) {
-																	var _v6 = a.id;
-																	if (_v6 === 'medals') {
-																		return _List_fromArray(
-																			[
-																				A2(
-																				$elm$html$Html$td,
-																				_List_fromArray(
-																					[
-																						A2($elm$html$Html$Attributes$style, 'padding', '4px'),
-																						A2($elm$html$Html$Attributes$style, 'text-align', 'center')
-																					]),
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$text(
-																						$elm$core$String$fromInt(
-																							A2(
-																								$elm$core$Maybe$withDefault,
-																								0,
-																								A2($elm$core$Dict$get, name, placementBy))))
-																					])),
-																				A2(
-																				$elm$html$Html$td,
-																				_List_fromArray(
-																					[
-																						A2($elm$html$Html$Attributes$style, 'padding', '4px'),
-																						A2($elm$html$Html$Attributes$style, 'text-align', 'center')
-																					]),
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$text(
-																						$elm$core$String$fromInt(
-																							A2(
-																								$elm$core$Maybe$withDefault,
-																								0,
-																								A2($elm$core$Dict$get, name, medalSumBy))))
-																					]))
-																			]);
-																	} else {
-																		var vVal = A2(
-																			$elm$core$Maybe$withDefault,
-																			0,
-																			A2(
-																				$elm$core$Dict$get,
-																				name,
-																				A2(
-																					$elm$core$Maybe$withDefault,
-																					$elm$core$Dict$empty,
-																					A2($elm$core$Dict$get, a.id, axisValuesBy))));
-																		return _List_fromArray(
-																			[
-																				A2(
-																				$elm$html$Html$td,
-																				_List_fromArray(
-																					[
-																						A2($elm$html$Html$Attributes$style, 'padding', '4px'),
-																						A2($elm$html$Html$Attributes$style, 'text-align', 'center')
-																					]),
-																				_List_fromArray(
-																					[
-																						$elm$html$Html$text(
-																						A3($author$project$View$formatPcValue, model.useRelative, a.id, vVal))
-																					]))
-																			]);
-																	}
-																},
-																axes);
-															var rankTds = A2(
-																$elm$core$List$map,
-																function (a) {
-																	var v = A2(
-																		$elm$core$Maybe$withDefault,
-																		0,
-																		A2(
-																			$elm$core$Dict$get,
-																			name,
-																			A2(
-																				$elm$core$Maybe$withDefault,
-																				$elm$core$Dict$empty,
-																				A2($elm$core$Dict$get, a.id, axisValuesBy))));
-																	var r = A2(
-																		$elm$core$Maybe$withDefault,
-																		0,
-																		A2(
-																			$elm$core$Dict$get,
-																			v,
-																			A2(
-																				$elm$core$Maybe$withDefault,
-																				$elm$core$Dict$empty,
-																				A2($elm$core$Dict$get, a.id, rankDictByAxis))));
-																	return A2(
-																		$elm$html$Html$td,
-																		_List_fromArray(
-																			[
-																				A2($elm$html$Html$Attributes$style, 'padding', '4px'),
-																				A2($elm$html$Html$Attributes$style, 'text-align', 'center')
-																			]),
-																		_List_fromArray(
-																			[
-																				$elm$html$Html$text(
-																				$elm$core$String$fromInt(r))
-																			]));
-																},
-																nonMedalAxes);
-															return A2(
-																$elm$html$Html$tr,
-																_List_fromArray(
-																	[
-																		A2($elm$html$Html$Attributes$style, 'border-bottom', '1px solid #eee')
-																	]),
-																A2(
-																	$elm$core$List$cons,
-																	A2(
-																		$elm$html$Html$td,
-																		_List_fromArray(
-																			[
-																				A2($elm$html$Html$Attributes$style, 'padding', '4px'),
-																				A2($elm$html$Html$Attributes$style, 'text-align', 'left')
-																			]),
-																		_List_fromArray(
-																			[
-																				$elm$html$Html$text(name)
-																			])),
-																	_Utils_ap(valueTds, rankTds)));
-														},
-														rows))
-												]))
-										]));
-							} else {
-								return $elm$html$Html$text('');
-							}
-						}()
+								]))
 						]));
 			}(),
 				A2(
@@ -16049,9 +16348,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 						A2($elm$html$Html$Attributes$style, 'text-align', 'right')
 					]),
 				_List_fromArray(
-					[
-						$author$project$View$nextLink('#heatmap')
-					]))
+					[$author$project$View$linkToTop]))
 			]));
 };
 var $author$project$View$view = function (model) {

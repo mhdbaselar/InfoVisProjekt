@@ -1,22 +1,19 @@
 module Components.Sunburst exposing (sunburst)
 
 import Color exposing (Color)
-import Hierarchy
 import Html exposing (Html)
 import List.Extra
 import Path exposing (Path)
-import Scale exposing (OrdinalScale)
+import Scale
 import Scale.Color
-import Set
 import Shape
 import Svg.Lazy
-import Tree exposing (Tree)
 import TypedSvg exposing (g, svg, text_)
 import TypedSvg.Attributes exposing (fill, textAnchor, transform, viewBox)
 import TypedSvg.Attributes.InPx exposing (y)
 import TypedSvg.Core exposing (Svg, text)
 import TypedSvg.Events
-import TypedSvg.Types exposing (AnchorAlignment(..), Opacity(..), Paint(..), Transform(..), em)
+import TypedSvg.Types exposing (AnchorAlignment(..), Opacity(..), Paint(..), Transform(..))
 
 import Model exposing (..)
 import Helpers exposing (nocToCountry)
@@ -27,12 +24,12 @@ import Helpers exposing (nocToCountry)
 
 sb_w : Float
 sb_w =
-    500
+    600
 
 
 sb_h : Float
 sb_h =
-    450
+    550
 
 
 radius : Float
@@ -41,7 +38,7 @@ radius =
 
 -- Make arcs colorfull
 mapColor : SBTreeData -> List String -> Color
-mapColor data range = 
+mapColor data range =
     let
         colors = List.range 0 (List.length range)
                 |> List.map (\i -> Scale.Color.rainbowInterpolator (toFloat i / toFloat (List.length range)))
@@ -64,7 +61,7 @@ sunburst sbmodel country =
                 |> List.Extra.unique
     in
     svg [ viewBox 0 0 sb_w sb_h ]
-        [ g [ transform [ Translate (sb_w / 2) (sb_h / 2)] ]
+        [ g [ transform [ Translate (sb_w / 2) 200] ]
             [ g []
                 (sbmodel.layout
                     |> List.map
@@ -82,7 +79,7 @@ sunburst sbmodel country =
 
                 Nothing ->
                     g [ textAnchor AnchorMiddle, TypedSvg.Attributes.fontFamily [ "sans-serif" ], fill (Paint (Color.rgb 0.5 0.5 0.5)) ]
-                        (if sbmodel.total == 0 then    
+                        (if sbmodel.total == 0 then
                                 [ text_ [ TypedSvg.Attributes.InPx.fontSize 15, y 15 ] [ text (String.concat [nocToCountry country, " hat keine Medaillen gewonnen"]) ]]
                         else
                                 [ text_ [ TypedSvg.Attributes.InPx.fontSize 20, y 10 ] [ text (nocToCountry country) ] ])

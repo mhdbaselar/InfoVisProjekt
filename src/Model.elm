@@ -44,13 +44,12 @@ type alias PCModel =
     { axes : List PCAxis
     , series : List PCSeries
     , hovered : Maybe String
-    , ranking : Bool
     }
 
 
 -- Tree Data for SunBurst-Vis
 type alias SBTreeData =
-    { sequence : List String, category : String, medalCount : Int }
+    { sequence : List String, medalCount : Int }
 
 -- Calculated svg-data for SunBurst-Vis
 type alias LayedOutDatum =
@@ -75,6 +74,7 @@ type alias HMModel =
     , columnLabels : List String
     , rowLabels : List String
     , selected : Maybe Cell
+    , sortByMedalTable: Bool
     }
 
 
@@ -83,19 +83,18 @@ type alias HMModel =
 type alias Model =
     { participations : List Participation
     , medalTable : List MedalTableRow
+    , collapseMedalTable : Bool
     , populationByCountry : Dict String { population : Int, medianAge : Int }
     , gdpByCountry : Dict String Float
     , sbmodel : SBModel
-    , sbcountry : String
+    , selectedCountry : String
     , hoverTable : Maybe String
     , tableCriterion : String
     , axisOrder : List String
     , draggingAxis : Maybe String
     , dropTargetAxis : Maybe String
-    , ranking : Bool
-    , useRelative : Bool
-    , showPcDebug : Bool
     , pcHover : Maybe String
+    , pcCountry: Maybe String
     , pcmodel : PCModel
     , heatmapmodel : HMModel
     , loading : Bool
@@ -108,40 +107,38 @@ type Msg
     | GdpReceived (Result Http.Error String)
     | OlympiaHistroyReceived (Result Http.Error String)
     | HoverSB (Maybe { sequence : List String, percentage : Float })
-    | ChangeSBCountry String
+    | ChangeselectedCountry String
     | HoverMedalTable (Maybe String)
+    | CollapseMedalTable
     | SelectCountryFromTable String
-    | NoOp
     | SetTableCriterion String
     | StartDragAxis String
     | DragOverAxis String
     | DropAxis String
-    | ToggleRanking Bool
-    | TogglePcMode Bool
-    | TogglePcDebug Bool
     | SetPcHover (Maybe String)
+    | PcClick (Maybe String)
     | OnHoverHeatMap Cell
     | OnLeaveHeatMap
+    | ChangeHeatMapSorting
 
 init : ( Model, Cmd Msg )
 init =
     ( { participations = []
       , medalTable = []
+      , collapseMedalTable = True
       , populationByCountry = Dict.empty
       , gdpByCountry = Dict.empty
       , sbmodel = { layout = [], total = 0, hovered = Nothing }
-      , sbcountry = ""
+      , selectedCountry = ""
       , hoverTable = Nothing
       , tableCriterion = "medals"
       , axisOrder = [ "medals", "pop", "gdp", "age" ]
       , draggingAxis = Nothing
       , dropTargetAxis = Nothing
-      , ranking = True
-    , useRelative = False
-      , showPcDebug = False
       , pcHover = Nothing
-      , pcmodel = { axes = [], series = [], hovered = Nothing, ranking = False }
-      , heatmapmodel = { data = [], columnLabels = [], rowLabels = [], selected = Nothing}
+      , pcCountry = Nothing
+      , pcmodel = { axes = [], series = [], hovered = Nothing }
+      , heatmapmodel = { data = [], columnLabels = [], rowLabels = [], selected = Nothing, sortByMedalTable = True }
       , loading = True
       , error = Nothing
       }
@@ -156,19 +153,41 @@ init =
 normalizeCountry : String -> String
 normalizeCountry name =
     case name of
+        -- Bereits vorhanden
         "Ivory Coast" -> "Côte d'Ivoire"
         "Cote d'Ivoire" -> "Côte d'Ivoire"
         "DPR Korea" -> "North Korea"
+        "Democratic People's Republic of Korea" -> "North Korea"
+        "Republic of Korea" -> "South Korea"
         "Korea" -> "South Korea"
         "IR Iran" -> "Iran"
+        "Islamic Republic of Iran" -> "Iran"
         "Czech Republic" -> "Czechia"
         "Czech Republic (Czechia)" -> "Czechia"
+        "Bohemia" -> "Czechia"
+        "Czechoslovakia" -> "Czechia"
         "Republic of Ireland" -> "Ireland"
         "Chinese Taipei" -> "Taiwan"
         "Hong Kong, China" -> "Hong Kong"
         "Türkiye" -> "Turkey"
         "Republic of Moldova" -> "Moldova"
         "Great Britain" -> "United Kingdom"
+        "Russian Federation" -> "Russia"
+        "Russian Olympic Committee" -> "Russia"
+        "ROC" -> "Russia"
+        "Soviet Union" -> "Russia"
+        "Unified Team" -> "Russia"
+        "East Germany" -> "Germany"
+        "West Germany" -> "Germany"
+        "People's Republic of China" -> "China"
+        "United Arab Republic" -> "Egypt"
+        "Syrian Arab Republic" -> "Syria"
+        "Kingdom of Saudi Arabia" -> "Saudi Arabia"
+        "United Republic of Tanzania" -> "Tanzania"
+        "The Bahamas" -> "Bahamas"
+        "Netherlands Antilles" -> "Netherlands"
+        "West Indies Federation" -> "Jamaica"
+        "Australasia" -> "Australia"
         _ -> name
 
 
@@ -295,7 +314,7 @@ decodeOlyHistroyCsv body =
             Ok
                 (rows
                     |> List.filter (\row -> String.contains "summer" (String.toLower row.edition))
-                    |> List.map (\row -> { country = row.country, gold = row.gold, silver = row.silver, bronze = row.bronze, total = row.total, placement = row.placement, year = row.year })
+                    |> List.map (\row -> { country = normalizeCountry row.country, gold = row.gold, silver = row.silver, bronze = row.bronze, total = row.total, placement = row.placement, year = row.year })
                 )
 
         Err _ ->
@@ -318,7 +337,7 @@ decoderHistory : Csv.Decoder RawOlyHistData
 decoderHistory =
     -- edition,year,country,country_noc,gold,silver,bronze,total
     Csv.into (\edition year country gold silver bronze total ->
-        { country = country
+        { country = normalizeCountry country
         , gold = gold
         , silver = silver
         , bronze = bronze
@@ -335,7 +354,7 @@ decoderHistory =
         |> Csv.pipeline (Csv.field "silver" Csv.int)
         |> Csv.pipeline (Csv.field "bronze" Csv.int)
         |> Csv.pipeline (Csv.field "total" Csv.int)
-        
+
 -- Filter: Nur Datensätze eines bestimmten Jahres behalten
 filterByYear : Int -> List Participation -> List Participation
 filterByYear year participations =
@@ -509,10 +528,8 @@ decodeGdpCsv body =
 
 
 -- Sunburst vorbereiten wie zuvor
-
 sportsToCategory : String -> String -> List String
 sportsToCategory sport event =
-    -- TODO: make complete
     case sport of
         "Swimming" -> ["Aquatics", "Swimming", event]
         "Artistic Swimming" -> ["Aquatics", "Artistic Swimming", event]
@@ -546,29 +563,47 @@ toSBModel parts country =
         -- Convert Participation to List of records
         recordData =
             parts
-            |> List.filter (\c -> c.noc == country && c.medal /= "No medal" )
-            |> List.map (\p -> { sequence = sportsToCategory p.sport p.event, medalCount = 1 })
-            |> List.Extra.uniqueBy (\r -> r.sequence)
+            |> List.filter (\c -> c.noc == country && c.medal /= "No medal")
+            |> List.map (\p -> { sequence = sportsToCategory p.sport p.event, medalCount = 1, medals = [p.medal] })
+            |> List.foldl
+                (\item acc ->
+                -- Search for equal rows
+                case List.Extra.find (\r -> r.sequence == item.sequence) acc of
+                    Just found ->
+                        -- if found, search for first appearance and inc medalCount
+                        (List.filter (\r -> r.sequence /= item.sequence) acc)
+                            ++ [ { sequence = item.sequence, medalCount = item.medalCount + 1, medals = found.medals ++ item.medals } ]
+                    Nothing ->
+                        -- else add new item
+                        item :: acc
+                )
+                []
 
         treeData =
             recordData
             |> Tree.stratifyWithPath
                 { path = \item -> List.Extra.inits item.sequence
-                , createMissingNode = \path -> { sequence = List.Extra.last path |> Maybe.withDefault [], medalCount = 0 }
+                , createMissingNode = \path -> { sequence = List.Extra.last path |> Maybe.withDefault [], medalCount = 0, medals = [] }
                 }
-            |> Result.withDefault (Tree.singleton { sequence = ["Tree error"], medalCount = 0 })
+            |> Result.withDefault (Tree.singleton { sequence = ["Tree error"], medalCount = 0, medals = [] })
             |> Tree.sumUp identity
                 (\node children ->
                     { node | medalCount = List.sum (List.map .medalCount children) }
                 )
             |> Tree.map
                 (\node ->
-                    { sequence = node.sequence
+                    let
+                        seq =
+                            node.medals
+                                |> List.map (\s -> String.split " " s |> List.head |> Maybe.withDefault "")
+                                |> List.intersperse ", "
+                                |> String.concat
+                    in
+                    { sequence = node.sequence ++ [seq]
                     , medalCount = node.medalCount
-                    , category = List.Extra.last node.sequence |> Maybe.withDefault "end"
                     }
                 )
-            |> Tree.sortWith (\_ a b -> compare (Tree.label a).sequence (Tree.label b).sequence)
+            |> Tree.sortWith (\_ a b -> compare (Tree.label b).medalCount (Tree.label a).medalCount)
     in
     { layout =
         treeData
@@ -587,10 +622,10 @@ toSBModel parts country =
 axisLabel : String -> String
 axisLabel aid =
     case aid of
-        "medals" -> "Medaillenspiegel"
-        "pop" -> "Einwohner"
-        "gdp" -> "BIP"
-        "age" -> "Median-Alter"
+        "medals" -> "Anzahl Medaillen"
+        "pop" -> "Medaillen pro Einwohner"
+        "gdp" -> "Medaillen pro BIP"
+        "age" -> "Medaillen pro Median-Alter"
         _ -> aid
 
 
@@ -617,23 +652,15 @@ toPCModel model =
 
         getValue : String -> String -> Float
         getValue axisId country =
-            if model.useRelative then
-                let
-                    total_medals = Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.second |> toFloat
-                in
-                case axisId of
-                    "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
-                    "pop" -> safeDiv total_medals (Dict.get country popBy |> Maybe.withDefault 0)
-                    "gdp" -> safeDiv total_medals (Dict.get country gdpBy |> Maybe.withDefault 0)
-                    "age" -> safeDiv total_medals (Dict.get country ageBy |> Maybe.withDefault 0)
-                    _ -> 0
-            else
-                case axisId of
-                    "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
-                    "pop" -> Dict.get country popBy |> Maybe.withDefault 0
-                    "gdp" -> Dict.get country gdpBy |> Maybe.withDefault 0
-                    "age" -> Dict.get country ageBy |> Maybe.withDefault 0
-                    _ -> 0
+            let
+                total_medals = Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.second |> toFloat
+            in
+            case axisId of
+                "medals" -> Dict.get country placementBy |> Maybe.withDefault (9999,0) |> Tuple.first
+                "pop" -> safeDiv total_medals (Dict.get country popBy |> Maybe.withDefault 0)
+                "gdp" -> safeDiv total_medals (Dict.get country gdpBy |> Maybe.withDefault 0)
+                "age" -> safeDiv total_medals (Dict.get country ageBy |> Maybe.withDefault 0)
+                _ -> 0
 
         countries : List String
         countries =
@@ -653,7 +680,6 @@ toPCModel model =
     { axes = axes
     , series = series
     , hovered = model.pcHover
-    , ranking = model.ranking
     }
 
 
@@ -666,9 +692,9 @@ toHMModel rows teams =
     let
         -- Jahre ermitteln
         allYears = rows |> List.map .year |> List.sort |> List.Extra.unique
-        addRow p dict = 
-            let 
-                country = p.country |> nocToCountry |> normalizeCountry
+        addRow p dict =
+            let
+                country = normalizeCountry p.country
             in
             if (country /= "Refugee Olympic Team") && (country /= "Individual Neutral Athletes") then
                 Dict.update ( country, p.year ) (\_ -> Just p.total) dict
@@ -679,7 +705,7 @@ toHMModel rows teams =
         countsBy = List.foldl addRow Dict.empty rows
 
         dataMatrix : List (List Float)
-        dataMatrix = 
+        dataMatrix =
             teams
                 |> List.map (\team ->
                     allYears
@@ -690,4 +716,5 @@ toHMModel rows teams =
     , columnLabels = (List.map fromInt allYears)
     , rowLabels = teams
     , selected = Nothing
+    , sortByMedalTable = True
     }
