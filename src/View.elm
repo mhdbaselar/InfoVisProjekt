@@ -569,6 +569,9 @@ parallelekoordinatensection model =
 -- Sektion 4: HeatMap
 heatmapSection : Model -> Html Msg
 heatmapSection model =
+    let
+        selectedOption = model.heatmapmodel.sortByMedalTable
+    in
     div [ id "heatmap", style "margin" "60px 0", style "padding" "20px" ]
         [ div [ style "max-width" "900px", style "margin" "0 auto" ]
             [ h2 [ style "text-align" "left", style "margin-bottom" "20px", style "color" "#333" ]
@@ -581,6 +584,11 @@ heatmapSection model =
                         p [ style "color" "#b00020" ] [ text ("Fehler beim Laden: " ++ err) ]
                     Nothing ->
                         text ""
+            , text "Sortieren nach " 
+            , select [ style "text-decoration" "none", style "cursor" "pointer", Events.onClick ChangeHeatMapSorting ]
+                [ option [ selected (not selectedOption), value "overall"] [ text "Overall-Ranking" ]
+                , option [ selected (selectedOption), value "medaltable" ] [ text "Medaillen-Spiegel 2024" ]
+                ]
             , div [ style "display" "flex", style "flex-direction" "column", style "align-items" "center", style "gap" "12px" ]
                 [ div [ style "font-size" "12px", style "color" "#555" ]
                     [ text "Tip: Hover cells to see values." ]

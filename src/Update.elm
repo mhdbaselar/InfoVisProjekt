@@ -184,6 +184,12 @@ update msg model =
                 newHeatMapModel = ( { state | selected = Nothing })
             in
             ( { model | heatmapmodel = newHeatMapModel }, Cmd.none )
+        ChangeHeatMapSorting ->
+            let
+                state = model.heatmapmodel
+                newHeatMapModel = ( { state | sortByMedalTable = not model.heatmapmodel.sortByMedalTable })
+            in
+            ( { model | heatmapmodel = newHeatMapModel }, Cmd.none )
 
 
 httpErrorToString : Http.Error -> String

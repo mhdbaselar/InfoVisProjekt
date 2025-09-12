@@ -74,6 +74,7 @@ type alias HMModel =
     , columnLabels : List String
     , rowLabels : List String
     , selected : Maybe Cell
+    , sortByMedalTable: Bool
     }
 
 
@@ -118,6 +119,7 @@ type Msg
     | PcClick (Maybe String)
     | OnHoverHeatMap Cell
     | OnLeaveHeatMap
+    | ChangeHeatMapSorting
 
 init : ( Model, Cmd Msg )
 init =
@@ -136,7 +138,7 @@ init =
       , pcHover = Nothing
       , pcCountry = Nothing
       , pcmodel = { axes = [], series = [], hovered = Nothing }
-      , heatmapmodel = { data = [], columnLabels = [], rowLabels = [], selected = Nothing}
+      , heatmapmodel = { data = [], columnLabels = [], rowLabels = [], selected = Nothing, sortByMedalTable = True }
       , loading = True
       , error = Nothing
       }

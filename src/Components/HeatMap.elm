@@ -11,6 +11,7 @@ import Model exposing (Msg(..), HMModel)
 import Helpers exposing (..)
 import Char
 import Svg exposing (text_)
+import Dict exposing (Dict)
 
 
 
@@ -53,8 +54,26 @@ heatmap hmmodel =
                 |> List.maximum
                 |> Maybe.withDefault 1
 
+        sortedData =
+            if (hmmodel.sortByMedalTable) then List.map2 (\a b -> (a,b)) hmmodel.rowLabels hmmodel.data
+            else
+                List.map2 (\a b -> (a,b)) hmmodel.rowLabels hmmodel.data
+                |> List.sortWith (\a b -> let
+                                                sumA = List.sum (Tuple.second a)
+                                                sumB = List.sum (Tuple.second b)
+                                            in
+                                            if sumA < sumB then
+                                                LT
+                                            else if sumA > sumB then
+                                                GT
+                                            else
+                                                EQ)
+                    |> List.reverse
+
+                
+
         quadHeatMapCells =
-            hmmodel.data
+            List.map (\(_,b) -> b) sortedData
                 |> List.map (List.map (\v -> Just {value=v, message= (String.fromFloat v), column=0, row=0}))
                 |> List.map
                     (\row ->
@@ -82,7 +101,7 @@ heatmap hmmodel =
     , Html.Attributes.style "overflow-x" "auto"
     ]
     [ Html.div [Html.Attributes.style "height" "80vh", Html.Attributes.style "overflow-y" "scroll" , Html.Attributes.style "padding-right" "10px"]
-        [ drawCells quadHeatMapCells hmmodel ]
+        [ drawCells quadHeatMapCells hmmodel (List.map (\(a,_) -> a) sortedData) ]
     , legend hmmodel
     ]
 
@@ -125,8 +144,8 @@ emptyCellContent =
         Html.span [ Html.Attributes.property "innerHTML" (Json.Encode.string "&nbsp;") ] []
     ]
 
-drawCells : List (List (Maybe Cell)) -> HMModel -> Html.Html Msg
-drawCells quadHeatMapCells hmmodel =
+drawCells : List (List (Maybe Cell)) -> HMModel -> List String -> Html.Html Msg
+drawCells quadHeatMapCells hmmodel sortedRows =
     let
         maxRowLength =
             quadHeatMapCells
@@ -185,7 +204,8 @@ drawCells quadHeatMapCells hmmodel =
         firstColumn rowIndex =
             let
                 rawLabel =
-                    hmmodel.rowLabels
+                    --hmmodel.rowLabels
+                    sortedRows
                         |> List.drop rowIndex
                         |> List.head
                         |> Maybe.withDefault ""
