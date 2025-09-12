@@ -1,8 +1,8 @@
 module View exposing (..)
 
-import Html exposing (Html, div, h1, h2, h3, text, a, img, p, table, thead, tbody, tr, th, td, select, option, input, span)
-import Html.Attributes exposing (href, src, alt, style, id, selected, value, draggable, type_, checked)
-import Html.Events as Events exposing (onInput, onCheck, on)
+import Html exposing (Html, div, h1, h2, text, a, img, p, table, thead, tbody, tr, th, td, select, option, span)
+import Html.Attributes exposing (href, src, alt, style, id, selected, value, draggable)
+import Html.Events as Events exposing (onInput, on)
 import Dict
 import List.Extra as ListExtra
 import Json.Decode as Decode
@@ -584,8 +584,8 @@ heatmapSection model =
                         p [ style "color" "#b00020" ] [ text ("Fehler beim Laden: " ++ err) ]
                     Nothing ->
                         text ""
-            , text "Sortieren nach " 
-            , select [ style "text-decoration" "none", style "cursor" "pointer", Events.onClick ChangeHeatMapSorting ]
+            , text "Sortieren nach "
+            , select [ style "text-decoration" "none", style "cursor" "pointer", Events.onInput (\_ -> ChangeHeatMapSorting) ]
                 [ option [ selected (not selectedOption), value "overall"] [ text "Overall-Ranking" ]
                 , option [ selected (selectedOption), value "medaltable" ] [ text "Medaillen-Spiegel 2024" ]
                 ]

@@ -6193,7 +6193,7 @@ var $author$project$Model$init = _Utils_Tuple2(
 		dropTargetAxis: $elm$core$Maybe$Nothing,
 		error: $elm$core$Maybe$Nothing,
 		gdpByCountry: $elm$core$Dict$empty,
-		heatmapmodel: {columnLabels: _List_Nil, data: _List_Nil, rowLabels: _List_Nil, selected: $elm$core$Maybe$Nothing},
+		heatmapmodel: {columnLabels: _List_Nil, data: _List_Nil, rowLabels: _List_Nil, selected: $elm$core$Maybe$Nothing, sortByMedalTable: true},
 		hoverTable: $elm$core$Maybe$Nothing,
 		loading: true,
 		medalTable: _List_Nil,
@@ -7470,6 +7470,8 @@ var $author$project$Model$normalizeCountry = function (name) {
 			return 'Russia';
 		case 'Russian Olympic Committee':
 			return 'Russia';
+		case 'ROC':
+			return 'Russia';
 		case 'Soviet Union':
 			return 'Russia';
 		case 'Unified Team':
@@ -7782,7 +7784,16 @@ var $author$project$Model$decoderHistory = A2(
 							$BrianHicks$elm_csv$Csv$Decode$into(
 								F7(
 									function (edition, year, country, gold, silver, bronze, total) {
-										return {bronze: bronze, country: country, edition: edition, gold: gold, placement: 0, silver: silver, total: total, year: year};
+										return {
+											bronze: bronze,
+											country: $author$project$Model$normalizeCountry(country),
+											edition: edition,
+											gold: gold,
+											placement: 0,
+											silver: silver,
+											total: total,
+											year: year
+										};
 									})))))))));
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
@@ -8401,8 +8412,7 @@ var $author$project$Model$toHMModel = F2(
 					rows)));
 		var addRow = F2(
 			function (p, dict) {
-				var country = $author$project$Model$normalizeCountry(
-					$author$project$Helpers$nocToCountry(p.country));
+				var country = $author$project$Model$normalizeCountry(p.country);
 				return ((country !== 'Refugee Olympic Team') && (country !== 'Individual Neutral Athletes')) ? A3(
 					$elm$core$Dict$update,
 					_Utils_Tuple2(country, p.year),
@@ -8433,7 +8443,8 @@ var $author$project$Model$toHMModel = F2(
 			columnLabels: A2($elm$core$List$map, $elm$core$String$fromInt, allYears),
 			data: dataMatrix,
 			rowLabels: teams,
-			selected: $elm$core$Maybe$Nothing
+			selected: $elm$core$Maybe$Nothing,
+			sortByMedalTable: true
 		};
 	});
 var $elm$core$Tuple$pair = F2(
@@ -9858,15 +9869,15 @@ var $author$project$Update$update = F2(
 								return (row.country !== 'Refugee Olympic Team') && (row.country !== 'Individual Neutral Athletes');
 							},
 							_Utils_ap(model.medalTable, rows));
-						var nocs = A2(
+						var countries = A2(
 							$elm$core$List$filter,
-							function (noc) {
-								return (noc !== 'EOR') && (noc !== 'AIN');
+							function (country) {
+								return (country !== 'Refugee Olympic Team') && (country !== 'Individual Neutral Athletes');
 							},
 							$elm_community$list_extra$List$Extra$unique(
 								A2(
 									$elm$core$List$map,
-									$author$project$Helpers$nocToCountry,
+									$author$project$Model$normalizeCountry,
 									A2(
 										$elm$core$List$map,
 										function ($) {
@@ -9877,7 +9888,7 @@ var $author$project$Update$update = F2(
 							_Utils_update(
 								model,
 								{
-									heatmapmodel: A2($author$project$Model$toHMModel, allMTrows, nocs)
+									heatmapmodel: A2($author$project$Model$toHMModel, allMTrows, countries)
 								}),
 							$elm$core$Platform$Cmd$none);
 					} else {
@@ -10081,11 +10092,21 @@ var $author$project$Update$update = F2(
 						model,
 						{heatmapmodel: newHeatMapModel}),
 					$elm$core$Platform$Cmd$none);
-			default:
+			case 'OnLeaveHeatMap':
 				var state = model.heatmapmodel;
 				var newHeatMapModel = _Utils_update(
 					state,
 					{selected: $elm$core$Maybe$Nothing});
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{heatmapmodel: newHeatMapModel}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var state = model.heatmapmodel;
+				var newHeatMapModel = _Utils_update(
+					state,
+					{sortByMedalTable: !model.heatmapmodel.sortByMedalTable});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
@@ -10255,18 +10276,12 @@ var $author$project$View$headerSection = A2(
 						]))
 				]))
 		]));
+var $author$project$Model$ChangeHeatMapSorting = {$: 'ChangeHeatMapSorting'};
 var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $author$project$Model$OnHoverHeatMap = function (a) {
 	return {$: 'OnHoverHeatMap', a: a};
 };
 var $author$project$Model$OnLeaveHeatMap = {$: 'OnLeaveHeatMap'};
-var $elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			$elm$core$List$any,
-			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isOkay),
-			list);
-	});
 var $elm$html$Html$col = _VirtualDom_node('col');
 var $elm$html$Html$colgroup = _VirtualDom_node('colgroup');
 var $avh4$elm_color$Color$RgbaSpace = F4(
@@ -10459,10 +10474,6 @@ var $avh4$elm_color$Color$toCssString = function (_v0) {
 				')'
 			]));
 };
-var $elm$core$String$foldr = _String_foldr;
-var $elm$core$String$toList = function (string) {
-	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
-};
 var $avh4$elm_color$Color$toRgba = function (_v0) {
 	var r = _v0.a;
 	var g = _v0.b;
@@ -10471,8 +10482,8 @@ var $avh4$elm_color$Color$toRgba = function (_v0) {
 	return {alpha: a, blue: b, green: g, red: r};
 };
 var $elm$html$Html$tr = _VirtualDom_node('tr');
-var $author$project$Components$HeatMap$drawCells = F2(
-	function (quadHeatMapCells, hmmodel) {
+var $author$project$Components$HeatMap$drawCells = F3(
+	function (quadHeatMapCells, hmmodel, sortedRows) {
 		var maxRowLength = A2(
 			$elm$core$Maybe$withDefault,
 			1,
@@ -10517,12 +10528,7 @@ var $author$project$Components$HeatMap$drawCells = F2(
 				$elm$core$Maybe$withDefault,
 				'',
 				$elm$core$List$head(
-					A2($elm$core$List$drop, rowIndex, hmmodel.rowLabels)));
-			var isAllUpper = function (s) {
-				var chars = $elm$core$String$toList(s);
-				return A2($elm$core$List$all, $elm$core$Char$isUpper, chars);
-			};
-			var labelText = (($elm$core$String$length(rawLabel) === 3) && isAllUpper(rawLabel)) ? $author$project$Helpers$nocToCountry(rawLabel) : rawLabel;
+					A2($elm$core$List$drop, rowIndex, sortedRows)));
 			return _List_fromArray(
 				[
 					A2(
@@ -10543,7 +10549,7 @@ var $author$project$Components$HeatMap$drawCells = F2(
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text(labelText)
+							$elm$html$Html$text(rawLabel)
 						]))
 				]);
 		};
@@ -10770,6 +10776,30 @@ var $author$project$Components$HeatMap$legend = function (_v0) {
 			]));
 };
 var $author$project$Components$HeatMap$heatmap = function (hmmodel) {
+	var sortedData = hmmodel.sortByMedalTable ? A3(
+		$elm$core$List$map2,
+		F2(
+			function (a, b) {
+				return _Utils_Tuple2(a, b);
+			}),
+		hmmodel.rowLabels,
+		hmmodel.data) : $elm$core$List$reverse(
+		A2(
+			$elm$core$List$sortWith,
+			F2(
+				function (a, b) {
+					var sumB = $elm$core$List$sum(b.b);
+					var sumA = $elm$core$List$sum(a.b);
+					return (_Utils_cmp(sumA, sumB) < 0) ? $elm$core$Basics$LT : ((_Utils_cmp(sumA, sumB) > 0) ? $elm$core$Basics$GT : $elm$core$Basics$EQ);
+				}),
+			A3(
+				$elm$core$List$map2,
+				F2(
+					function (a, b) {
+						return _Utils_Tuple2(a, b);
+					}),
+				hmmodel.rowLabels,
+				hmmodel.data)));
 	var maxRowLength = A2(
 		$elm$core$Maybe$withDefault,
 		1,
@@ -10796,7 +10826,13 @@ var $author$project$Components$HeatMap$heatmap = function (hmmodel) {
 							value: v
 						});
 				}),
-			hmmodel.data));
+			A2(
+				$elm$core$List$map,
+				function (_v1) {
+					var b = _v1.b;
+					return b;
+				},
+				sortedData)));
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -10823,7 +10859,17 @@ var $author$project$Components$HeatMap$heatmap = function (hmmodel) {
 					]),
 				_List_fromArray(
 					[
-						A2($author$project$Components$HeatMap$drawCells, quadHeatMapCells, hmmodel)
+						A3(
+						$author$project$Components$HeatMap$drawCells,
+						quadHeatMapCells,
+						hmmodel,
+						A2(
+							$elm$core$List$map,
+							function (_v0) {
+								var a = _v0.a;
+								return a;
+							},
+							sortedData))
 					])),
 				$author$project$Components$HeatMap$legend(hmmodel)
 			]));
@@ -10845,7 +10891,53 @@ var $author$project$View$linkToTop = A2(
 		[
 			$elm$html$Html$text('Nach Oben')
 		]));
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$option = _VirtualDom_node('option');
+var $elm$html$Html$select = _VirtualDom_node('select');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$View$heatmapSection = function (model) {
+	var selectedOption = model.heatmapmodel.sortByMedalTable;
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -10905,6 +10997,43 @@ var $author$project$View$heatmapSection = function (model) {
 							}
 						}
 					}(),
+						$elm$html$Html$text('Sortieren nach '),
+						A2(
+						$elm$html$Html$select,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$style, 'text-decoration', 'none'),
+								A2($elm$html$Html$Attributes$style, 'cursor', 'pointer'),
+								$elm$html$Html$Events$onInput(
+								function (_v1) {
+									return $author$project$Model$ChangeHeatMapSorting;
+								})
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$option,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$selected(!selectedOption),
+										$elm$html$Html$Attributes$value('overall')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Overall-Ranking')
+									])),
+								A2(
+								$elm$html$Html$option,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$selected(selectedOption),
+										$elm$html$Html$Attributes$value('medaltable')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Medaillen-Spiegel 2024')
+									]))
+							])),
 						A2(
 						$elm$html$Html$div,
 						_List_fromArray(
@@ -10980,6 +11109,10 @@ var $elm_community$list_extra$List$Extra$dropWhile = F2(
 		}
 	});
 var $elm$core$String$fromList = _String_fromList;
+var $elm$core$String$foldr = _String_foldr;
+var $elm$core$String$toList = function (string) {
+	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
+};
 var $author$project$View$trimFloat = function (s) {
 	if (A2($elm$core$String$contains, '.', s)) {
 		var noZeros = $elm$core$String$fromList(
@@ -11082,59 +11215,14 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$json$Json$Decode$string = _Json_decodeString;
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
-};
 var $elm$html$Html$Events$onMouseEnter = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
 		'mouseenter',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$html$Html$option = _VirtualDom_node('option');
-var $elm$html$Html$select = _VirtualDom_node('select');
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$View$medaillenspiegelSection = function (model) {
 	var selectedId = model.tableCriterion;
 	var relHeader = function () {

@@ -174,6 +174,7 @@ normalizeCountry name =
         "Great Britain" -> "United Kingdom"
         "Russian Federation" -> "Russia"
         "Russian Olympic Committee" -> "Russia"
+        "ROC" -> "Russia"
         "Soviet Union" -> "Russia"
         "Unified Team" -> "Russia"
         "East Germany" -> "Germany"
@@ -336,7 +337,7 @@ decoderHistory : Csv.Decoder RawOlyHistData
 decoderHistory =
     -- edition,year,country,country_noc,gold,silver,bronze,total
     Csv.into (\edition year country gold silver bronze total ->
-        { country = country
+        { country = normalizeCountry country
         , gold = gold
         , silver = silver
         , bronze = bronze
@@ -693,7 +694,7 @@ toHMModel rows teams =
         allYears = rows |> List.map .year |> List.sort |> List.Extra.unique
         addRow p dict =
             let
-                country = p.country |> nocToCountry |> normalizeCountry
+                country = normalizeCountry p.country
             in
             if (country /= "Refugee Olympic Team") && (country /= "Individual Neutral Athletes") then
                 Dict.update ( country, p.year ) (\_ -> Just p.total) dict
@@ -715,4 +716,5 @@ toHMModel rows teams =
     , columnLabels = (List.map fromInt allYears)
     , rowLabels = teams
     , selected = Nothing
+    , sortByMedalTable = True
     }

@@ -9,9 +9,6 @@ import Model exposing (Msg, Cell)
 import String exposing (fromFloat)
 import Model exposing (Msg(..), HMModel)
 import Helpers exposing (..)
-import Char
-import Svg exposing (text_)
-import Dict exposing (Dict)
 
 
 
@@ -70,7 +67,7 @@ heatmap hmmodel =
                                                 EQ)
                     |> List.reverse
 
-                
+
 
         quadHeatMapCells =
             List.map (\(_,b) -> b) sortedData
@@ -190,7 +187,7 @@ drawCells quadHeatMapCells hmmodel sortedRows =
                     , Html.Attributes.style "text-align" "center"
                     , case hmmodel.selected of
                         Just cellWithPosition ->
-                            if (cellWithPosition.column == i-1) then
+                            if (cellWithPosition.column == i - 1) then
                                 Html.Attributes.style "font-weight" "bold"
                             else
                                 Html.Attributes.style "font-weight" "normal"
@@ -209,16 +206,6 @@ drawCells quadHeatMapCells hmmodel sortedRows =
                         |> List.drop rowIndex
                         |> List.head
                         |> Maybe.withDefault ""
-
-                isAllUpper s =
-                    let chars = String.toList s in
-                    List.all Char.isUpper chars
-
-                labelText =
-                    if String.length rawLabel == 3 && isAllUpper rawLabel then
-                        nocToCountry rawLabel
-                    else
-                        rawLabel
             in
             [ Html.td
                 [ Html.Attributes.style "font-size" "60%"
@@ -232,7 +219,7 @@ drawCells quadHeatMapCells hmmodel sortedRows =
                     Nothing ->
                         Html.Attributes.style "font-weight" "normal"
                 ]
-                [ Html.text labelText ] 
+                [ Html.text rawLabel ]
             ]
 
         toTableRow rowIndex cellList =

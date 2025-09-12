@@ -33,7 +33,7 @@ update msg model =
                             ( { model | loading = False, error = Just decodeErr }, Cmd.none )
 
                 Err httpErr ->
-                    ( { model | loading = False, error = Just (httpErrorToString httpErr) }, Cmd.none )    
+                    ( { model | loading = False, error = Just (httpErrorToString httpErr) }, Cmd.none )
 
         PopulationReceived result ->
             case result of
@@ -84,17 +84,17 @@ update msg model =
                     case decodeOlyHistroyCsv body of
                         Ok rows ->
                             let
-                                allMTrows = 
+                                allMTrows =
                                     model.medalTable ++ rows
                                     |> List.filter (\row -> row.country /= "Refugee Olympic Team" && row.country /= "Individual Neutral Athletes")
-                                nocs =
+                                countries =
                                     allMTrows
                                         |> List.map (.country)
-                                        |> List.map nocToCountry
+                                        |> List.map normalizeCountry
                                         |> ListExtra.unique
-                                        |> List.filter (\noc -> noc /= "EOR" && noc /= "AIN")
+                                        |> List.filter (\country -> country /= "Refugee Olympic Team" && country /= "Individual Neutral Athletes")
                             in
-                            ( { model | heatmapmodel = toHMModel allMTrows nocs }, Cmd.none )
+                            ( { model | heatmapmodel = toHMModel allMTrows countries }, Cmd.none )
                         Err decodeErr ->
                             ( { model | loading = False, error = Just decodeErr }, Cmd.none )
 

@@ -26,7 +26,6 @@ import Color
 import Color.Gradient as ColorGradient
 import Color.Interpolate exposing (Space(..))
 import List.Extra as ListExtra
-import Json.Decode as Decode
 import Path
 import Scale exposing (ContinuousScale)
 import Shape
@@ -299,7 +298,7 @@ view cfg axes seriesList hoveredName =
                         Dict.get v0 (ranksForAxis a.id)
                             |> Maybe.map (\r -> clamp 1 globalMaxRank r)
                             |> Maybe.withDefault 1
-                
+
                 xAt i = Scale.convert xScale (toFloat i)
                 yAt aid v = Scale.convert (yScaleFor aid) v
 
