@@ -1,29 +1,31 @@
 \section{Daten}
 % Beschreiben Sie vorhandene Daten. Gehen sie kritisch darauf ein, in wie weit sich die Daten für die Bearbeitung der Fragestellungen und dem Erreichen von Lösungen für die oben beschriebene Zielgruppen eignen.
 
-Die Daten des quantitativen Medaillenspiegels werden von vielen Quellen bereitgestellt. Jedoch ist dieser für unsere Analyse zu allgemein. Die Platzierungen ergeben sich lediglich aus der Anzahl gewonnener Goldmedaillen. Bei gleicher Anzahl entscheidet die Anzahl an Silber- und Bronzemedaillen über die Platzierung. Gewinnt eine Nation eine Goldmedaille, belegt diese also einen besseren Platz als eine Nation mit null Goldmedaillen, aber 10 Silbermedaillen. Offensichtlich ist dieses einfache Verfahren zu trivial, um die Frage nach der sportlich erfolgreichsten Nation adäquat zu beantworten.
+Die Daten des quantitativen Medaillenspiegels werden von vielen Quellen bereitgestellt. Jedoch ist dieser für unsere Analyse zu allgemein. Die Platzierungen ergeben sich lediglich aus der Anzahl gewonnener Goldmedaillen. Bei gleicher Anzahl entscheidet die Anzahl an Silber- und Bronzemedaillen über die Platzierung. Pakistan hat zum Beispiel mit einer gewonnenen Goldmedaille einen besseren Platz belegt, als die Türkei mit 8 Silber- und Bronzemedaillen. Offensichtlich ist dieses einfache Verfahren zu trivial, um die Frage nach der sportlich erfolgreichsten Nation adäquat zu beantworten.
 
-Für eine detailliertere Analyse werden einerseits die Informationen benötigt, welche Medaillen ein konkretes Land in einer Sportart gewonnen hat, um die Verteilung der Medaillen zu analysieren. Andererseits sind für die Analyse der historischen Entwicklung der Medaillengewinner eines Landes Informationen über alle Medaillengewinner der Olympischen Sommerspiele erforderlich. Auf Kaggle steht ein Datensatz frei verfügbar, der diesen Anforderungen gerecht wird \cite{kaggleAllTime}. Dieser enthält Informationen zu jedem Sportler, der jemals an einer Olympiade teilgenommen hat. Zu jedem Sportler wird die absolvierte Sportart und gegebenenfalls die gewonnene Medaille angegeben.
-
+Für eine detailliertere Analyse werden einerseits die Informationen benötigt, in welchen Sportarten und Disziplinen ein konkretes Land die Medaillen gewonnen hat, um die Verteilung der Medaillen zu analysieren. Andererseits sind für die Analyse der historischen Entwicklung der Medaillengewinner eines Landes Informationen über alle Medaillengewinner der Olympischen Sommerspiele erforderlich. Auf Kaggle haben wir zunächst einen Datensatz gefunden, der die Daten aller Medaillengewinner von 1986 bis 2024 vereint \cite{kaggleWrongData}. Während der Entwicklung haben wir aber leider festgestellt, dass dieser Datensatz unvollständig ist und etliche Medaillengewinner nicht enthalten sind. Daher haben wir unsere Suche fortgesetzt und zwei andere Datensätze auf Kaggle gefunden. Der eine enthält umfangreiche Informationen zu den Olympischen Sommerspiele 2024 \cite{kaggleOly24} und der andere Informationen zu allen Medaillengewinnern von 1896 bis 2020 \cite{kaggleOlyHist}.
 
 \subsection{Technische Bereitstellung}
 % Erklären sie die technische Bereitstellung der Daten.
 % Wie sind die Daten zugänglich?
 % Welche Formate werden genutzt.
 % Gibt es Besonderheiten beim Lesen der Formate?
-Der Datensatz \cite{kaggleAllTime} besteht aus 253.000 Einträgen und stellt Informationen von den ersten Olympischen Sommerspielen der Neuzeit im Jahre 1896 bis 2024 bereit. Dieser kann im \texttt{CSV}-Format von der Webseite frei heruntergeladen werden. Für die Einträge werden die folgenden Attribute bereitgestellt:
+Beide Datensätze \cite{kaggleOly24, kaggleOlyHist} enthalten weit über 100.000 Einträge und sind intern nochmal in verschiedene Dateien untergliedert. Diese können im \texttt{CSV}-Format von der Webseite frei heruntergeladen werden. Für unsere Analysen nutzen wir aus dem Datensatz der Olympischen Sommerspiele 2024 die Datei \texttt{medals.csv} \cite{kaggleOly24}, welche zu jeder Medaille die folgenden Informationen bereitstellt:
 \begin{itemize}
-    \item \texttt{player\_id}: Einzigartiger Bezeichner für jeden Athleten
-    \item \texttt{Name}: Name des Athleten
-    \item \texttt{Sex}: Geschlecht (M/F) des Athleten
-    \item \texttt{Team}: Repräsentiertes Land
-    \item \texttt{NOC}: IOC-Ländercode des repräsentierten Landes
-    \item \texttt{Year}: Jahr 
-    \item \texttt{Season}: Saison der Olympischen Spiele (Summer/Winter)
-    \item \texttt{City}: Austragungsort der Olympischen Spiele
-    \item \texttt{Sport}: Sportart, in welcher der Athlet teilgenommen hat
-    \item \texttt{Event}: Konkretes Event in der Sportart
-    \item \texttt{Medal}: Gewonnene Medaille (Gold, Silver, Bronze) oder \enquote{No medal} 
+    \item \texttt{medal\_type}: Gewonnene Medaille (Bronze Medal, Silver Medal, Gold Medal)
+    \item \texttt{name}: Name des Athleten
+    \item \texttt{country\_code}: IOC-Ländercode des repräsentierten Landes
+    \item \texttt{discipline}: Sportart, in welcher der Athlet teilgenommen hat
+    \item \texttt{event}: Konkretes Event in der Sportart
+\end{itemize}
+Aus dem Datensatz über die historischen Medaillengewinner nutzen wir die Datei\\\texttt{Olympic\_Athlete\_Event\_Results.csv} \cite{kaggleOlyHist}, welche ähnliche Informationen bereitstellt:
+\begin{itemize}
+    \item \texttt{edition}: Jahr
+    \item \texttt{athlete}: Name des Athleten
+    \item \texttt{country\_noc}: IOC-Ländercode\footnote{Das Internationale Olympische Komitee (IOC) verwendet für jedes Nationale Olympische Komitee (NOC) eine aus drei Buchstaben bestehende Abkürzung.} des repräsentierten Landes
+    \item \texttt{sport}: Sportart, in welcher der Athlet teilgenommen hat
+    \item \texttt{event}: Konkretes Event in der Sportart
+    \item \texttt{medal}: Gewonnene Medaille (Gold, Silver, Bronze, null)
 \end{itemize}
 Diese Daten können in \texttt{Elm} direkt über einen entsprechenden Decoder verarbeitet werden.\\
 
@@ -52,4 +54,9 @@ Für die Analyse mit den qualitativen Einflussfaktoren werden die nachfolgenden 
 
 % [ ] Müssen die Daten nur einmal umgewandelt werden, oder jedes mal?
 
-\textbf{... TODO ...}
+\textbf{... TODO: Basel ...}
+- Daten werden jedes Mal neu geladen und müssen daher jedes Mal neu umgewandelt werden
+- Elm Decode -> abbilden auf 'type alias Partizipation'
+- 'normalizeCountry' umschreiben warum wir das machen und was passiert
+- Manuelle Overrides bei Pop/Gdp/Median-Alter
+- An die historischen Daten werden die von 2024 konkateniert
