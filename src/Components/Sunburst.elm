@@ -80,7 +80,7 @@ sunburst sbmodel country =
                 Nothing ->
                     g [ textAnchor AnchorMiddle, TypedSvg.Attributes.fontFamily [ "sans-serif" ], fill (Paint (Color.rgb 0.5 0.5 0.5)) ]
                         (if sbmodel.total == 0 then
-                                [ text_ [ TypedSvg.Attributes.InPx.fontSize 15, y 15 ] [ text (String.concat [nocToCountry country, " hat keine Medaillen gewonnen"]) ]]
+                                [ text_ [ TypedSvg.Attributes.InPx.fontSize 15, y 15 ] [ text (String.concat [nocToCountry country, " has not won any medals"]) ]]
                         else
                                 [ text_ [ TypedSvg.Attributes.InPx.fontSize 20, y 10 ] [ text (nocToCountry country) ] ])
             ]
@@ -131,3 +131,4 @@ mouseArc s =
         , padAngle = 0
         , padRadius = 0
         }
+

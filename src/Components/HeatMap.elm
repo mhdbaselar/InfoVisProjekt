@@ -130,7 +130,7 @@ legend _ =
     Html.div [ Html.Attributes.style "max-width" "55px" ]
         [ Html.div [ Html.Attributes.style "font-size" "12px", Html.Attributes.style "color" "#555", Html.Attributes.style "margin-bottom" "4px", Html.Attributes.style "text-align" "center" ]
             [ Html.h3 [ Html.Attributes.style "margin-bottom" "0" ] [ Html.text "Legende"]
-            , Html.text "Anzahl Medaillen (diskrete Stufen)" ]
+            , Html.text "Number of medals" ]
         , Html.div [ Html.Attributes.style "display" "flex", Html.Attributes.style "justify-content" "center", Html.Attributes.style "gap" "4px", Html.Attributes.style "flex-wrap" "wrap" ]
             (List.map swatch colorSteps)
         ]
@@ -273,3 +273,4 @@ drawCells quadHeatMapCells hmmodel sortedRows =
             ]
             rows
         ]
+
