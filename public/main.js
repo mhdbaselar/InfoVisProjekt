@@ -10175,7 +10175,7 @@ var $author$project$View$headerSection = A2(
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Medaillenspiegel')
+							$elm$html$Html$text('Medal Table')
 						])),
 					$elm$html$Html$text(' | '),
 					A2(
@@ -10190,7 +10190,7 @@ var $author$project$View$headerSection = A2(
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Medaillenverteilung')
+							$elm$html$Html$text('Medal Distribution')
 						])),
 					$elm$html$Html$text(' | '),
 					A2(
@@ -10205,7 +10205,7 @@ var $author$project$View$headerSection = A2(
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Parallele Koordinaten')
+							$elm$html$Html$text('Parallel Coordinates')
 						])),
 					$elm$html$Html$text(' | '),
 					A2(
@@ -10220,7 +10220,7 @@ var $author$project$View$headerSection = A2(
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Medaillen Entwicklung')
+							$elm$html$Html$text('Medal Evolution')
 						]))
 				])),
 			A2(
@@ -10236,7 +10236,7 @@ var $author$project$View$headerSection = A2(
 					_List_fromArray(
 						[
 							$elm$html$Html$Attributes$src('https://upload.wikimedia.org/wikipedia/commons/5/5c/Olympic_rings_without_rims.svg'),
-							$elm$html$Html$Attributes$alt('Olympische Ringe'),
+							$elm$html$Html$Attributes$alt('Olympic Rings'),
 							A2($elm$html$Html$Attributes$style, 'width', '300px'),
 							A2($elm$html$Html$Attributes$style, 'height', 'auto')
 						]),
@@ -10252,7 +10252,7 @@ var $author$project$View$headerSection = A2(
 				]),
 			_List_fromArray(
 				[
-					$elm$html$Html$text('Analyse des Medaillenspiegels der Olympischen Sommerspiele 2024')
+					$elm$html$Html$text('Analysis of the 2024 Summer Olympics Medal Table')
 				])),
 			A2(
 			$elm$html$Html$div,
@@ -10272,7 +10272,7 @@ var $author$project$View$headerSection = A2(
 					_List_Nil,
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Diese interaktive Analyse führt Sie durch verschiedene Perspektiven auf die Medaillenverteilung der Olympischen Sommerspiele 2024. Scrollen Sie nach unten oder nutzen Sie die Navigation, um verschiedene Visualisierungen zu erkunden.')
+							$elm$html$Html$text('This interactive analysis guides you through multiple perspectives on the medal distribution of the Paris 2024 Olympic Games. Scroll down or use the navigation to explore the visualizations.')
 						]))
 				]))
 		]));
@@ -10761,7 +10761,7 @@ var $author$project$Components$HeatMap$legend = function (_v0) {
 							[
 								$elm$html$Html$text('Legende')
 							])),
-						$elm$html$Html$text('Anzahl Medaillen (diskrete Stufen)')
+						$elm$html$Html$text('Number of medals')
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -10889,7 +10889,7 @@ var $author$project$View$linkToTop = A2(
 		]),
 	_List_fromArray(
 		[
-			$elm$html$Html$text('Nach Oben')
+			$elm$html$Html$text('Back to top')
 		]));
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
@@ -10935,6 +10935,26 @@ var $elm$html$Html$Attributes$boolProperty = F2(
 			$elm$json$Json$Encode$bool(bool));
 	});
 var $elm$html$Html$Attributes$selected = $elm$html$Html$Attributes$boolProperty('selected');
+var $elm$html$Html$strong = _VirtualDom_node('strong');
+var $author$project$View$singleTip = function (tip) {
+	return A2(
+		$elm$html$Html$p,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'margin', '0 0 4px 0')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$strong,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Tip: ')
+					])),
+				$elm$html$Html$text(tip)
+			]));
+};
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$View$heatmapSection = function (model) {
 	var selectedOption = model.heatmapmodel.sortByMedalTable;
@@ -10967,7 +10987,7 @@ var $author$project$View$heatmapSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('4. Medaillen Entwicklung')
+								$elm$html$Html$text('4. Medal Evolution')
 							])),
 						function () {
 						if (model.loading) {
@@ -10976,7 +10996,7 @@ var $author$project$View$heatmapSection = function (model) {
 								_List_Nil,
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Lade Daten...')
+										$elm$html$Html$text('Loading data...')
 									]));
 						} else {
 							var _v0 = model.error;
@@ -10990,14 +11010,14 @@ var $author$project$View$heatmapSection = function (model) {
 										]),
 									_List_fromArray(
 										[
-											$elm$html$Html$text('Fehler beim Laden: ' + err)
+											$elm$html$Html$text('Error while loading: ' + err)
 										]));
 							} else {
 								return $elm$html$Html$text('');
 							}
 						}
 					}(),
-						$elm$html$Html$text('Sortieren nach '),
+						$elm$html$Html$text('Sort by '),
 						A2(
 						$elm$html$Html$select,
 						_List_fromArray(
@@ -11031,7 +11051,7 @@ var $author$project$View$heatmapSection = function (model) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Medaillen-Spiegel 2024')
+										$elm$html$Html$text('2024 Medal Table')
 									]))
 							])),
 						A2(
@@ -11049,12 +11069,13 @@ var $author$project$View$heatmapSection = function (model) {
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
+										A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
 										A2($elm$html$Html$Attributes$style, 'font-size', '12px'),
 										A2($elm$html$Html$Attributes$style, 'color', '#555')
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Tip: Hover cells to see values.')
+										$author$project$View$singleTip('Hover cells to see values.')
 									])),
 								$author$project$Components$HeatMap$heatmap(model.heatmapmodel)
 							]))
@@ -11221,6 +11242,25 @@ var $elm$html$Html$Events$onMouseEnter = function (msg) {
 		'mouseenter',
 		$elm$json$Json$Decode$succeed(msg));
 };
+var $author$project$View$singleNote = function (note) {
+	return A2(
+		$elm$html$Html$p,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'margin', '0 0 4px 0')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$strong,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Note: ')
+					])),
+				$elm$html$Html$text(note)
+			]));
+};
 var $elm$html$Html$th = _VirtualDom_node('th');
 var $elm$html$Html$thead = _VirtualDom_node('thead');
 var $author$project$View$medaillenspiegelSection = function (model) {
@@ -11239,7 +11279,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Einwohner (Wert)')
+								$elm$html$Html$text('Population (value)')
 							])),
 						A2(
 						$elm$html$Html$th,
@@ -11265,7 +11305,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('BIP (Wert)')
+								$elm$html$Html$text('GDP (value)')
 							])),
 						A2(
 						$elm$html$Html$th,
@@ -11291,7 +11331,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Median-Alter (Wert)')
+								$elm$html$Html$text('Median age (value)')
 							])),
 						A2(
 						$elm$html$Html$th,
@@ -11312,7 +11352,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 	var popBy = A2(
 		$elm$core$Dict$map,
 		F2(
-			function (_v5, v) {
+			function (_v7, v) {
 				return v.population;
 			}),
 		model.populationByCountry);
@@ -11327,7 +11367,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 	var ageBy = A2(
 		$elm$core$Dict$map,
 		F2(
-			function (_v4, v) {
+			function (_v6, v) {
 				return v.medianAge;
 			}),
 		model.populationByCountry);
@@ -11480,7 +11520,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('1. Medaillenspiegel')
+								$elm$html$Html$text('1. Medal Table')
 							])),
 						A2(
 						$elm$html$Html$div,
@@ -11508,7 +11548,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 										_List_Nil,
 										_List_fromArray(
 											[
-												$elm$html$Html$text('Kriterium für Ranking:')
+												$elm$html$Html$text('Ranking criterion:')
 											])),
 										A2(
 										$elm$html$Html$select,
@@ -11558,7 +11598,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Vergleiche Rankings')
+										$elm$html$Html$text('Compare rankings')
 									]))
 							])),
 						function () {
@@ -11568,7 +11608,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 								_List_Nil,
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Lade Daten...')
+										$elm$html$Html$text('Loading data...')
 									]));
 						} else {
 							var _v0 = model.error;
@@ -11582,33 +11622,48 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 										]),
 									_List_fromArray(
 										[
-											$elm$html$Html$text('Fehler beim Laden: ' + err)
+											$elm$html$Html$text('Error while loading: ' + err)
 										]));
 							} else {
 								return $elm$html$Html$text('');
 							}
 						}
 					}(),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								A2($elm$html$Html$Attributes$style, 'max-width', '950px'),
-								A2($elm$html$Html$Attributes$style, 'margin', '8px auto 0'),
-								A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
-								A2($elm$html$Html$Attributes$style, 'color', '#555'),
-								A2($elm$html$Html$Attributes$style, 'font-size', '12px')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$p,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text('Tip: Click any table row to select the country and jump to its medal distribution below.')
-									]))
-							])),
+						function () {
+						var noteBlock = function () {
+							switch (selectedId) {
+								case 'pop':
+									return $author$project$View$singleNote('Population criterion uses medals per 1M inhabitants (Med/Pop).');
+								case 'gdp':
+									return $author$project$View$singleNote('GDP criterion uses medals per $1B GDP (Med/GDP).');
+								case 'age':
+									return $author$project$View$singleNote('Age criterion uses medals divided by median age (Med/Age).');
+								default:
+									return $elm$html$Html$text('');
+							}
+						}();
+						return A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'max-width', '950px'),
+									A2($elm$html$Html$Attributes$style, 'margin', '8px auto 0'),
+									A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
+									A2($elm$html$Html$Attributes$style, 'color', '#555'),
+									A2($elm$html$Html$Attributes$style, 'font-size', '12px')
+								]),
+							A2(
+								$elm$core$List$cons,
+								$author$project$View$singleTip('Click any table row to select the country and jump to its medal distribution below.'),
+								function () {
+									if (selectedId === 'medals') {
+										return _List_Nil;
+									} else {
+										return _List_fromArray(
+											[noteBlock]);
+									}
+								}()));
+					}(),
 						A2(
 						$elm$html$Html$table,
 						_List_fromArray(
@@ -11642,7 +11697,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Platz')
+															$elm$html$Html$text('Rank')
 														])),
 													A2(
 													$elm$html$Html$th,
@@ -11653,7 +11708,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Land')
+															$elm$html$Html$text('Country')
 														])),
 													A2(
 													$elm$html$Html$th,
@@ -11675,7 +11730,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Silber')
+															$elm$html$Html$text('Silver')
 														])),
 													A2(
 													$elm$html$Html$th,
@@ -11697,7 +11752,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 														]),
 													_List_fromArray(
 														[
-															$elm$html$Html$text('Gesamt')
+															$elm$html$Html$text('Total')
 														]))
 												]),
 											relHeader))
@@ -12128,7 +12183,7 @@ var $author$project$View$medaillenspiegelSection = function (model) {
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										model.collapseMedalTable ? 'Alle anzeigen' : 'Weniger anzeigen')
+										model.collapseMedalTable ? 'Show all' : 'Show fewer')
 									]))
 							]))
 					])),
@@ -14585,7 +14640,7 @@ var $author$project$Components$Sunburst$sunburst = F2(
 														_List_fromArray(
 															[
 																$author$project$Helpers$nocToCountry(country),
-																' hat keine Medaillen gewonnen'
+																' has not won any medals'
 															])))
 												]))
 										]) : _List_fromArray(
@@ -14653,7 +14708,7 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('2. Medaillenverteilung')
+								$elm$html$Html$text('2. Medal Distribution')
 							])),
 						function () {
 						if (model.loading) {
@@ -14662,7 +14717,7 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 								_List_Nil,
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Lade Daten...')
+										$elm$html$Html$text('Loading data...')
 									]));
 						} else {
 							var _v0 = model.error;
@@ -14676,7 +14731,7 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 										]),
 									_List_fromArray(
 										[
-											$elm$html$Html$text('Fehler beim Laden: ' + err)
+											$elm$html$Html$text('Error while loading: ' + err)
 										]));
 							} else {
 								return $elm$html$Html$text('');
@@ -14708,7 +14763,7 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text('Dargestelltes Land:'),
+												$elm$html$Html$text('Selected country:'),
 												A2(
 												$elm$html$Html$select,
 												_List_fromArray(
@@ -14748,7 +14803,7 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 										$elm$core$String$concat(
 											_List_fromArray(
 												[
-													'Anzahl Medaillen: ',
+													'Total medals: ',
 													$elm$core$String$fromFloat(model.sbmodel.total)
 												])))
 									])),
@@ -14773,7 +14828,7 @@ var $author$project$View$medaillenverteilungSection = function (model) {
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text('Tip: More details will be displayed when you hover over the category')
+												$author$project$View$singleTip('More details will be displayed when you hover over a category segment.')
 											])) : A2($elm$html$Html$div, _List_Nil, _List_Nil),
 										A2($author$project$Components$Sunburst$sunburst, model.sbmodel, model.selectedCountry)
 									]))
@@ -14804,6 +14859,44 @@ var $author$project$Model$StartDragAxis = function (a) {
 	return {$: 'StartDragAxis', a: a};
 };
 var $elm$html$Html$Attributes$draggable = _VirtualDom_attribute('draggable');
+var $author$project$View$multipleTips = function (tips) {
+	if (!tips.b) {
+		return $elm$html$Html$text('');
+	} else {
+		return A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			A2(
+				$elm$core$List$cons,
+				A2(
+					$elm$html$Html$p,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'margin', '0 0 4px 0'),
+							A2($elm$html$Html$Attributes$style, 'font-weight', 'bold'),
+							A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Tips:')
+						])),
+				A2(
+					$elm$core$List$map,
+					function (t) {
+						return A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									A2($elm$html$Html$Attributes$style, 'margin', '0 0 4px 0')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(t)
+								]));
+					},
+					tips)));
+	}
+};
 var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
 	return {$: 'MayPreventDefault', a: a};
 };
@@ -16062,7 +16155,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('3. Parallele Koordinaten')
+						$elm$html$Html$text('3. Parallel Coordinates')
 					])),
 				function () {
 				var series = model.pcmodel.series;
@@ -16133,7 +16226,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 													]) : _List_Nil),
 											_List_fromArray(
 												[
-													$elm$html$Html$text('Drop am Anfang')
+													$elm$html$Html$text('Drop at start')
 												]))
 										]),
 										A2(
@@ -16257,7 +16350,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 													]) : _List_Nil),
 											_List_fromArray(
 												[
-													$elm$html$Html$text('Drop ans Ende')
+													$elm$html$Html$text('Drop at end')
 												]))
 										])
 									]))),
@@ -16266,27 +16359,16 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 							_List_fromArray(
 								[
 									A2($elm$html$Html$Attributes$style, 'max-width', '950px'),
-									A2($elm$html$Html$Attributes$style, 'margin', '8px auto 0'),
+									A2($elm$html$Html$Attributes$style, 'margin', '12px auto 0'),
 									A2($elm$html$Html$Attributes$style, 'text-align', 'center'),
 									A2($elm$html$Html$Attributes$style, 'color', '#555'),
 									A2($elm$html$Html$Attributes$style, 'font-size', '12px')
 								]),
 							_List_fromArray(
 								[
-									A2(
-									$elm$html$Html$p,
-									_List_Nil,
+									$author$project$View$multipleTips(
 									_List_fromArray(
-										[
-											$elm$html$Html$text('Tip: You can reorder the axes by dragging the axis labels above the chart (drag and drop).')
-										])),
-									A2(
-									$elm$html$Html$p,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Tip: Click any axis label above to jump to the medal table and set that criterion.')
-										]))
+										['Reorder axes by dragging the axis labels above the chart.', 'Click an axis label to jump to the medal table and set that criterion.', 'Hover a line to highlight it and show the country name.', 'Click a line to lock the highlight (use \'Release focus\' to release).']))
 								])),
 							A2(
 							$elm$html$Html$div,
@@ -16306,7 +16388,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 								]),
 							_List_fromArray(
 								[
-									$elm$html$Html$text('Fokus lösen')
+									$elm$html$Html$text('Release focus')
 								])),
 							A2(
 							$elm$html$Html$div,
@@ -16331,13 +16413,7 @@ var $author$project$View$parallelekoordinatensection = function (model) {
 								]),
 							_List_fromArray(
 								[
-									A2(
-									$elm$html$Html$p,
-									_List_Nil,
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Note: EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Therefore, there are no values for population, GDP or age, which is why they are not included in this ranking.')
-										]))
+									$author$project$View$singleNote('EOR (Refugee Olympic Team) and AIN (Individual Neutral Athletes) are not countries. Therefore, there are no values for population, GDP or age, which is why they are not included in this ranking.')
 								]))
 						]));
 			}(),
