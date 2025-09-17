@@ -1,9 +1,8 @@
 \section{Daten}
 % Beschreiben Sie vorhandene Daten. Gehen sie kritisch darauf ein, in wie weit sich die Daten für die Bearbeitung der Fragestellungen und dem Erreichen von Lösungen für die oben beschriebene Zielgruppen eignen.
+Die Daten des quantitativen Medaillenspiegels werden von vielen Quellen bereitgestellt. Für unsere Analyse sind diese Daten jedoch zu ungenau. Außerdem werden die Platzierungen im Medaillenspiegel lediglich aus der Anzahl gewonnener Goldmedaillen ermittelt. Bei gleicher Anzahl entscheidet die Anzahl an Silber- und Bronzemedaillen über die Platzierung. Beispielsweise hat Pakistan hat mit einer einzigen Goldmedaille einen besseren Platz belegt, als die Türkei mit 8 Silber- und Bronzemedaillen. Offensichtlich ist dieses einfache Verfahren zu trivial, um die Frage nach der sportlich erfolgreichsten Nation adäquat zu beantworten.
 
-Die Daten des quantitativen Medaillenspiegels werden von vielen Quellen bereitgestellt. Jedoch ist dieser für unsere Analyse zu allgemein. Die Platzierungen ergeben sich lediglich aus der Anzahl gewonnener Goldmedaillen. Bei gleicher Anzahl entscheidet die Anzahl an Silber- und Bronzemedaillen über die Platzierung. Pakistan hat zum Beispiel mit einer gewonnenen Goldmedaille einen besseren Platz belegt, als die Türkei mit 8 Silber- und Bronzemedaillen. Offensichtlich ist dieses einfache Verfahren zu trivial, um die Frage nach der sportlich erfolgreichsten Nation adäquat zu beantworten.
-
-Für eine detailliertere Analyse werden einerseits die Informationen benötigt, in welchen Sportarten und Disziplinen ein konkretes Land die Medaillen gewonnen hat, um die Verteilung der Medaillen zu analysieren. Andererseits sind für die Analyse der historischen Entwicklung der Medaillengewinner eines Landes Informationen über alle Medaillengewinner der Olympischen Sommerspiele erforderlich. Auf Kaggle haben wir zunächst einen Datensatz gefunden, der die Daten aller Medaillengewinner von 1986 bis 2024 vereint \cite{kaggleWrongData}. Während der Entwicklung haben wir aber leider festgestellt, dass dieser Datensatz unvollständig ist und etliche Medaillengewinner nicht enthalten sind. Daher haben wir unsere Suche fortgesetzt und zwei andere Datensätze auf Kaggle gefunden. Der eine enthält umfangreiche Informationen zu den Olympischen Sommerspiele 2024 \cite{kaggleOly24} und der andere Informationen zu allen Medaillengewinnern von 1896 bis 2020 \cite{kaggleOlyHist}.
+Für eine detailliertere Analyse werden einerseits die Informationen benötigt, in welchen Sportarten und Disziplinen ein konkretes Land die Medaillen gewonnen hat, um die Verteilung der Medaillen zu analysieren. Andererseits sind für die Analyse des historischen Medaillenspiegels eines Landes Informationen aller vergangenen Olympischen Sommerspiele erforderlich. Auf Kaggle haben wir zunächst einen Datensatz gefunden, der die Daten aller Medaillengewinner von 1986 bis 2024 vereint \cite{kaggleWrongData}. Während der Entwicklung haben wir aber leider festgestellt, dass dieser Datensatz unvollständig ist und etliche Medaillengewinner nicht enthalten sind. Daher haben wir unsere Suche fortgesetzt und zwei andere Datensätze auf Kaggle gefunden. Der eine enthält umfangreiche Informationen zu den Olympischen Sommerspiele 2024 \cite{kaggleOly24} und der andere Informationen zu allen Medaillengewinnern von 1896 bis 2020 \cite{kaggleOlyHist}.
 
 \subsection{Technische Bereitstellung}
 % Erklären sie die technische Bereitstellung der Daten.
@@ -14,15 +13,15 @@ Beide Datensätze \cite{kaggleOly24, kaggleOlyHist} enthalten weit über 100.000
 \begin{itemize}
     \item \texttt{medal\_type}: Gewonnene Medaille (Bronze Medal, Silver Medal, Gold Medal)
     \item \texttt{name}: Name des Athleten
-    \item \texttt{country\_code}: IOC-Ländercode des repräsentierten Landes
-    \item \texttt{discipline}: Sportart, in welcher der Athlet teilgenommen hat
+    \item \texttt{country\_code}: IOC-Ländercode\footnote{Das Internationale Olympische Komitee (IOC) verwendet für jedes Nationale Olympische Komitee (NOC) eine aus drei Buchstaben bestehende Abkürzung.} des repräsentierten Landes
+    \item \texttt{discipline}: Sportart, in welcher die Medaillen gewonnen wurde
     \item \texttt{event}: Konkretes Event in der Sportart
 \end{itemize}
-Aus dem Datensatz über die historischen Medaillengewinner nutzen wir die Datei\\\texttt{Olympic\_Athlete\_Event\_Results.csv} \cite{kaggleOlyHist}, welche ähnliche Informationen bereitstellt:
+Aus dem Datensatz des historischen Medaillenspiegels nutzen wir die Datei\\\texttt{Olympic\_Athlete\_Event\_Results.csv} \cite{kaggleOlyHist}, welche ähnliche Informationen bereitstellt:
 \begin{itemize}
     \item \texttt{edition}: Jahr
     \item \texttt{athlete}: Name des Athleten
-    \item \texttt{country\_noc}: IOC-Ländercode\footnote{Das Internationale Olympische Komitee (IOC) verwendet für jedes Nationale Olympische Komitee (NOC) eine aus drei Buchstaben bestehende Abkürzung.} des repräsentierten Landes
+    \item \texttt{country\_noc}: IOC-Ländercode des repräsentierten Landes
     \item \texttt{sport}: Sportart, in welcher der Athlet teilgenommen hat
     \item \texttt{event}: Konkretes Event in der Sportart
     \item \texttt{medal}: Gewonnene Medaille (Gold, Silver, Bronze, null)
@@ -32,18 +31,6 @@ Diese Daten können in \texttt{Elm} direkt über einen entsprechenden Decoder ve
 % Haben sie die Daten sinnvoll mit weiteren Datenquellen ergänzt? Wenn ja, wie?
 Für die Analyse mit den qualitativen Einflussfaktoren werden die nachfolgenden Kennzahlen genutzt, welche von den aufgeführten Quellen bezogen werden:
 \begin{itemize}
-    % Für Einwohnerzahl könnte man vllt die Datensätze von Kaggle nehmen:
-    % 1960 - 2022: https://www.kaggle.com/datasets/ayushparwal2026/country-population-from-1960-to-2022
-    % 2023: https://www.kaggle.com/datasets/rajkumarpandey02/2023-world-population-by-country
-    % 2024: https://www.kaggle.com/datasets/dataanalyst001/world-population-by-country-2024
-    
-    % Für Bruttoinlandsprodukt:
-    % 1999 - 2022: https://www.kaggle.com/datasets/alejopaullier/-gdp-by-country-1999-2022
-
-    % Einwohnerzahl und Median Alter - Stand 2024
-    % https://www.kaggle.com/datasets/samithsachidanandan/world-population-by-countries-2025
-    % Bruttoinlandsprodukt - Stand 2023
-    % https://www.kaggle.com/datasets/nelgiriyewithana/countries-of-the-world-2023
     \item \texttt{Einwohnerzahl}: \cite{kagglePopulation}
     \item \texttt{Bruttoinlandsprodukt}: \cite{kaggleBIP}
     \item  \texttt{Median Alter der Bevölkerung}: \cite{kagglePopulation}
@@ -54,9 +41,57 @@ Für die Analyse mit den qualitativen Einflussfaktoren werden die nachfolgenden 
 
 % [ ] Müssen die Daten nur einmal umgewandelt werden, oder jedes mal?
 
-\textbf{... TODO: Basel ...}
-- Daten werden jedes Mal neu geladen und müssen daher jedes Mal neu umgewandelt werden
-- Elm Decode -> abbilden auf 'type alias Partizipation'
-- 'normalizeCountry' umschreiben warum wir das machen und was passiert
-- Manuelle Overrides bei Pop/Gdp/Median-Alter
-- An die historischen Daten werden die von 2024 konkateniert
+% \textbf{... TODO: Basel ...}
+% - Daten werden jedes Mal neu geladen und müssen daher jedes Mal neu umgewandelt werden
+% - Elm Decode -> abbilden auf 'type alias Partizipation'
+% - 'normalizeCountry' umschreiben warum wir das machen und was passiert
+% - Manuelle Overrides bei Pop/Gdp/Median-Alter
+% - An die historischen Daten werden die von 2024 konkateniert
+
+Die gesamte Vorverarbeitung wurde vollständig in \texttt{Elm} implementiert, so dass jede Änderung der Rohdaten (oder ein erneutes Laden im Browser) automatisch zu einer aktualisierten Visualisierung führt. Dadurch entfällt ein manueller Pre-Processing Schritt und die Pipeline bleibt reproduzierbar. Die Datenvorverarbeitung besteht aus den folgenden Schritten, welche im Anschluss beschrieben werden:
+
+\begin{enumerate}
+    \item Laden und Decodieren der CSV-Dateien
+    \item Typisierung in interne Records (u.a. \texttt{Participation}, \texttt{MedalTableRow})
+    \item Eliminierung doppelter Sport-Event-Medaillen-Kombinationen.
+    \item Normalisierung von Ländernamen zur sicheren Verknüpfung (\texttt{normalizeCountry})
+    \item Anreicherung mit demographischen und wirtschaftlichen Kennzahlen (Einwohnerzahl, BIP, Medianalter) inkl. manueller Overrides
+    \item Zusammenführung historischer Daten (1896–2020) mit 2024er Daten
+    \item Ausschluss spezieller Teams ohne valide Referenzwerte für relative Kennzahlen
+\end{enumerate}
+
+\paragraph{1. Laden und Decodieren}
+Jede CSV-Datei wird per \texttt{Http.get} geladen (Funktionen \texttt{requestOly2024Csv}, \texttt{requestPopulationCsv}, \texttt{requestGdpCsv}, \texttt{requestOlyHistoryCsv}). Das Decoding erfolgt mit \texttt{Csv.decodeCsv} und eigens definierten Decodern wie \texttt{decoder2024} bzw. \texttt{decoderHistory}. Beispielauszug (vereinfacht):
+\begin{verbatim}
+decoder2024 : Csv.Decoder Participation
+decoder2024 =
+  Csv.into (\medal_type name discipline event country_code ->
+      { medal = medal_type
+      , name = name
+      , sport = discipline
+      , event = event
+      , noc = country_code
+      , year = 2024 })
+    |> Csv.pipeline (Csv.field "medal_type" Csv.string)
+    |> ...
+\end{verbatim}
+Die Rohzeilen der CSV-Datei werden so in den typisierten Datentyp \texttt{Participation} überführt.
+
+\paragraph{2. Typisierung und Grundstruktur}
+Mit den im Datenmodell verwendeten Typen (z.B. \texttt{Participation}, \texttt{MedalTableRow},
+\texttt{PCModel}, \texttt{SBModel}) sind die späteren Schritte (Aggregation, Sortierung, Ranking) statisch überprüfbar. Dadurch können Fehler, wie fehlende Spalten oder unerwartete Formate, früh behoben werden. Ergänzend zur Struktur nutzen wir für nominale bzw. kategoriale Attribute (Ländernamen, Athletennamen, Sportarten, Events, Disziplinen, Medaillentypen) konsequent den Datentyp \texttt{String}. Für ganzzahlige messbare Größen (Jahr, Medaillenzahlen, Platzierung, Bevölkerungszahl, Medianalter) den Datentyp \texttt{Int}, und für wirtschaftliche Kennzahlen mit potentiell großen Beträgen und Dezimalanteilen (BIP) den Datentyp \texttt{Float}.
+
+\paragraph{3. Duplikateliminierung}
+Mehrfachzeilen entstehen u.a. durch Mehrfachreferenzen identischer Medaillen (Formatierungs- oder Team-bedingte Wiederholungen). Es wird pro Eintrag ein stabiler Schlüssel (Event, Sport, NOC, Medaillentyp) gebildet und nur die erste Instanz behalten. Damit wird jede tatsächlich vergebene Medaille genau einmal gezählt und künstliche Aufblähungen der Summen verhindert.
+
+\paragraph{4. Normalisierung von Ländernamen}
+Die Quell‑CSV Dateien verwenden inkonsistente oder historisch bedingte Varianten von Ländernamen (z.B. \enquote{Republic of Korea} vs. \enquote{Korea}), sodass sie ohne Bereinigung als getrennte Einheiten gezählt würden. Durch den langen historischen Zeitraum (ab 1896) treten zusätzlich Um- und Aufspaltungen auf (z.B. \enquote{West Germany} bzw. \enquote{East Germany}), die wir einheitlich auf den heutigen Sammelnamen (\enquote{Germany}) abbilden. Historische oder internationale Sammelteams (z.B. \enquote{Soviet Union}, \enquote{Unified Team}, \enquote{Australasia}) werden auf das dominierende Nachfolge- bzw. Mitgliedsland (hier: \enquote{Russia} bzw. \enquote{Australia}) projiziert, um zeitliche Serien vergleichbar zu halten. Diese Normalisierung verhindert doppelte oder fehlende Aggregationen und bildet die Grundlage für stabile Joins mit demographischen und wirtschaftlichen Kennzahlen.
+
+\paragraph{5. Anreicherung mit Kennzahlen und Overrides} 
+Die Bevölkerungszahl, Medianalter und BIP werden nach dem Dekodieren in Dictionaries abgelegt. Fehlende Einzelwerte haben wir gegebenenfalls manuell ergänzt (z.\,B. anhand von \href{https://www.statista.com}{Statista}), damit alle Länder im Medaillenspiegel und den alternativen Länderrankings konsistente Referenzgrößen für relative Metriken aufweisen.
+
+\paragraph{6. Zusammenführung Historie mit 2024}
+Die historischen Medaillendatensätze (bis 2020) werden mit den 2024er Ergebnissen konkateniert. Dadurch entsteht ein Zeitstrahl für die Heatmap und historische Vergleiche.
+
+\paragraph{7. Ausschluss spezieller Einträge}
+Spezielle Einträge wie Refugee Olympic Team (EOR) oder Individual Neutral Athletes (AIN) werden für Kennzahl-basierte Vergleiche ausgeschlossen, weil keine Population- oder BIP-Werte existieren.
