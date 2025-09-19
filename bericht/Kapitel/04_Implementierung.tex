@@ -1,4 +1,118 @@
 \section{Implementierung}
-% Beschreiben Sie die Implementierung ihrer Visualisierungsanwendung in Elm. Stellen die Gliederung ihres Quellcodes vor. Haben Sie verschiedene Elm-Module erstellt. Was war aufwändig umzusetzen, was ließ sich mit dem vorhanden Code aus den Übungen relativ einfach umsetzen? 
+% Beschreiben Sie die Implementierung ihrer Visualisierungsanwendung in Elm. Stellen die Gliederung ihres Quellcodes vor. Haben Sie verschiedene Elm-Module erstellt. Was war aufwändig umzusetzen, was ließ sich mit dem vorhanden Code aus den Übungen relativ einfach umsetzen?
 % Wie sieht die Elm-Datenstruktur für das Model aus, in dem die verschiedenen Zustände der Interaktion gespeichert werden können.
-\textbf{... TODO ...}
+Dieses Kapitel beschreibt die Implementierung der Visualisierungsanwendung in \texttt{Elm}. Es werden die Modulstruktur und zentrale Funktionen vorgestellt, das Datenmodell (\texttt{Model}) mit seinen Zuständen für die Interaktion erläutern und aufwändige bzw. wiederverwendete Codesegmente hervorgehoben.
+
+\subsection{Gliederung des Quellcodes}
+Die Anwendung folgt strikt der \emph{Elm Architecture} für Webanwendungen \cite{elm}, mit klarer Trennung von \texttt{Model}, \texttt{Update}, \texttt{View}, sowie anwendungsspezifischen Komponenten. Dies wurde mit der folgenden Dateistruktur umgesetzt:
+\dirtree{%
+.1 src/.
+.2 Components/.
+.3 HeatMap.elm.
+.3 ParallelCoordinates.elm.
+.3 Sunburst.elm.
+.2 Helpers.elm.
+.2 Main.elm.
+.2 Model.elm.
+.2 Update.elm.
+.2 View.elm.
+}
+
+\begin{itemize}
+	\item \texttt{Main.elm}: Einstiegspunkt. Bindet \texttt{init}, \texttt{update} und \texttt{view} ein.
+	\item \texttt{Model.elm}: Zentrale Typen, Datendekoder, Datenbeschaffung (HTTP), Vorverarbeitung und Modellbildung für die Visualisierungen. %Enthält u.a. \texttt{Participation}, \texttt{MedalTableRow}, \texttt{PCModel}, \texttt{SBModel}, \texttt{HMModel} sowie Funktionen wie \texttt{toMedalTable}, \texttt{toPCModel}, \texttt{toSBModel}, \texttt{toHMModel}.
+	\item \texttt{Update.elm}: Zustandslogik (\texttt{update}), Nachrichten (\texttt{Msg}), Datenfluss nach HTTP-Responses, sowie Interaktions-Handling.
+	\item \texttt{View.elm}: Darstellung der vier Visualisierungen (Medaillenspiegel, SunBurst, Parallele Koordinaten, HeatMap), inklusive Formatierungs-Helfern und UI-Logik (z.B. Achsenwahl, Tooltips, Hinweise).
+	\item \texttt{Sunburst}.\texttt{elm}, \texttt{ParallelCoordinates}.\texttt{elm}, \texttt{HeatMap}.\texttt{elm}: Implementierung der jeweiligen Visualisierungen.
+	\item \texttt{Helpers.elm}: Zuordnung \emph{NOC} $\Rightarrow$ Ländernamen (\texttt{nocToCountry}) als robuste Basis für Joins und Anzeigen.
+\end{itemize}
+
+\subsection{Datenmodell}
+Das zentrale \texttt{Model} speichert sowohl Rohdaten als auch abgeleitete Modelle und UI-Zustände:
+	\begin{itemize}
+	\item \texttt{participations : List Participation}: typisierte Rohzeilen der 2024er Teilnahmen.
+	\item \texttt{medalTable : List MedalTableRow}: nach dem Land aggregierte Medaillen (inkl. Rang).
+	\item \texttt{collapseMedalTable : Bool}: UI-Zustand zum Einklappen der Medaillentabelle (Top-10).
+	\item \texttt{populationByCountry : Dict String \{ population, medianAge \}}: demographische\\ Kennzahlen je Land.
+	\item \texttt{gdpByCountry : Dict String Float}: BIP je Land.
+	\item \texttt{sbmodel : SBModel}: vorberechnete Layoutdaten und Hover-State für die Sunburst-\\Visualisierung.
+	\item \texttt{selectedCountry : String}: fokussiertes Land für die Sunburst-Visualisierung.
+	\item \texttt{hoverTable : Maybe String}: Hover-Zustand im Medaillenspiegel.
+	\item \texttt{tableCriterion : String}: Kriterium zur Darstellung der Medaillentabelle (\texttt{"medals"}, \texttt{"pop"}, \texttt{"gdp"}, \texttt{"age"}).
+	\item \texttt{axisOrder : List String}: Reihenfolge der Achsen für parallele Koordinaten.
+	\item \texttt{draggingAxis : Maybe String}: Zustand, um die aktuell gezogene Achse zu speichern.
+    \item \texttt{dropTargetAxis : Maybe String}: Zustand, um die gerade überfahrene Ziel-Achse zu speichern (ermöglicht visuelles Feedback)
+	\item \texttt{pcHover, pcCountry : Maybe String}: Hover- bzw. Fokus-Zustand für parallele Koordinaten (Fokussierung via Klick).
+	\item \texttt{pcmodel : PCModel}: Achsenliste und Werte-Serien für alle Länder.
+	\item \texttt{heatmapmodel : HMModel}: Matrix über Jahre/Länder inkl. Selektion und Sortierpräferenz.
+	\item \texttt{loading : Bool}, \texttt{error : Maybe String}: Lade- und Fehlerzustand für robuste UI.
+\end{itemize}
+
+\subsection{Visualisierungen}
+In diesem Abschnitt werden die Visualisierungen im Detail erläutert.
+
+\subsubsection{Medaillenspiegel}
+
+Der Medaillenspiegel zeigt für jedes Land die Anzahl an Gold-, Silber- und Bronzemedaillen, sowie die Gesamtanzahl. Aufgrund der Datenvorverarbeitung wurden bereits doppelte Einträge eliminiert. Die Aggregation übernimmt \texttt{toMedalTable}. Diese Funktion gruppiert die Einträge nach dem Land, summiert die Anzahl der gewonnenen Medaillen auf und erzeugt Platzierungen mit dem Wettbewerbsschema \enquote{Competition Ranking}. Gleiche Tripel aus Gold-, Silber- und Bronzemedaillen erhalten denselben Rang. Der nächste Rang wird in der Zählung übersprungen wodurch die Reihenfolge \enquote{1,2,2,4,\dots} entsteht. Das Ergebnis wird als \texttt{List MedalTableRow} mit den Feldern \texttt{country}, \texttt{gold}, \texttt{silver}, \texttt{bronze}, \texttt{total}, \texttt{placement} und \texttt{year} im Datenmodell gespeichert.
+
+Die Darstellung entsteht in \texttt{View.medaillenspiegelSection}. Es wird eine HTML Tabelle mit Kopfzeile und sortierten Einträgen gebaut. Das Sortierkriterium steht in \texttt{tableCriterion}. Bei \texttt{"medals"} wird die Tabelle gemäß \texttt{placement} geordnet. Für die anderen Sortierkriterien werden absolute und relative Kennzahlen pro Land berechnet. Es wird die Summe der Medaillen durch das entsprechende Kriterium des jeweiligen Landes geteilt. Um die unübersichtliche Darstellung der Daten zu vermeiden, wird für Bevölkerung das Verhältnis aus Medaillen pro eine Million Einwohner angezeigt. Für das BIP wird analog Medaillen pro eine Milliarde Dollar angezeigt. Der aktuelle Rang je Land wird über eine Hilfstabelle \texttt{rankByCountry} bestimmt und bei Kriteriumswechsel neu gebildet. Eine optionale Ansicht mit den ersten zehn Einträgen wird über \texttt{collapseMedalTable} bereitgestellt.
+
+Die Interaktionen sind im View und im Update verankert. Ein Klick auf den Schalter für die Top Zehn löst \texttt{CollapseMedalTable} aus und wechselt zwischen kompletter Liste und Vorschau. Der Wechsel des Sortierkriteriums löst \texttt{SetTableCriterion} aus und aktualisiert die entsprechenden Werte und Rangfolge. Beim Überfahren einer Tabellenzeile mit dem Mauszeiger wird diese durch \texttt{HoverMedalTable} hervorgehoben. Ein Klick auf ein Land sendet \texttt{SelectCountryFromTable}. Diese Nachricht setzt \texttt{selectedCountry} und erzeugt unmittelbar ein neues Sunburst Modell über \texttt{toSBModel} mit dem gesetzten Land. Zusätzlich wird \texttt{pcCountry} für die parallelen Koordinaten gesetzt. Damit reagieren die Visualisierungen synchron auf die Auswahl eines Landes.
+
+\subsubsection{Sunburst}
+
+Die Sunburst-Visualisierung zeigt die Medaillen eines ausgewählten Landes als radiale Hierarchie. Die Funktion \enquote{\texttt{toSBModel parts country}} filtert die Teilnahmen auf das gewählte Land und bildet jede Medaille auf eine Pfadsequenz ab. Diese Sequenz entsteht über \enquote{\texttt{sportsToCategory sport event}} und kodiert die Ebenen (z.\,B. \enquote{Kategorie} \(\rightarrow\) \enquote{Sportart} \(\rightarrow\) \enquote{Event}). Für jede identische Sequenz wird die Häufigkeit gezählt. Auf diese Weise liegt pro Pfad die Anzahl der gewonnenen Medaillen vor.
+
+Aus den Pfaden baut \texttt{Tree.stratifyWithPath} einen Baum auf, dessen Knoten die Hierarchieebenen repräsentieren. Dieser Baum wird mit \texttt{Hierarchy.partition} in ein radiales Layout überführt. Die Partition berechnet für jeden Knoten die Winkelposition und den radialen Bereich proportional zum Anteil am Gesamtwert. Das Ergebnis ist eine Liste von \texttt{LayedOutDatum} mit Feldern \texttt{x}, \texttt{y}, \texttt{width}, \texttt{height}, \texttt{value} sowie dem zugrunde liegenden Knotendatum (Sequenz) und einer globalen Summe \texttt{total}.
+
+Die Visualisierung wird in \texttt{Components/Sunburst.elm} mit TypedSvg gerendert. Für jedes Layout-Element erzeugt die Funktion \texttt{arc} aus den Partitionskoordinaten ein SVG-Segment mittels \texttt{Shape.arc}. Dabei wird der Radius über die Wurzel der Daten gemappt (\texttt{innerRadius = sqrt y}, \texttt{outerRadius = sqrt (y + height)}), wodurch die Flächendarstellung visuell ausgewogen skaliert. Die Farbgebung erfolgt über \texttt{mapColor}. Eine kategoriale Skala ordnet der obersten Hierarchieebene (erstes Sequenzelement) eine Grundfarbe zu. Tiefere Ebenen werden schrittweise abgedunkelt. Grundlage für die Skala ist die im Code gebildete Liste eindeutiger Wurzel-Kategorien (\texttt{range}), wodurch Äste zusammengehörig und dennoch unterscheidbar bleiben.
+
+Die Interaktion ist ereignisgetrieben und spiegelt sich im \texttt{Model} wieder. Über eine transparente Interaktionsschicht (\texttt{mouseInteractionArcs}) werden Mausereignisse abgefangen. Beim Überfahren eines Segments sendet \texttt{onMouseEnter} eine \texttt{HoverSB}-Nachricht mit der vollständigen Sequenz und dem relativen Anteil. Im Update wird \texttt{sbmodel.hovered} gesetzt. Der View rendert daraufhin im Zentrum anstelle des Landesnamens die Sequenzteile und den prozentualen Anteil der ausgewählten Teilhierarchie. Die Prozentzahl wird aus \texttt{item.value / total * 100} berechnet und auf zwei Dezimalstellen gerundet. Das Ereignis \texttt{onMouseLeave} setzt den Hover-Zustand wieder auf \texttt{Nothing}. Wenn die Variable \texttt{total} gleich Null ist, wird ein Hinweis angezeigt, dass das Land keine Medaillen gewonnen hat. Andernfalls steht dort der Ländername (ermittelt via \texttt{Helpers.nocToCountry}).
+
+
+\subsubsection{Parallele Koordinaten}
+
+Die Visualisierung paralleler Koordinaten verknüpft mehrere Kennzahlen eines Landes zu einer Polylinie, die die Position eines Landes entlang mehrerer Achsen zeigt. Im Anwendungsmodell liegt dafür \texttt{pcmodel : PCModel} vor, das sowohl die Achsen, als auch die Datenreihen kapselt. Der Datentyp \texttt{PCModel} ist in \texttt{Model.elm} definiert und besitzt die Felder \texttt{axes : List PCAxis}, \texttt{series : List PCSeries} und \texttt{hovered : Maybe String}. Die zugehörigen, einfachen Strukturen \texttt{PCAxis} und \texttt{PCSeries} sind ebenfalls in \texttt{Model.elm} festgelegt: \texttt{PCAxis = \{ id : String, label : String \}} und \texttt{PCSeries = \{ name : String, values : List ( String, Float ) \}}. Achsen tragen eine interne ID (\enquote{medals}, \enquote{pop}, \enquote{gdp}, \enquote{age}) und ein angezeigtes Label, das über \enquote{\texttt{axisLabel : String -> String}} generiert wird. Die Funktion \enquote{\texttt{toPCModel : Model -> PCModel}} leitet aus dem aktuellen Modell-Zustand die sichtbaren Achsen und die Werte-Serien je Land ab.
+
+Die Achsen sind in der Reihenfolge \texttt{axisOrder} im \texttt{Model} definiert. Diese Liste wird bei Drag\,\&\,Drop-Anpassungen verändert und bildet die Grundlage für die horizontale Anordnung. Eine gemeinsame x-Skala ordnet die diskreten Achsenpositionen auf den verfügbaren Zeichenbereich zu (Index 0 bis \(n-1\), wobei \(n\) der Anzahl sichtbarer Achsen entspricht). Für jede Dimension wird zusätzlich eine y-Skala bestimmt. Für die Rang-Berechnung werden alle Werte einer Achse gesammelt, eindeutige Werte sortiert und auf Ränge abgebildet. Dadurch erhalten Achsen mit unterschiedlichen Wertebereichen eine vergleichbare vertikale Skala, was den Linienvergleich über Dimensionen hinweg erleichtert.
+
+Die Linien werden als Pfade über die Achsenpunkte hinweg gezeichnet. Für jede Serie (ein Land) wird der x-Wert aus der Achsenposition entnommen und der y-Wert über die jeweils passende y-Skala berechnet. Die resultierende Punktefolge wird in einen kontinuierlichen Pfad überführt. Die Komponente zeichnet die Linien mit einer Farbe, die sich am Medaillenrang orientiert. Dazu wird aus dem Rang eine normalisierte Größe \(t\in[0,1]\) berechnet und in eine mehrstufige Gradientenpalette gemappt. Länder mit besseren Platzierungen erhalten visuell differenzierte, kontrastreichere Farben. Zusätzlich wird die Deckkraft reduziert, wenn eine Linie nicht im Hover oder Fokus steht. Im Komponenten-Code sind die dafür relevanten Hilfsfunktionen unter anderem \texttt{valuesForAxis}, \texttt{ranksForAxis} und die Farbabbildung \texttt{gradientColor}.
+
+Bewegt der Mauszeiger sich über eine Linie, wird das Ereignis \texttt{SetPcHover} mit dem Ländernamen ausgelöst. Das \texttt{Model} speichert diesen Namen in \texttt{pcHover}. Die Komponente nutzt den Wert, um die entsprechende Linie stärker zu betonen und rechts neben der letzten Achse ein kleines Label mit dem Ländernamen einzublenden. Ein Klick auf eine Linie oder auf den dedizierten Button im View löst \texttt{PcClick} aus und setzt \texttt{pcCountry} als Fokus. Ist ein Fokus gesetzt, bleibt die entsprechende Linie auch ohne Hover hervorgehoben. Ein erneuter Klick auf den Button entfernt den Fokus wieder.
+
+Die Reihenfolge der Achsen wird per Drag\,\&\,Drop verändert. Die Achsentitel sind ziehbar und senden beim Beginn des Ziehens, sowie beim Überfahren während des Ziehens, entsprechende Nachrichten (\texttt{StartDragAxis}, \texttt{DragOverAxis}). Beim Loslassen löst \texttt{DropAxis} die tatsächliche Umordnung von \texttt{axisOrder} im \texttt{Update} aus. Direkt danach wird \texttt{recomputePcModel} aufgerufen, wodurch das PC-Modell aus der neuen Reihenfolge und dem aktuellen Datenstand abgeleitet wird. Die Komponente liest anschließend \texttt{axes} und \texttt{series} aus \texttt{pcmodel} und zeichnet die Linien neu.
+
+\subsubsection{Heatmap}
+
+Die Heatmap zeigt die zeitliche Entwicklung der Medaillenspiegel als Matrix mit Ländern als Zeilen und Jahren als Spalten. Die Struktur \texttt{HMModel} hält die Matrixdaten, Labels, eine optionale Selektion, sowie die Sortierpräferenz.
+
+Nach dem Dekodieren der historischen Medaillenspiegel (\texttt{decodeOlyHistroyCsv}) werden spezielle Teams explizit ausgeschlossen (\enquote{Refugee Olympic Team}, \enquote{Individual Neutral Athletes}). Aus den verbleibenden Zeilen wird eine Länderliste abgeleitet und zusammen mit allen Medaillenzeilen an \enquote{\texttt{toHMModel allMTrows countries}} übergeben. Die Funktion \texttt{toHMModel} konstruiert eine dichte Matrix. Für jedes Land (Zeile) und jedes Jahr (Spalte) wird der Gesamtwert \texttt{total} bestimmt. Fehlende Kombinationen werden auf \(0\) gesetzt, sodass die Spalten über alle Länder hinweg ausgerichtet sind. Die Spaltenbeschriftungen entstehen aus den Jahren mittels \texttt{String.fromInt}. Die \texttt{rowLabels} übernehmen die Reihenfolge aus \texttt{countries}.
+
+Die Darstellung geschieht in der Funktion \texttt{heatmap : HMModel -> Html Msg}. Vor dem Zeichnen kann die Zeilenreihenfolge umsortiert werden. Steht \texttt{hmmodel.sortByMedalTable} auf \texttt{True}, bleibt die Reihenfolge der \texttt{rowLabels} erhalten. Andernfalls werden die Zeilen nach der Zeilensumme sortiert und absteigend angeordnet. Dadurch lässt sich die Heatmap sowohl in der von der Medaillentabelle abgeleiteten Reihenfolge, als auch explorativ nach Gesamterfolg ordnen.
+
+Für die Farbgebung wird eine diskrete Stufenskala verwendet, welche in \texttt{colorSteps} definiert ist. Die Schwellen \enquote{<0, 1, 2, 5, 10, 20, 30, 40, 50+>} werden jeweils einer Farbe aus einer abgestuften Rotpalette zugeordnet. Die Funktion \enquote{\texttt{colorSchemeGet v}} wählt für einen Messwert \(v\) die passende Stufe, indem die größte, nicht überschrittene Schwelle, genommen wird. Ungültige Werte (\texttt{isNaN}) erhalten eine neutrale Graufarbe. Diese diskrete Skala macht Einzelwerte gut unterscheidbar und verhindert, dass Ausreißer die visuelle Verteilung unverhältnismäßig dominieren.
+
+Das Rendering nutzt ein HTML-\texttt{table}-Layout. Die Funktion \texttt{drawCells} rendert farbige Rechtecke im Raster und verteilt die Spalten gleichmäßig über die verfügbare Breite. Rechts daneben zeigt \texttt{legend} die Farbskala mit kleinen Farbfeldern und Zahlenwerten.
+
+Jede Datenzelle hat einen \texttt{onMouseOver}-Handler, der eine Nachricht \texttt{OnHoverHeatMap \{ value, row, column, message \}} sendet. Diese Nachricht setzt den Zustand \enquote{\texttt{hmmodel.selected = Just cell}}. Auf der anderen Seite setzt \texttt{OnLeaveHeatMap} den Zustand \texttt{selected} auf \texttt{Nothing}. Abhängig von \texttt{selected} werden die Zellen dann unterschiedlich gezeichnet. Die fokussierte Zelle wird prominent hervorgehoben (kräftiger Rahmen), die zugehörige Zeile und Spalte werden betont, während nicht betroffene Zellen etwas abgedunkelt gezeichnet werden. Dadurch entsteht ein klarer Fokus, bei gleichzeitig erhaltener Kontextinformation, etwa um die Entwicklung eines Landes über die Jahre oder die Verteilung innerhalb eines Jahres zu verfolgen.
+
+Die Sortierung lässt sich umschalten. Im Update \texttt{ChangeHeatMapSorting} wird \texttt{sortByMedalTable} invertiert und beim nächsten Rendern ändert sich die Zeilenordnung entsprechend.
+
+\subsection{Herausforderungen und Wiederverwendung}
+In diesem Abschnitt werden aufwendige Teile der Implementierung und wiederverwendeter Code aus der Übung betrachtet.
+
+\subsubsection{Probleme und aufwendige Teile}
+Die Normalisierung von Ländernamen war herausfordernd, weil historische und organisatorische Varianten zusammengeführt werden mussten. Dazu zählen Umbenennungen über längere Zeiträume, sowie Bezeichnungen für internationale Teams. Alle Länder mussten auf fehlende Werte überprüft und gegebenenfalls ergänzt werden. Dabei wurde situationsbedingt entschieden, welche Bezeichnung historisch veraltet ist und wie der entsprechende aktuelle Name lautet. So wurde die Datenbasis stabil und vergleichbar.
+
+Ein weiteres Problem zeigte sich bei der Rangbildung in den parallelen Koordinaten. Auf der Median-Alter Achse traten viele gleiche Werte auf. Dadurch reichten die Ränge nur bis etwa 32, während andere Achsen bis 91 differenziert waren. Der obere Bereich auf dieser Achse blieb leer, was die Lesbarkeit beeinträchtigte. Das Problem wurde mithilfe von relativen Kennzahlen gelöst. Aus den absoluten Medaillen wurden \texttt{Medaillen pro Bevölkerung}, \texttt{Medaillen pro BIP} und \texttt{Medaillen pro Alter} abgeleitet und daraus die Platzierung berechnet. Die relativen Kennzahlen machen die Vergleiche fairer und verringern das Auftreten gleicher Plätze. Damit füllte sich der Wertebereich auf allen Achsen wieder schlüssig.
+
+Ein weiteres Problem betraf die Performance der Heatmap. In einer frühen Version wurde die Matrix direkt aus den Rohzeilen berechnet. Für jedes Team wurde über alle Jahre iteriert und innerhalb dieser Schleifen erneut die gesamte Liste gefiltert. Dadurch entstand eine verschachtelte Struktur mit vielen Wiederholungen. Die Funktion hat für jedes Zellenpaar \enquote{Team und Jahr} erneut \texttt{filterSportsEventMedal} aufgerufen und danach wieder über alle Zeilen gefiltert und summiert. Dieses Muster führte zu quadratischer bis kubischer Laufzeit in der Anzahl der Teams und Jahre und skaliert schlecht, weshalb das Laden spürbar lange dauerte. Die korrigierte Fassung arbeitet mit Voraggregation und reduziert die Datenmenge. In einem einzelnen Durchlauf wird ein Wörterbuch aufgebaut, das die Häufigkeit pro Schlüssel \enquote{Land und Jahr} speichert. Die Normalisierung der Ländernamen geschieht dabei einmalig. Die Menge der Jahre wird einmal aus den Zeilen abgeleitet und sortiert. Die Liste der Länder liefert der Aufrufer und ist bereits bereinigt. Die Matrix wird anschließend durch Nachschlagen in diesem Wörterbuch aufgebaut, statt durch wiederholtes Filtern. Das reduziert die Arbeit auf eine lineare Vorverarbeitung und einfache Zugriffe und beschleunigt die Darstellung der Visualisierung deutlich.
+
+\subsubsection{Wiederverwendung von Code}
+Die CSV Dekodierung basiert auf \texttt{Csv.decodeCsv} in Verbindung mit Pipeline Decodern über \texttt{Csv.into}. Dieses Muster wurde für alle Quellen übernommen und auf neue Dateien angewendet.
+
+Die Komponente für Parallele Koordinaten wurde nicht direkt aus der Übung übernommen. Das Modell aus der Übung arbeitet mit dem Zustand \enquote{dimensionOrder} und Feldzugriffen per \enquote{DimensionAccessor}. Unsere Variante verwendet einen ähnlichen Aufbau mit \texttt{Axis} und \texttt{Series}. Ein Strukturunterschied betrifft die Datenorganisation. In der Übung wurden die Werte nach Achsen gruppiert gespeichert und für jede Achse lag eine Liste der zugehörigen Datenpunkte vor, Linien entstanden durch Transponieren dieser Struktur. In unserer Umsetzung wird dagegen pro Land genau eine Serie gebildet, die die Werte aller sichtbaren Achsen enthält. Diese Serienzentrierung macht Hover und Fokus auf Länderebene natürlich und vereinfacht farbliche Kodierung und Interaktion pro Linie. Wiederverwendet wurden lediglich allgemeine Ideen wie eine gemeinsame x Skala, separate y Skalen pro Achse und der Linienzug über Pfade in \texttt{TypedSvg}. Die Hover Logik ist neu implementiert.
+
+Die Visualisierungen Sunburst und Heatmap waren nicht Teil der Übung. Für beide gab es deshalb keine direkte Codewiederverwendung. Wir haben sie neu implementiert und lediglich allgemeine Muster der Elm Architektur sowie wiederkehrende Hilfsfunktionen genutzt.
+
+Schließlich half der gewohnte Fluss aus Initialisierung, Aktualisierung und Darstellung im Sinne der Elm Architektur. In \texttt{View.elm} blieb die HTML Strukturierung übersichtlich und für neue Bereiche erweiterbar und wiederkehrende Muster wie Hover Nachrichten mit \texttt{Maybe} Zustand kamen in mehreren Komponenten zum Einsatz.
