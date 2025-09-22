@@ -258,3 +258,6 @@ nocToCountry code =
 -- Alias-Funktion
 countryFromNoc : String -> String
 countryFromNoc = nocToCountry
+
+thisFunctionIsNotUsedAnyWhere : Int
+thisFunctionIsNotUsedAnyWhere = 0
