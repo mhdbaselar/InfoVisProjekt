@@ -237,16 +237,16 @@ manualPopulationOverrides =
 
 -- CSV laden
 olympia2024CsvUrl : String
-olympia2024CsvUrl = "/data/medals2024.csv"
+olympia2024CsvUrl = "data/medals2024.csv"
 
 olympiaHistoryCsvUrl : String
-olympiaHistoryCsvUrl = "/data/medalsHistory.csv"
+olympiaHistoryCsvUrl = "data/medalsHistory.csv"
 
 populationCsvUrl : String
-populationCsvUrl = "/data/world_population_data.csv"
+populationCsvUrl = "data/world_population_data.csv"
 
 gdpCsvUrl : String
-gdpCsvUrl = "/data/world_data_2023.csv"
+gdpCsvUrl = "data/world_data_2023.csv"
 
 requestOly2024Csv : String -> Cmd Msg
 requestOly2024Csv url =

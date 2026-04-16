@@ -5374,9 +5374,9 @@ var $elm$browser$Browser$element = _Browser_element;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
-var $author$project$Model$gdpCsvUrl = '/data/world_data_2023.csv';
-var $author$project$Model$olympia2024CsvUrl = '/data/medals2024.csv';
-var $author$project$Model$populationCsvUrl = '/data/world_population_data.csv';
+var $author$project$Model$gdpCsvUrl = 'data/world_data_2023.csv';
+var $author$project$Model$olympia2024CsvUrl = 'data/medals2024.csv';
+var $author$project$Model$populationCsvUrl = 'data/world_population_data.csv';
 var $author$project$Model$GdpReceived = function (a) {
 	return {$: 'GdpReceived', a: a};
 };
@@ -8033,7 +8033,7 @@ var $elm$core$Maybe$map = F2(
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $elm$core$Basics$not = _Basics_not;
-var $author$project$Model$olympiaHistoryCsvUrl = '/data/medalsHistory.csv';
+var $author$project$Model$olympiaHistoryCsvUrl = 'data/medalsHistory.csv';
 var $author$project$Model$axisLabel = function (aid) {
 	switch (aid) {
 		case 'medals':
