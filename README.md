@@ -1,93 +1,120 @@
 # InfoVisProjekt
 
+Interaktive Visual-Analytics-Anwendung zur Analyse des Medaillenspiegels der Olympischen Sommerspiele 2024. Das Projekt untersucht, ob die Frage nach der sportlich erfolgreichsten Nation allein mit der klassischen Medaillentabelle beantwortet werden kann, oder ob Sportartenverteilung, demografische Kennzahlen, Wirtschaftskraft und historische Entwicklung eine differenziertere Bewertung erfordern.
 
+Die Anwendung ist in Elm umgesetzt und visualisiert die Daten als Medaillenspiegel, Sunburst-Diagramm, parallele Koordinaten und Heatmap. Ergaenzend enthaelt das Repository einen LaTeX-Bericht zur Motivation, Datenbasis, Gestaltung und Implementierung.
 
-## Getting started
+## Features
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- Medaillenspiegel fuer Paris 2024 mit Gold-, Silber-, Bronze- und Gesamtwertung.
+- Alternative Rankings nach Medaillen pro Einwohner, Medaillen pro BIP und Medaillen pro Median-Alter.
+- Sunburst-Diagramm zur Verteilung der Medaillen eines ausgewaehlten Landes nach Sportarten, Kategorien und Events.
+- Parallele Koordinaten zum Vergleich der Laenderrankings mit Drag-and-Drop-Achsen, Hover und Fokusauswahl.
+- Heatmap zur historischen Entwicklung der Medaillenzahlen je Land seit 1896.
+- Interaktive Verknuepfung der Visualisierungen: Auswahl im Medaillenspiegel aktualisiert Sunburst und Fokus in den parallelen Koordinaten.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## Datenbasis
 
-## Add your files
+Die Anwendung laedt CSV-Dateien aus `public/data/` und verarbeitet sie direkt im Browser:
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+- `medals2024.csv`: Medaillen der Olympischen Sommerspiele 2024 mit Medaillentyp, Athlet, Land, Sportart und Event.
+- `medalsHistory.csv`: historische Medaillenspiegel der Olympischen Sommerspiele.
+- `world_population_data.csv`: Bevoelkerung und Medianalter je Land.
+- `world_data_2023.csv`: Bruttoinlandsprodukt je Land.
 
+Die Vorverarbeitung geschieht in Elm. Dazu gehoeren CSV-Decoding, Aggregation nach Laendern, Entfernen doppelter Sport-Event-Medaillen-Kombinationen, Normalisierung von Laendernamen, manuelle Overrides fuer einzelne fehlende Kennzahlen und der Ausschluss von Teams ohne valide demografische Referenzwerte aus den relativen Rankings.
+
+## Projektstruktur
+
+```text
+.
+|-- elm.json
+|-- public/
+|   |-- index.html
+|   |-- main.js
+|   `-- data/
+|-- src/
+|   |-- Main.elm
+|   |-- Model.elm
+|   |-- Update.elm
+|   |-- View.elm
+|   |-- Helpers.elm
+|   `-- Components/
+|       |-- HeatMap.elm
+|       |-- ParallelCoordinates.elm
+|       `-- Sunburst.elm
+`-- bericht/
+    |-- main.tex
+    |-- literatur.bib
+    `-- Kapitel/
 ```
-cd existing_repo
-git remote add origin https://gitlab.informatik.uni-halle.de/arscn/infovisprojekt.git
-git branch -M main
-git push -uf origin main
+
+## Voraussetzungen
+
+- Elm `0.19.1`
+- Ein lokaler HTTP-Server zum Ausliefern von `public/`
+
+Die CSV-Dateien werden per HTTP ueber relative Pfade wie `data/medals2024.csv` geladen. Deshalb sollte die App nicht direkt als lokale Datei im Browser geoeffnet werden, sondern ueber einen Webserver mit `public/` als Root-Verzeichnis laufen. Die relativen Pfade sind wichtig, damit die Anwendung auch unter einem GitHub-Pages-Projektpfad wie `https://<user>.github.io/<repo>/` funktioniert.
+
+## Anwendung starten
+
+1. Elm-JavaScript bauen:
+
+   ```sh
+   elm make src/Main.elm --output=public/main.js
+   ```
+
+2. Lokalen Server im `public/`-Verzeichnis starten:
+
+   ```sh
+   cd public
+   python3 -m http.server 8000
+   ```
+
+3. Im Browser oeffnen:
+
+   ```text
+   http://localhost:8000
+   ```
+
+## Entwicklung
+
+Der Einstiegspunkt ist `src/Main.elm`. Die Anwendung folgt der Elm Architecture:
+
+- `Model.elm` definiert Datentypen, CSV-Decoder, HTTP-Requests, Normalisierung und abgeleitete Modelle fuer die Visualisierungen.
+- `Update.elm` verarbeitet Ladeergebnisse und Nutzerinteraktionen.
+- `View.elm` baut die Seite und verbindet die einzelnen Visualisierungen.
+- `src/Components/` enthaelt die eigenstaendigen Visualisierungskomponenten.
+- `Helpers.elm` enthaelt die Zuordnung von NOC-Codes zu Laendernamen.
+
+Nach Aenderungen am Elm-Code muss `public/main.js` neu gebaut werden:
+
+```sh
+elm make src/Main.elm --output=public/main.js
 ```
 
-## Integrate with your tools
+## GitHub Pages
 
-- [ ] [Set up project integrations](https://gitlab.informatik.uni-halle.de/arscn/infovisprojekt/-/settings/integrations)
+Das Repository enthaelt einen GitHub-Actions-Workflow unter `.github/workflows/pages.yml`. Bei jedem Push auf `main` oder bei manuellem Start ueber `workflow_dispatch` wird die Elm-Anwendung gebaut und der Inhalt von `public/` als GitHub-Pages-Artefakt deployt.
 
-## Collaborate with your team
+Damit das Deployment laeuft, muss in GitHub unter `Settings` -> `Pages` -> `Build and deployment` als Source `GitHub Actions` ausgewaehlt sein.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## Bericht
 
-## Test and Deploy
+Der Bericht liegt in `bericht/` und beschreibt Motivation, Daten, Visualisierungsentscheidungen, Interaktionen und Implementierung. Einstiegspunkt ist:
 
-Use the built-in continuous integration in GitLab.
+```text
+bericht/main.tex
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Mit einer lokalen LaTeX-Installation kann der Bericht beispielsweise mit `latexmk` gebaut werden:
 
-***
+```sh
+latexmk -pdf bericht/main.tex
+```
 
-# Editing this README
+## Hinweise
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- `public/main.js` ist das kompilierte Elm-Bundle und wird von `public/index.html` eingebunden.
+- Historische Laenderbezeichnungen werden fuer vergleichbare Zeitreihen auf normalisierte Namen abgebildet.
+- Das Refugee Olympic Team und Individual Neutral Athletes werden in Kennzahl-basierten Rankings nicht beruecksichtigt, da keine sinnvollen Bevoelkerungs- oder BIP-Werte existieren.
